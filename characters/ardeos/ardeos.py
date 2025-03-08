@@ -3,7 +3,7 @@
 import random
 
 from base import BaseCharacter
-from characters.ardeos.spells import InfernoBolt
+from characters.ardeos.spells import InfernoBolt, Apocalypse, EngulfingFlames
 
 from .utils.enums import SpellSimFellName
 
@@ -22,7 +22,9 @@ class Ardeos(BaseCharacter):
 
     def configure_spell_book(self):
         self.spells = {
-            SpellSimFellName.INFERNOBOLT.value: InfernoBolt(),
+            SpellSimFellName.APOCALYPSE.value: Apocalypse(),
+            SpellSimFellName.ENGULFING_FLAMES.value: EngulfingFlames(),
+            SpellSimFellName.INFERNO_BOLT.value: InfernoBolt(),
         }
 
         # I couldn't find a clean way to handle this. Up for solutions.
@@ -30,21 +32,22 @@ class Ardeos(BaseCharacter):
             spell.character = self
 
     def gain_ember(self, amount):
-        """Gain Anima"""
+        """Gain Embers"""
         self.ember += amount
-        if self.ember >= 10:
+        if self.ember >= 100:
             self.ember = 0
             self.gain_burning_embers(1)
 
     def gain_burning_embers(self, amount):
-        """Gain Winter Orbs"""
+        """Gain Burning Embers"""
         self.burning_embers += amount
         self.burning_embers = min(self.burning_embers, 4)
 
     def lose_burning_embers(self, amount):
-        """Lose Winter Orbs"""
+        """Lose Burning Embers"""
         self.burning_embers -= amount
         self.burning_embers = max(self.burning_embers, 0)
+        # TODO: Assuming his Spirit buff is similar to Rimes.
         if random.uniform(0, 100) < self.get_spirit():
             self.burning_embers += amount
             self.burning_embers = min(self.burning_embers, 4)

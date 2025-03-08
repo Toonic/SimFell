@@ -24,4 +24,6 @@ enemies=1
 run_count=2000
 
 # Actions
-action=/inferno_bolt
+action=/apocalypse
+action+=/engulfing_flames,if=debuff.engulfing_flames.duration<0
+action+=/inferno_bolt

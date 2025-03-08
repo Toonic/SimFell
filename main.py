@@ -195,7 +195,7 @@ def debug_sim(table: Table, configuration: SimFellConfiguration) -> None:
         do_debug=True,
         is_deterministic=True,
     )
-    dps = sim.run(detailed_debug=False)
+    dps = sim.run(detailed_debug=True)
 
     table.add_row("Total DPS", f"[bold magenta]{dps:.2f}", end_section=True)
 

@@ -1,4 +1,4 @@
-"""Module for Frost Bolt Spell"""
+"""Module for Inferno Bolt Spell"""
 
 from characters.ardeos import ArdeosSpell
 

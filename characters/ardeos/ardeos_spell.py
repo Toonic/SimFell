@@ -17,12 +17,12 @@ class ArdeosSpell(BaseSpell):
         *args,
         ember_gain=0,
         burning_ember_cost=0,
-        ember_per_tiick=0,
+        ember_per_tick=0,
         **kwargs,
     ):
         self.ember_gain = ember_gain
         self.burning_ember_cost = burning_ember_cost
-        self.ember_per_tiick = ember_per_tiick
+        self.ember_per_tick = ember_per_tick
         super().__init__(*args, **kwargs)
 
     def is_ready(self):

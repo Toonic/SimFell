@@ -6,4 +6,6 @@ from enum import Enum
 class SpellSimFellName(Enum):
     """Enum for spell simfell names"""
 
-    INFERNOBOLT = "inferno_bolt"
+    APOCALYPSE = "apocalypse"
+    ENGULFING_FLAMES = "engulfing_flames"
+    INFERNO_BOLT = "inferno_bolt"
