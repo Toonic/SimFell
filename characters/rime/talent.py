@@ -56,6 +56,7 @@ class WisdomOfTheNorthTalent(Talent):
 class SoulfrostTorrentTalent(Talent):
     """Defines static variables for the Soulfrost Torrent Talent"""
 
+    anima_and_swallow_crit_bonus = 20  # As Percent
     torrent_bonus_damage = 1.5  # Multiplier
     torrent_bonus_duration = 2  # Multiplier
     soulfrost_ppm = 1.5  # PPM
