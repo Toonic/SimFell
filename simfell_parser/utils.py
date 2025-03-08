@@ -16,6 +16,7 @@ character_classes: Dict[str, CharacterTypeT] = {"Rime": Rime, "Ardeos": Ardeos}
 
 default_simfell_files: Dict[str, str] = {
     "Rime": "simfell_parser/defaults/rime_default.simfell",
+    "Ardeos": "simfell_parser/defaults/ardeos_default.simfell",
 }
 
 

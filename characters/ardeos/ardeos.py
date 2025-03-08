@@ -48,3 +48,11 @@ class Ardeos(BaseCharacter):
         if random.uniform(0, 100) < self.get_spirit():
             self.burning_embers += amount
             self.burning_embers = min(self.burning_embers, 4)
+
+    def add_talent(self, talent_identifier: str):
+        print("Todo")
+        # talent = RimeTalents.get_by_identifier(talent_identifier)
+        # if talent is not None:
+        #     self.talents.append(talent)
+        #     if talent == RimeTalents.AVALANCHE:
+        #         self.crit_power_multiplier += AvalancheTalent.bonus_crit_power
