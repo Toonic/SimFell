@@ -16,6 +16,8 @@ from characters.rime.rime import (
     Rime,
 )
 
+from characters.ardeos.ardeos import Ardeos
+
 if TYPE_CHECKING:
     from base import BaseSpell, BaseCharacter
 
@@ -59,6 +61,7 @@ def map_character_name_to_class(character_name: str) -> "BaseCharacter":
     # Dictionary to map class names to their corresponding classes
     character_classes: Dict[str, CharacterTypeT] = {
         "Rime": Rime,
+        "Ardeos": Ardeos,
     }
 
     character_class: Optional[CharacterTypeT] = character_classes.get(

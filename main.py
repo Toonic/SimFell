@@ -82,7 +82,7 @@ def main(arguments: argparse.Namespace):
     print()
 
     console = Console()
-    table = Table(title="Rime DPS Simulation", box=box.SIMPLE)
+    table = Table(title="DPS Simulation", box=box.SIMPLE)
     table.add_column(
         "Attribute", style="blue", justify="center", vertical="middle"
     )
