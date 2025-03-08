@@ -84,7 +84,9 @@ class Rime(BaseCharacter):
             self.winter_orbs += amount
             self.winter_orbs = min(self.winter_orbs, 5)
 
-    def add_talent(self, talent: CharacterTalentT):
-        super().add_talent(talent)
-        if talent == RimeTalents.AVALANCHE:
-            self.crit_power_multiplier += AvalancheTalent.bonus_crit_power
+    def add_talent(self, talent_identifier: str):
+        talent = RimeTalents.get_by_identifier(talent_identifier)
+        if talent is not None:
+            self.talents.append(talent)
+            if talent == RimeTalents.AVALANCHE:
+                self.crit_power_multiplier += AvalancheTalent.bonus_crit_power

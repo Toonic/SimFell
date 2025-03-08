@@ -14,11 +14,8 @@ from rich.progress import (
     TimeRemainingColumn,
 )
 
-
-from characters.rime.rime import Rime
-from characters.rime.preset import RimePreset
-from characters.rime.talent import RimeTalents
 from simfell_parser.simfile_parser import SimFileParser, SimFellConfiguration
+from simfell_parser.utils import character_classes, default_simfell_files
 from sim import Simulation
 
 
@@ -26,16 +23,24 @@ def handle_configuration(
     arguments: argparse.Namespace,
 ) -> SimFellConfiguration:
     """Handles the configuration based on the arguments."""
-
-    simfile_parser = SimFileParser(arguments.simfile)
-    configuration = simfile_parser.parse()
+    if arguments.simfile:
+        simfile_parser = SimFileParser(arguments.simfile)
+        configuration = simfile_parser.parse()
+    elif arguments.character_hero:
+        simfile_parser = SimFileParser(
+            default_simfell_files[arguments.character_hero]
+        )
+        configuration = simfile_parser.parse()
+    else:
+        raise ValueError(
+            "Either a Simfell File needs to be defined {-f} "
+            + "or a Hero needs to be defined {-ch}."
+        )
 
     if arguments.enemy_count:
         configuration.enemies = arguments.enemy_count
     if arguments.talent_tree:
         configuration.talents = arguments.talent_tree
-    if arguments.preset:
-        configuration.character = RimePreset[arguments.preset].value
     if arguments.custom_character:
         try:
             stats = [
@@ -59,13 +64,20 @@ def handle_configuration(
                     + f"Invalid stat: {stat}"
                 )
 
-        configuration.character = Rime(
+        hero = (
+            arguments.character_hero
+            if arguments.character_hero is not None
+            else configuration.hero
+        )
+
+        configuration.character = character_classes[hero](
             intellect=stats[0],
             crit=stats[1],
             expertise=stats[2],
             haste=stats[3],
             spirit=stats[4],
         )
+
     if arguments.duration:
         configuration.duration = arguments.duration
     if arguments.run_count:
@@ -94,11 +106,6 @@ def main(arguments: argparse.Namespace):
     table.add_row("Run Count", str(configuration.run_count))
     if arguments.simulation_type == "stat_weights":
         table.add_row("Stat Weights Gain", str(arguments.stat_weights_gain))
-    table.add_row(
-        "Preset",
-        arguments.preset if arguments.preset else RimePreset.DEFAULT.name,
-        end_section=True,
-    )
 
     # Parse the talent tree argument.
     # e.g. Combination of "2-12-3" means Talent 1.2, 2.1, 2.2, 3.3
@@ -107,9 +114,7 @@ def main(arguments: argparse.Namespace):
         talents = configuration.talents.split("-")
         for index, talent in enumerate(talents):
             for i in talent:
-                rime_talent = RimeTalents.get_by_identifier(f"{index+1}.{i}")
-                if rime_talent:
-                    configuration.character.add_talent(rime_talent)
+                configuration.character.add_talent(f"{index+1}.{i}")
 
     table.add_row(
         "Talent Tree",
@@ -289,7 +294,7 @@ def average_dps(
 
 if __name__ == "__main__":
     # Create parser for command line arguments.
-    parser = argparse.ArgumentParser(description="Simulate Rime DPS.")
+    parser = argparse.ArgumentParser(description="Simulate DPS.")
 
     parser.add_argument(
         "-s",
@@ -315,21 +320,19 @@ if __name__ == "__main__":
         + "e.g., 13-1-2 means Talent 1.1, Talent 1.3, Talent 2.1, Talent 3.2",
     )
     parser.add_argument(
-        "-p",
-        "--preset",
-        type=str,
-        default="",
-        help="Preset to use. Possible values: "
-        + ",".join([preset.name for preset in RimePreset]),
-        choices=[preset.name for preset in RimePreset],
-    )
-    parser.add_argument(
         "-c",
         "--custom-character",
         type=str,
         default="",
         help="Custom character to use. "
         + "Format: intellect-crit-expertise-haste-spirit",
+    )
+    parser.add_argument(
+        "-ch",
+        "--character-hero",
+        type=str,
+        choices=character_classes.keys(),
+        help=f"Character hero to use. Choices: {', '.join(character_classes.keys())}",
     )
     parser.add_argument(
         "-d",
@@ -360,7 +363,6 @@ if __name__ == "__main__":
         "-f",
         "--simfile",
         type=str,
-        default="test.simfell",
         help="Path to the SimFell file.",
     )
 

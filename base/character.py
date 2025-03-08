@@ -127,10 +127,6 @@ class BaseCharacter(ABC):
         """Returns the character's damage multiplyer."""
         return 1 + self.damage_multiplier
 
-    def add_talent(self, talent: CharacterTalentT) -> None:
-        """Adds a talent to the character's available talents."""
-        self.talents.append(talent)
-
     def has_talent(self, talent: CharacterTalentT) -> bool:
         """Returns true if the talent is present."""
         return talent in self.talents
@@ -155,3 +151,7 @@ class BaseCharacter(ABC):
     @abstractmethod
     def configure_spell_book(self) -> None:
         """Adds a spells to the character's spell book."""
+
+    @abstractmethod
+    def add_talent(self, talent_identifier: str) -> None:
+        """Adds a talent to the character's available talents. To be overridden"""

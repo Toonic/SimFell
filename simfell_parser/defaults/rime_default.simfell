@@ -9,24 +9,16 @@ hero=Rime
 # haste=120
 # spirit=50
 
-intellect=331
-crit=120
-expertise=109
-haste=146
-spirit=107
+intellect=300
+crit=100
+expertise=100
+haste=100
+spirit=100
 
-talents=2-12-3 # Stands for Talents 1.2, 2.1, 2.2, 3.3
-
-# Gear
-#gear_helmet=Test Helm Name,int=14,stam=17,exp=23,crit=4,gem_bonus=33,gem=emerald_t1,ilvl=150,tier=6
-#gear_shoulder=Test Shoulder Name,int=12,stam=15,crit=13,haste=6,set=Wyrmling Vigor,ilvl=150,tier=6
-
-# Trinkets
-# trinket1=drums
-# trinket2=drums
+talents=0-0-0
 
 # Sim Information
-duration=5
+duration=120
 enemies=1
 run_count=2000
 

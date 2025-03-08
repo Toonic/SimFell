@@ -60,8 +60,8 @@ class Equipment(BaseModel):
 class Gear(BaseModel):
     """Class for a gear in a SimFell configuration."""
 
-    helmet: Optional[Equipment]
-    shoulder: Optional[Equipment]
+    helmet: Optional[Equipment] = None
+    shoulder: Optional[Equipment] = None
 
 
 class SimFellConfiguration(BaseModel):
