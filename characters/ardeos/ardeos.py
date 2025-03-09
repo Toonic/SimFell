@@ -3,7 +3,12 @@
 import random
 
 from base import BaseCharacter
-from characters.ardeos.spells import InfernoBolt, Apocalypse, EngulfingFlames
+from characters.ardeos.spells import (
+    InfernoBolt,
+    Apocalypse,
+    Detonate,
+    EngulfingFlames,
+)
 
 from .utils.enums import SpellSimFellName
 
@@ -23,6 +28,7 @@ class Ardeos(BaseCharacter):
     def configure_spell_book(self):
         self.spells = {
             SpellSimFellName.APOCALYPSE.value: Apocalypse(),
+            SpellSimFellName.DETONATE.value: Detonate(),
             SpellSimFellName.ENGULFING_FLAMES.value: EngulfingFlames(),
             SpellSimFellName.INFERNO_BOLT.value: InfernoBolt(),
         }
@@ -47,13 +53,14 @@ class Ardeos(BaseCharacter):
         """Lose Burning Embers"""
         self.burning_embers -= amount
         self.burning_embers = max(self.burning_embers, 0)
+
         # TODO: Assuming his Spirit buff is similar to Rimes.
         if random.uniform(0, 100) < self.get_spirit():
             self.burning_embers += amount
             self.burning_embers = min(self.burning_embers, 4)
 
     def add_talent(self, talent_identifier: str):
-        print("Todo")
+        print("Ardeos Talents not Configured.")
         # talent = RimeTalents.get_by_identifier(talent_identifier)
         # if talent is not None:
         #     self.talents.append(talent)

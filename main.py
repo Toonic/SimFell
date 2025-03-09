@@ -115,7 +115,8 @@ def main(arguments: argparse.Namespace):
         for index, talent in enumerate(talents):
             for i in talent:
                 configuration.character.add_talent(f"{index+1}.{i}")
-
+    table.add_row("", "")
+    table.add_row("Hero", configuration.hero)
     table.add_row(
         "Talent Tree",
         (
@@ -195,7 +196,7 @@ def debug_sim(table: Table, configuration: SimFellConfiguration) -> None:
         do_debug=True,
         is_deterministic=True,
     )
-    dps = sim.run(detailed_debug=True)
+    dps = sim.run(detailed_debug=False)
 
     table.add_row("Total DPS", f"[bold magenta]{dps:.2f}", end_section=True)
 

@@ -25,5 +25,6 @@ run_count=2000
 
 # Actions
 action=/apocalypse
-action+=/engulfing_flames,if=debuff.engulfing_flames.duration<0
+action=/detonate,if=debuff.engulfing_flames.remaining_time>spell.detonate.effective_cast_time # and if all other dots durations are greater than 5.
+action+=/engulfing_flames,if=debuff.engulfing_flames.remaining_time<0
 action+=/inferno_bolt
