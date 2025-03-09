@@ -1,5 +1,6 @@
 """Module for parsing SimFell condition lines."""
 
+import typing
 from typing import Any, List
 import operator
 import re
@@ -7,6 +8,9 @@ from rich import print  # pylint: disable=redefined-builtin
 
 from simfell_parser.model import Condition
 from simfell_parser.utils import CharacterTypeT
+
+if typing.TYPE_CHECKING:
+    from sim import Simulation
 
 
 class SimFileConditionParser:
@@ -101,77 +105,120 @@ class SimFileConditionParser:
                 return Condition(
                     left=left.strip(),
                     operator=op_key,
-                    right=self.parse_expression(right.strip()),
+                    right=right.strip(),
                 )
 
         raise ValueError(f"Invalid condition: {self._condition}")
 
     @staticmethod
-    def evaluate_character(
-        conditions: List[Condition], character: CharacterTypeT
+    def evaluate_conditions(
+        conditions: List[Condition], simulation: "Simulation"
     ) -> bool:
-        """Map a condition to a character attribute."""
-
+        """Checks all conditions."""
         checks: List[bool] = []
 
         for condition in conditions:
-            if condition.left.startswith("character."):
-                attribute_name = condition.left.split(".", 1)[1]
-                character_value = getattr(character, attribute_name, None)
+            # Get both values.
+            left_value = SimFileConditionParser.parse_side(
+                condition.left, simulation
+            )
+            right_value = SimFileConditionParser.parse_side(
+                condition.right, simulation
+            )
 
-                if character_value is not None:
-                    op_func = SimFileConditionParser.possible_operators.get(
-                        condition.operator
-                    )
-                    if op_func:
-                        print(
-                            f"\t-> Checking if {attribute_name}"
-                            + f"({character_value})"
-                            + f" {condition.operator} {condition.right}"
-                        )
-
-                        checks.append(
-                            op_func(character_value, condition.right),
-                        )
-
-                        print(f"\tCondition: {condition}")
-                        print(f"\tResult: {checks[-1]}")
-                        print("\t--------------------")
+            # Get the Op function.
+            op_func = SimFileConditionParser.possible_operators.get(
+                condition.operator
+            )
+            # if left_value is not None or right_value is not None:
+            if simulation.detailed_debug:
+                print(
+                    f"\t-> Checking if {left_value}"
+                    + f" {condition.operator} {right_value}"
+                )
+            # If everything is set. We evaluate to see if condition is met.
+            if (
+                op_func is not None
+                and left_value is not None
+                and right_value is not None
+            ):
+                checks.append(
+                    op_func(left_value, right_value),
+                )
 
         return all(checks)
 
     @staticmethod
-    def evaluate_spell(
-        conditions: List[Condition],
-        character: CharacterTypeT,
-    ) -> bool:
-        """Map a condition to a spell attribute."""
+    def parse_side(condition: str, simulation: "Simulation"):
+        """Parses out the side and fetches the appropriate value."""
 
-        checks: List[bool] = []
+        # If the values are floats or ints, just return as is.
+        if bool(re.fullmatch(r"-?\d+(\.\d+)?", condition)):
+            return float(condition)
 
-        for condition in conditions:
-            if condition.left.startswith("spell."):
-                condition_coding = condition.left.split(".", 1)[1]
-                spell_name = condition_coding.split(".", 1)[0]
-                attribute_name = condition_coding.split(".", 1)[1]
-                spell_value = getattr(
-                    character.spells[spell_name], attribute_name, None
-                )
+        if condition.startswith("active_enemies"):
+            return simulation.enemy_count
 
-                if spell_value is not None:
-                    op_func = SimFileConditionParser.possible_operators.get(
-                        condition.operator
-                    )
-                    if op_func:
-                        print(
-                            f"\t-> Checking if {spell_name}({spell_value}) "
-                            + f"{condition.operator} {condition.right}"
-                        )
+        if condition.startswith("character."):
+            return SimFileConditionParser.get_character_value(
+                condition, simulation
+            )
+        if condition.startswith("spell."):
+            return SimFileConditionParser.get_spell_value(
+                condition, simulation
+            )
+        if condition.startswith("buff."):
+            return SimFileConditionParser.get_buff_value(condition, simulation)
+        if condition.startswith("debuff."):
+            return SimFileConditionParser.get_debuff_value(
+                condition, simulation
+            )
 
-                        checks.append(op_func(spell_value, condition.right))
+    @staticmethod
+    def get_character_value(condition: str, simulation: "Simulation"):
+        """Returns the condition value from the Character."""
+        attribute_name = condition.split(".", 1)[1]
+        character_value = getattr(simulation.character, attribute_name, None)
+        if callable(character_value):
+            character_value = character_value()
+        return character_value
 
-                        print(f"\tCondition: {condition}")
-                        print(f"\tResult: {checks[-1]}")
-                        print("\t--------------------")
+    @staticmethod
+    def get_spell_value(condition: str, simulation: "Simulation"):
+        """Returns the condition value from the Spell."""
+        spell_name = condition.split(".", 2)[1]
+        attribute_name = condition.split(".", 2)[2]
+        spell_value = getattr(
+            simulation.character.spells[spell_name], attribute_name, None
+        )
+        if callable(spell_value):
+            spell_value = spell_value()
+        return spell_value
 
-        return all(checks)
+    @staticmethod
+    def get_buff_value(condition: str, simulation: "Simulation"):
+        """Returns the condition value from buffs"""
+        buff_name = condition.split(".", 2)[1]
+        attribute_name = condition.split(".", 2)[2]
+        if buff_name in simulation.character.buffs:
+            buff_value = getattr(
+                simulation.character.buffs[buff_name], attribute_name, None
+            )
+            if callable(buff_value):
+                buff_value = buff_value()
+            return buff_value
+        return None
+
+    @staticmethod
+    def get_debuff_value(condition: str, simulation: "Simulation"):
+        """Returns the condition value from debuffs"""
+        debuff_name = condition.split(".", 2)[1]
+        attribute_name = condition.split(".", 2)[2]
+        if debuff_name in simulation.debuffs:
+            debuff_value = getattr(
+                simulation.debuffs[debuff_name], attribute_name, None
+            )
+            if callable(debuff_value):
+                debuff_value = debuff_value()
+            return debuff_value
+        return None

@@ -115,7 +115,8 @@ def main(arguments: argparse.Namespace):
         for index, talent in enumerate(talents):
             for i in talent:
                 configuration.character.add_talent(f"{index+1}.{i}")
-
+    table.add_row("", "")
+    table.add_row("Hero", configuration.hero)
     table.add_row(
         "Talent Tree",
         (

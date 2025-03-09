@@ -26,6 +26,7 @@ class Simulation:
         self.duration = configuration.duration
         self.enemy_count = configuration.enemies
         self.do_debug = do_debug
+        self.detailed_debug = False
         self.time = 0
         self.gcd = 0
         self.ability_queue = []
@@ -85,6 +86,7 @@ class Simulation:
 
     def run(self, detailed_debug=False):
         """Run the simulation."""
+        self.detailed_debug = detailed_debug
 
         while self.time <= self.duration:
             if self.gcd > 0:
@@ -96,7 +98,7 @@ class Simulation:
                 self.update_time(self.gcd)
 
             for action in self.configuration.actions:
-                if self.do_debug and detailed_debug:
+                if self.do_debug and self.detailed_debug:
                     print(
                         "[grey37]--------------------------[/grey37]"
                         + f"\nAction: [dark_magenta]'{action.name}'"
@@ -114,23 +116,20 @@ class Simulation:
                     )
                     continue
 
-                character_check = SimFileConditionParser.evaluate_character(
-                    action.conditions, self.character
-                )
-                spell_check = SimFileConditionParser.evaluate_spell(
-                    action.conditions,
-                    self.character,
+                evaluate_conditions = (
+                    SimFileConditionParser.evaluate_conditions(
+                        action.conditions, self
+                    )
                 )
 
                 is_spell_ready = spell.is_ready()
 
-                if self.do_debug and detailed_debug:
-                    print(f"\tCharacter Result: {character_check}")
-                    print(f"\tSpell Result: {spell_check}")
+                if self.do_debug and self.detailed_debug:
+                    print(f"\tCondition Results: {evaluate_conditions}")
                     print(f"\tSpell Ready: {is_spell_ready}")
                     print("\t=====================\n")
 
-                if all([is_spell_ready, character_check, spell_check]):
+                if all([is_spell_ready, evaluate_conditions]):
                     if self.do_debug:
                         print(
                             f"Time {self.time:.2f}: "
