@@ -15,7 +15,9 @@ Currently working on:
 | Relics                  | Not Started  |
 | Area of Effect/Multi Target | Not Started        |
 | Multi Dotting | Not Started        |
-| Tariq + Other Heroes  | Partial Support |
+| Tariq | Not Started |
+| Ardeos | Started - Private Branch |
+| Mara | Started - Private Branch |
 
 ## 🚀 How to Run
 
