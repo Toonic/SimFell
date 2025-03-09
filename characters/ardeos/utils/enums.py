@@ -9,4 +9,6 @@ class SpellSimFellName(Enum):
     APOCALYPSE = "apocalypse"
     DETONATE = "detonate"
     ENGULFING_FLAMES = "engulfing_flames"
+    FIRE_BALL = "fire_ball"
+    FIRE_FROGS = "fire_frogs"
     INFERNO_BOLT = "inferno_bolt"

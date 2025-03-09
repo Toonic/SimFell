@@ -11,11 +11,12 @@ class BaseDebuff(BaseSpell):
 
     remaining_time = 0
 
-    def __init__(self, *args, duration=0, **kwargs):
+    def __init__(self, *args, duration=0, maximum_stacks=1, **kwargs):
         super().__init__(*args, **kwargs)
         self.duration = duration
         self.tick_rate = 0
         self.time_to_next_tick = 0
+        self.maximum_stacks = maximum_stacks
         self._is_active = True
 
     def cast(self, do_damage=False):

@@ -69,7 +69,8 @@ class BaseSpell(ABC):
             self.character.simulation.gcd = self.get_gcd()
             self.set_cooldown()  # Channeled spells cooldown starts on cast.
             self.ticks = int(self.cast_time / self.base_tick_duration)
-            self.damage()
+            if do_damage:
+                self.damage()
             for _ in range(self.ticks):
                 self.character.simulation.update_time(self.base_tick_duration)
                 if do_damage:

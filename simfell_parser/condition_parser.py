@@ -156,6 +156,9 @@ class SimFileConditionParser:
         if bool(re.fullmatch(r"-?\d+(\.\d+)?", condition)):
             return float(condition)
 
+        if condition.startswith("active_enemies"):
+            return simulation.enemy_count
+
         if condition.startswith("character."):
             return SimFileConditionParser.get_character_value(
                 condition, simulation
@@ -204,7 +207,7 @@ class SimFileConditionParser:
             if callable(buff_value):
                 buff_value = buff_value()
             return buff_value
-        return None
+        return float("-inf")
 
     @staticmethod
     def get_debuff_value(condition: str, simulation: "Simulation"):
@@ -218,4 +221,4 @@ class SimFileConditionParser:
             if callable(debuff_value):
                 debuff_value = debuff_value()
             return debuff_value
-        return None
+        return float("-inf")

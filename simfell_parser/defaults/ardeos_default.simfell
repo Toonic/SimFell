@@ -24,7 +24,13 @@ enemies=1
 run_count=2000
 
 # Actions
-action=/apocalypse
-action=/detonate,if=debuff.engulfing_flames.remaining_time>spell.detonate.effective_cast_time # and if all other dots durations are greater than 5.
-action+=/engulfing_flames,if=debuff.engulfing_flames.remaining_time<0
-action+=/inferno_bolt
+#action=/apocalypse
+#action+=/detonate,if=active_enemies<3 and debuff.engulfing_flames.remaining_time>spell.detonate.effective_cast_time
+#Note: Casting Fire Frogs doesn't seem worth it in Single Target?
+#action+=/detonate,if=active_enemies<3 and debuff.engulfing_flames.remaining_time>spell.detonate.effective_cast_time and debuff.fire_frogs.remaining_time>spell.detonate.effective_cast_time
+action+=/fire_frogs
+#Note: Casting Fireball isn't worth it single target. Even for Detonate bonus.
+#action+=/detonate,if=active_enemies>3 and debuff.engulfing_flames.remaining_time>spell.detonate.effective_cast_time and debuff.fire_ball.remaining_time>spell.detonate.effective_cast_time
+#action+=/fire_ball,if=active_enemies>3 and debuff.fire_ball.remaining_time<0
+#action+=/engulfing_flames,if=debuff.engulfing_flames.remaining_time<0
+#action+=/inferno_bolt

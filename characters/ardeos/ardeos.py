@@ -8,6 +8,8 @@ from characters.ardeos.spells import (
     Apocalypse,
     Detonate,
     EngulfingFlames,
+    FireBall,
+    FireFrogs,
 )
 
 from .utils.enums import SpellSimFellName
@@ -30,6 +32,8 @@ class Ardeos(BaseCharacter):
             SpellSimFellName.APOCALYPSE.value: Apocalypse(),
             SpellSimFellName.DETONATE.value: Detonate(),
             SpellSimFellName.ENGULFING_FLAMES.value: EngulfingFlames(),
+            SpellSimFellName.FIRE_BALL.value: FireBall(),
+            SpellSimFellName.FIRE_FROGS.value: FireFrogs(),
             SpellSimFellName.INFERNO_BOLT.value: InfernoBolt(),
         }
 

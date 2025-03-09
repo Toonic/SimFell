@@ -1,1 +1,3 @@
 from .engulfing_flames_debuff import EngulfingFlamesDebuff
+from .fire_ball_debuff import FireBallDebuff
+from .fire_frogs_debuff import FireFrogsDebuff
