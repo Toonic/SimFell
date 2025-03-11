@@ -3,6 +3,7 @@
 from typing import Dict
 from copy import deepcopy
 from rich import print  # pylint: disable=redefined-builtin
+import random
 
 from base.spells.base_debuff import BaseDebuff
 from simfell_parser.model import SimFellConfiguration
@@ -38,8 +39,7 @@ class Simulation:
         self.configuration = configuration
 
         if self.is_deterministic:
-            self.character._crit = 0
-            self.character._spirit = 0
+            random.seed(42)
 
     def get_debuff(self, debuff_simfell_name: str) -> BaseDebuff:
         """Returns the Debuff."""
