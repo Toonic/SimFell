@@ -1,19 +1,19 @@
-"""Module for Fire Frogs Debuff"""
+"""Module for Incinerate Debuff"""
 
 from characters.ardeos.ardeos_debuff import ArdeosDebuff
 
 
-class FireFrogsDebuff(ArdeosDebuff):
-    """Fire Frogs debuff."""
+class IncinerateDebuff(ArdeosDebuff):
+    """Incinerate debuff."""
 
     def __init__(self):
         super().__init__(
-            "Fire Frogs",
+            "Incinerate",
             base_tick_duration=3,
             duration=12,
-            damage_percent=19,  # Tick Based Damage.
-            maximum_stacks=9999,  # Description says 9. However, internally theres no cap? Needs testing.
-            percent_of_damage_per_tick_per_stack=1,  # Each stack is 100% damage.
+            damage_percent=75,  # Tick Based Damage.
+            maximum_stacks=9999,
+            percent_of_damage_per_tick_per_stack=0.1,  # Each stack is 10%
         )
 
     def on_tick(self):

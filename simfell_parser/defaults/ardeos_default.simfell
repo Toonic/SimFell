@@ -25,14 +25,18 @@ run_count=2000
 
 # Actions
 action=/apocalypse
-action+=/detonate,if=active_enemies<3 and debuff.engulfing_flames.remaining_time>spell.detonate.effective_cast_time and debuff.fire_frogs.remaining_time>spell.detonate.effective_cast_time
-action+=/detonate,if=active_enemies<3 and debuff.engulfing_flames.remaining_time>spell.detonate.effective_cast_time and spell.fire_frogs.remaining_cooldown>debuff.engulfing_flames.remaining_time
-#Note: Casting Fire Frogs doesn't seem worth it in Single Target?
+action+=/incinerate
+action+=/engulfing_flames,if=debuff.engulfing_flames.remaining_time<0
+action+=/searing_blaze,if=debuff.searing_blaze.remaining_time<0
 action+=/fire_frogs
+action+=/wildfire # If it has a GCD, this is garbage. Otherwise, its good. Coded without a GCD as its the only way it becomes good.
+#Always detonate with Burning Frogs up.
+action+=/detonate,if=debuff.fire_frogs.remaining_time>spell.detonate.effective_cast_time and debuff.engulfing_flames.remaining_time>spell.detonate.effective_cast_time and debuff.searing_blaze.remaining_time>spell.detonate.effective_cast_time
+#Only detonate without frogs if you're at Burning Ember Cap. But ensure all other dots are up.
+action+=/detonate,if=character.burning_embers>3 and debuff.fire_frogs.remaining_time<0 and debuff.engulfing_flames.remaining_time>spell.detonate.effective_cast_time and debuff.searing_blaze.remaining_time>spell.detonate.effective_cast_time
 #Start: AOE Detonates
 #Note: Casting Fireball isn't worth it single target. Even for Detonate bonus.
 action+=/detonate,if=active_enemies>2 and debuff.engulfing_flames.remaining_time>spell.detonate.effective_cast_time and debuff.fire_ball.remaining_time>spell.detonate.effective_cast_time
 action+=/fire_ball,if=active_enemies>2 and debuff.fire_ball.remaining_time<0
 #End: AOE Detonate.
-action+=/engulfing_flames,if=debuff.engulfing_flames.remaining_time<0
 action+=/inferno_bolt

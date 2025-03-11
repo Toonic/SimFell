@@ -10,6 +10,9 @@ from characters.ardeos.spells import (
     EngulfingFlames,
     FireBall,
     FireFrogs,
+    SearingBlaze,
+    Incinerate,
+    Wildfire,
 )
 
 from .utils.enums import SpellSimFellName
@@ -35,6 +38,9 @@ class Ardeos(BaseCharacter):
             SpellSimFellName.FIRE_BALL.value: FireBall(),
             SpellSimFellName.FIRE_FROGS.value: FireFrogs(),
             SpellSimFellName.INFERNO_BOLT.value: InfernoBolt(),
+            SpellSimFellName.SEARING_BLAZE.value: SearingBlaze(),
+            SpellSimFellName.INCINERATE.value: Incinerate(),
+            SpellSimFellName.WILDFIRE.value: Wildfire(),
         }
 
         # I couldn't find a clean way to handle this. Up for solutions.
@@ -50,6 +56,8 @@ class Ardeos(BaseCharacter):
 
     def gain_burning_embers(self, amount):
         """Gain Burning Embers"""
+        if self.burning_embers == 4:
+            print("Overcapped Burning Embers")
         self.burning_embers += amount
         self.burning_embers = min(self.burning_embers, 4)
 

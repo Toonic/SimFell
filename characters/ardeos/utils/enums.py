@@ -12,3 +12,6 @@ class SpellSimFellName(Enum):
     FIRE_BALL = "fire_ball"
     FIRE_FROGS = "fire_frogs"
     INFERNO_BOLT = "inferno_bolt"
+    SEARING_BLAZE = "searing_blaze"
+    INCINERATE = "incinerate"
+    WILDFIRE = "wildfire"

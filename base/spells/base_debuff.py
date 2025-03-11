@@ -12,13 +12,23 @@ class BaseDebuff(BaseSpell):
 
     remaining_time = 0
 
-    def __init__(self, *args, duration=0, maximum_stacks=1, **kwargs):
+    def __init__(
+        self,
+        *args,
+        duration=0,
+        maximum_stacks=1,
+        percent_of_damage_per_tick_per_stack=1,
+        **kwargs,
+    ):
         super().__init__(*args, **kwargs)
         self.duration = duration
         self.tick_rate = 0
         self.time_to_next_tick = 0
         self.current_stacks = 0
         self.maximum_stacks = maximum_stacks
+        self.percent_of_damage_per_tick_per_stack = (
+            percent_of_damage_per_tick_per_stack
+        )
         self._is_active = True
 
     def cast(self, do_damage=False):
@@ -61,7 +71,9 @@ class BaseDebuff(BaseSpell):
                 1 + (self.character.get_haste() / 100)
             )
 
-            self.time_to_next_tick = self.tick_rate
+            self.time_to_next_tick = self.get_tick_rate_modifier(
+                self.tick_rate
+            )
         else:
             self.time_to_next_tick = self.duration
 
@@ -87,7 +99,9 @@ class BaseDebuff(BaseSpell):
                 if delta_time >= self.time_to_next_tick:
                     delta_time -= self.time_to_next_tick
                     self.remaining_time -= self.time_to_next_tick
-                    self.time_to_next_tick = self.tick_rate
+                    self.time_to_next_tick = self.get_tick_rate_modifier(
+                        self.tick_rate
+                    )
                     self.on_tick()
                 else:
                     self.time_to_next_tick -= delta_time
@@ -96,6 +110,10 @@ class BaseDebuff(BaseSpell):
 
             if self.remaining_time <= 0 and self._is_active:
                 self.remove()
+
+    def get_tick_rate_modifier(self, tick_rate):
+        """Allows for overriding the base tickrate from buffs."""
+        return tick_rate
 
     def remove(self) -> None:
         """Removes the debuff from the target."""
