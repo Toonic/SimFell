@@ -17,4 +17,5 @@ class FireFrogsDebuff(ArdeosDebuff):
 
     def on_tick(self):
         super().on_tick()
-        self.damage()
+        for _ in range(self.current_stacks):
+            self.damage()

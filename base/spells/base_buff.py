@@ -1,5 +1,6 @@
 """Base class for all buffs."""
 
+from typing import final
 from rich import print  # pylint: disable=redefined-builtin
 
 from base import BaseSpell
@@ -32,16 +33,10 @@ class BaseBuff(BaseSpell):
             self.character.buffs[self.simfell_id].reapply()
             return
 
-        if self.base_tick_duration > 0:
-            self.tick_rate = self.base_tick_duration / (
-                1 + (self.character.get_haste() / 100)
-            )
+        self.current_stacks = 1
+        self.set_values()
 
-            self.time_to_next_tick = self.tick_rate
-        else:
-            self.time_to_next_tick = self.duration
-
-        self.remaining_time = self.duration
+        # The actual application of the buff.
         self.character.buffs[self.simfell_id] = self
         self.on_apply()
 
@@ -57,10 +52,10 @@ class BaseBuff(BaseSpell):
     def on_apply(self) -> None:
         """Called when the buff is applied."""
 
-    def reapply(self) -> None:
-        """Reapplies the buff to the target."""
-        if self.current_stacks < self.maximum_stacks:
-            self.current_stacks += 1
+    @final
+    def set_values(self):
+        """Calculates the tick duration and sets the current duration."""
+        self.remaining_time = self.duration
 
         if self.base_tick_duration > 0:
             self.tick_rate = self.base_tick_duration / (
@@ -71,8 +66,12 @@ class BaseBuff(BaseSpell):
         else:
             self.time_to_next_tick = self.duration
 
-        self.remaining_time = self.duration
-        self.character.buffs[self.simfell_id] = self
+    def reapply(self) -> None:
+        """Reapplies the buff to the target."""
+        if self.current_stacks < self.maximum_stacks:
+            self.current_stacks += 1
+
+        self.set_values()
 
         self._is_active = True
 
