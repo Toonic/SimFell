@@ -7,7 +7,8 @@ import re
 from rich import print  # pylint: disable=redefined-builtin
 
 from simfell_parser.model import Condition
-from simfell_parser.utils import CharacterTypeT
+
+# from simfell_parser.utils import CharacterTypeT
 
 if typing.TYPE_CHECKING:
     from sim import Simulation
@@ -149,7 +150,7 @@ class SimFileConditionParser:
         return all(checks)
 
     @staticmethod
-    def parse_side(condition: str, simulation: "Simulation"):
+    def parse_side(condition: str, simulation: "Simulation") -> Any:
         """Parses out the side and fetches the appropriate value."""
 
         # If the values are floats or ints, just return as is.
@@ -175,7 +176,7 @@ class SimFileConditionParser:
             )
 
     @staticmethod
-    def get_character_value(condition: str, simulation: "Simulation"):
+    def get_character_value(condition: str, simulation: "Simulation") -> Any:
         """Returns the condition value from the Character."""
         attribute_name = condition.split(".", 1)[1]
         character_value = getattr(simulation.character, attribute_name, None)
@@ -184,7 +185,7 @@ class SimFileConditionParser:
         return character_value
 
     @staticmethod
-    def get_spell_value(condition: str, simulation: "Simulation"):
+    def get_spell_value(condition: str, simulation: "Simulation") -> Any:
         """Returns the condition value from the Spell."""
         spell_name = condition.split(".", 2)[1]
         attribute_name = condition.split(".", 2)[2]
@@ -196,7 +197,7 @@ class SimFileConditionParser:
         return spell_value
 
     @staticmethod
-    def get_buff_value(condition: str, simulation: "Simulation"):
+    def get_buff_value(condition: str, simulation: "Simulation") -> Any:
         """Returns the condition value from buffs"""
         buff_name = condition.split(".", 2)[1]
         attribute_name = condition.split(".", 2)[2]
@@ -210,7 +211,7 @@ class SimFileConditionParser:
         return float("-inf")
 
     @staticmethod
-    def get_debuff_value(condition: str, simulation: "Simulation"):
+    def get_debuff_value(condition: str, simulation: "Simulation") -> Any:
         """Returns the condition value from debuffs"""
         debuff_name = condition.split(".", 2)[1]
         attribute_name = condition.split(".", 2)[2]

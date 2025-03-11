@@ -115,7 +115,7 @@ def main(arguments: argparse.Namespace):
         for index, talent in enumerate(talents):
             for i in talent:
                 configuration.character.add_talent(f"{index+1}.{i}")
-    table.add_row("", "")
+    table.add_section()
     table.add_row("Hero", configuration.hero)
     table.add_row(
         "Talent Tree",
@@ -333,7 +333,8 @@ if __name__ == "__main__":
         "--character-hero",
         type=str,
         choices=character_classes.keys(),
-        help=f"Character hero to use. Choices: {', '.join(character_classes.keys())}",
+        help="Character hero to use. "
+        + f"Choices: {', '.join(character_classes.keys())}",
     )
     parser.add_argument(
         "-d",
