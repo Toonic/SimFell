@@ -42,11 +42,7 @@ class GlacialBlast(RimeSpell):
         # Checks to see if Glacial Assault is talented,
         # and if it is increases the Crit.
         if self.character.has_talent(RimeTalents.GLACIAL_ASSAULT):
-            crit_chance += (
-                GlacialAssaultTalent.bonus_critical_strike
-                if not self.character.simulation.is_deterministic
-                else 0
-            )
+            crit_chance += GlacialAssaultTalent.bonus_critical_strike
         return crit_chance
 
     def is_glacial_assault_ready(self) -> bool:
