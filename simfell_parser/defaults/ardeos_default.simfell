@@ -29,7 +29,7 @@ action+=/incinerate
 action+=/engulfing_flames,if=debuff.engulfing_flames.remaining_time<0
 action+=/searing_blaze,if=debuff.searing_blaze.remaining_time<0
 action+=/fire_frogs
-action+=/wildfire # If it has a GCD, this is garbage. Otherwise, its good. Coded without a GCD as its the only way it becomes good. Even at low haste is garbage?
+action+=/wildfire
 #Always detonate with Burning Frogs up.
 action+=/detonate,if=debuff.fire_frogs.remaining_time>spell.detonate.effective_cast_time and debuff.engulfing_flames.remaining_time>spell.detonate.effective_cast_time and debuff.searing_blaze.remaining_time>spell.detonate.effective_cast_time
 #Only detonate without frogs if you're at Burning Ember Cap. But ensure all other dots are up.

@@ -20,8 +20,6 @@ class ArdeosDebuff(BaseDebuff):
 
     def get_tick_rate_modifier(self, tick_rate):
         new_tick_rate = tick_rate
-        print(new_tick_rate)
         if self.wild_fire_buff.simfell_id in self.character.buffs:
-            new_tick_rate *= 1 - self.wild_fire_buff.tick_rate_increase
-        print(new_tick_rate)
+            new_tick_rate = 1 / (1 + (30 / 100))
         return new_tick_rate
