@@ -2,6 +2,7 @@
 
 from characters.ardeos import ArdeosSpell
 from characters.ardeos.debuffs import IncinerateDebuff
+from characters.ardeos.buffs import IncinerateBuff
 
 
 class Incinerate(ArdeosSpell):
@@ -19,6 +20,10 @@ class Incinerate(ArdeosSpell):
             channeled=True,
             base_tick_duration=0.5,
         )
+
+    def cast(self, do_damage=True):
+        IncinerateBuff().apply(self.character)
+        super().cast(do_damage)
 
     def on_tick(self):
         self.incinerate_debuff.apply(self.character)

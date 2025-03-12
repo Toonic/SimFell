@@ -2,11 +2,11 @@
 name="Ardeos - ST/General Talents"
 hero=Ardeos
 
-intellect=100
-crit=0
-expertise=0
-haste=0
-spirit=0
+intellect=300
+crit=100
+expertise=100
+haste=100
+spirit=100
 
 talents=0-0-0 # Stands for Talents 1.2, 2.1, 2.2, 3.3
 
@@ -29,7 +29,7 @@ action+=/incinerate
 action+=/engulfing_flames,if=debuff.engulfing_flames.remaining_time<0
 action+=/searing_blaze,if=debuff.searing_blaze.remaining_time<0
 action+=/fire_frogs
-action+=/wildfire # If it has a GCD, this is garbage. Otherwise, its good. Coded without a GCD as its the only way it becomes good.
+action+=/wildfire # If it has a GCD, this is garbage. Otherwise, its good. Coded without a GCD as its the only way it becomes good. Even at low haste is garbage?
 #Always detonate with Burning Frogs up.
 action+=/detonate,if=debuff.fire_frogs.remaining_time>spell.detonate.effective_cast_time and debuff.engulfing_flames.remaining_time>spell.detonate.effective_cast_time and debuff.searing_blaze.remaining_time>spell.detonate.effective_cast_time
 #Only detonate without frogs if you're at Burning Ember Cap. But ensure all other dots are up.
