@@ -91,6 +91,10 @@ class BaseCharacter(ABC):
 
         return total_effect
 
+    def percent_stat_to_points(self, stat_name: str) -> float:
+        """Converts a percentage stat to points."""
+        return (getattr(self, f"_{stat_name}") - 1) / self.percent_per_point
+
     def set_simulation(self, simulation: "Simulation") -> None:
         """Sets the simulation for the character."""
         self.simulation = simulation
@@ -148,10 +152,33 @@ class BaseCharacter(ABC):
             1 + self.crit_multiplier
         )
 
+    def update_stat(self, stat_name: str, stat_increase: int) -> None:
+        """Updates the character's stats."""
+
+        current_stat = (
+            self.percent_stat_to_points(stat_name)
+            if stat_name != "main_stat"
+            else getattr(self, f"_{stat_name}")
+        )
+        increased_stat = current_stat + stat_increase
+
+        setattr(
+            self,
+            f"_{stat_name}",
+            (
+                self.calculate_stat_diminishing_returns(increased_stat)
+                if stat_name != "main_stat"
+                else increased_stat
+            ),
+        )
+
     @abstractmethod
     def configure_spell_book(self) -> None:
         """Adds a spells to the character's spell book."""
 
     @abstractmethod
     def add_talent(self, talent_identifier: str) -> None:
-        """Adds a talent to the character's available talents. To be overridden"""
+        """
+        Adds a talent to the character's available talents.
+        To be overridden by the subclass.
+        """
