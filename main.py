@@ -2,6 +2,7 @@
 
 import argparse
 from typing import Optional
+from copy import deepcopy
 from rich import box
 from rich.console import Console
 from rich.table import Table
@@ -14,6 +15,7 @@ from rich.progress import (
     TimeRemainingColumn,
 )
 
+from base import BaseCharacter
 from simfell_parser.simfile_parser import SimFileParser, SimFellConfiguration
 from simfell_parser.utils import character_classes, default_simfell_files
 from sim import Simulation
@@ -165,16 +167,12 @@ def main(arguments: argparse.Namespace):
                 arguments.experimental_feature,
             )
         case "stat_weights":
-            raise NotImplementedError("Stat Weights not implemented yet.")
-            # stat_weights(
-            #     table,
-            #     character,
-            #     configuration.duration,
-            #     configuration.run_count,
-            #     arguments.stat_weights_gain,
-            #     arguments.experimental_feature,
-            #     configuration.enemies,
-            # )
+            stat_weights(
+                table,
+                configuration,
+                arguments.stat_weights_gain,
+                arguments.experimental_feature,
+            )
         case "debug_sim":
             debug_sim(
                 table,
@@ -291,6 +289,70 @@ def average_dps(
             table.add_row(spell_name, damage)
 
     return avg_dps
+
+
+def stat_weights(
+    table: Table,
+    configuration: SimFellConfiguration,
+    stat_increase: int,
+    use_experimental: bool,
+) -> None:
+    """Calculates the stat weights of the character."""
+
+    character = deepcopy(configuration.character)
+    base_dps = average_dps(
+        table,
+        configuration,
+        use_experimental=use_experimental,
+        stat_name="base",
+    )
+
+    def update_stats(
+        character: BaseCharacter, stat_increase: int, stat_name: str
+    ) -> float:
+        character_updated = deepcopy(character)
+        character_updated.update_stat(stat_name, stat_increase)
+
+        configuration_copy = deepcopy(configuration)
+        configuration_copy.character = character_updated
+
+        return average_dps(
+            table,
+            configuration_copy,
+            use_experimental=use_experimental,
+            stat_name=stat_name,
+        )
+
+    int_dps = update_stats(character, stat_increase, "main_stat")
+    crit_dps = update_stats(character, stat_increase, "crit")
+    expertise_dps = update_stats(character, stat_increase, "expertise")
+    haste_dps = update_stats(character, stat_increase, "haste")
+    spirit_dps = update_stats(character, stat_increase, "spirit")
+
+    match configuration.hero:
+        case "Rime":
+            main_stat_table_name = "Intellect"
+        case _:
+            main_stat_table_name = "Main Stat"
+
+    table.add_row("\n[white]Stat Weights", "\n[white]-------------")
+    table.add_row(
+        main_stat_table_name,
+        f"[magenta]{1 + ((int_dps - base_dps) / base_dps):.2f}",
+    )
+    table.add_row(
+        "Crit", f"[magenta]{1 + ((crit_dps - base_dps) / base_dps):.2f}"
+    )
+    table.add_row(
+        "Expertise",
+        f"[magenta]{1 + ((expertise_dps - base_dps) / base_dps):.2f}",
+    )
+    table.add_row(
+        "Haste", f"[magenta]{1 + ((haste_dps - base_dps) / base_dps):.2f}"
+    )
+    table.add_row(
+        "Spirit", f"[magenta]{1 + ((spirit_dps - base_dps) / base_dps):.2f}"
+    )
 
 
 if __name__ == "__main__":
