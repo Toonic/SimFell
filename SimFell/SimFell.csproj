@@ -21,10 +21,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="SimFell\" />
-    </ItemGroup>
-
-    <ItemGroup>
       <Content Include="Configs\**\*">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
