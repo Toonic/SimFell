@@ -12,11 +12,11 @@ public class Mage : Unit
 
         SpellBook.Add(
             //Compact added spell. Showing you don't need to use id: etc.
-            new Spell("01", "Ignite Mind", 12f,
+            new Spell("01", "Ignite Mind", 12f, 0,
                 //Confirms if we can cast the spell or not.
                 canCast: () => Mana >= 30,
                 //Defines the OnCast event.
-                onCast: (caster, targets) =>
+                onCast: (caster,spell, targets) =>
                 {
                     //Reduce Mana.
                     // Mana -= 30;
@@ -31,7 +31,7 @@ public class Mage : Unit
                         name: "Burning",
                         duration: 10,
                         tickInterval: 1,
-                        onTick: (target) => caster.DealDamage(target, (int)(Intellect * 0.1f))
+                        onTick: (target) => caster.DealDamage(target, (int)(Intellect * 0.1f), spell)
                     );
                     //Applies the debuff to the first target.
                     firstTarget.ApplyDebuff(burning);
@@ -39,10 +39,9 @@ public class Mage : Unit
             )
         );
         SpellBook.Add(
-            new("03", "Bloodlust", 300f,
-                shouldCastFirst: true,
+            new Spell("03", "Bloodlust", 300f, 0,
                 canCast: () => Mana >= 60,
-                onCast: (caster, targets) =>
+                onCast: (caster,spell, targets) =>
                 {
                     // var mage_caster = caster as Mage ?? throw new Exception("Caster is not a Mage");
                     // var originalIntellect = mage_caster.Intellect;

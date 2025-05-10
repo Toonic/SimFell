@@ -6,18 +6,18 @@ public class Spell
     public string Name { get; set; }
     public double Cooldown { get; set; }
     public double RemainingCooldown { get; private set; }
-    public Action<Unit, List<Unit>>? OnCast { get; set; }
+    public double CastTime { get; set; }
+    public Action<Unit,Spell,List<Unit>>? OnCast { get; set; }
     public Func<bool>? CanCast { get; set; }
-    public bool ShouldCastFirst { get; set; }
 
     public Spell(
-        string id, string name, double cooldown, bool shouldCastFirst = false,
-        Func<bool>? canCast = null, Action<Unit, List<Unit>>? onCast = null)
+        string id, string name, double cooldown, double castTime,
+        Func<bool>? canCast = null, Action<Unit, Spell, List<Unit>>? onCast = null)
     {
         ID = id;
         Name = name;
         Cooldown = cooldown;
-        ShouldCastFirst = shouldCastFirst;
+        CastTime = castTime;
         OnCast = onCast;
         CanCast = canCast;
         RemainingCooldown = 0;
@@ -36,7 +36,7 @@ public class Spell
 
     public void Cast(Unit caster, List<Unit> targets)
     {
-        OnCast?.Invoke(caster, targets);
+        OnCast?.Invoke(caster, this, targets);
         RemainingCooldown = Cooldown;  // Reset cooldown after casting
     }
 }

@@ -13,16 +13,6 @@ public class SimLoop
         {
             OnUpdate?.Invoke(step);
 
-            // First cast the spell that should cast first.
-            foreach (var spell in player.SpellBook)
-            {
-                if (spell.ShouldCastFirst && spell.CheckCanCast(player))
-                {
-                    spell.Cast(player, enemies);
-                    break;
-                }
-            }
-
             // Then cast the spell that should cast last.
             foreach (var spell in player.SpellBook)
             {
