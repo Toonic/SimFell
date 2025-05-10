@@ -3,6 +3,7 @@
 using SimFell;
 
 var player = new Rime("Rime", 100);
+player.SetPrimaryStats(100, 0,0,0,0);
 var enemies = new List<Unit>
 {
     new("Goblin1", 1000),

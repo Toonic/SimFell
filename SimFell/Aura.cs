@@ -20,7 +20,7 @@ public class Aura
 
     public bool IsExpired => _expired;
 
-    public Aura(string id, string name, double duration, double tickInterval, int maxStacks = 1,
+    public Aura(string id, string name, double duration, double tickInterval, int maxStacks = 1000,
         Action<Unit>? onTick = null,
         Action<Unit>? onApply = null,
         Action<Unit>? onRemove = null)

@@ -5,10 +5,10 @@ public class SimLoop
     private static SimLoop? _instance;
     public static SimLoop Instance => _instance ??= new();
     public event Action<double>? OnUpdate;
+    private const double step = 0.1; // Simulate 0.1 th of a second.
 
     public void Start(Unit player, List<Unit> enemies)
     {
-        const double step = 0.5; // simulate half-second per iteration
         while (enemies.Count > 0)
         {
             OnUpdate?.Invoke(step);
@@ -25,8 +25,28 @@ public class SimLoop
 
             for (int i = enemies.Count - 1; i >= 0; i--)
             {
-                if (enemies[i].Health <= 0) enemies.RemoveAt(i);
+                if (enemies[i].Health <= 0)
+                {
+                    enemies[i].Died();
+                    enemies.RemoveAt(i);
+                }
             }
+        }
+    }
+
+    public void Update(double delta)
+    {
+        int steps = (int)(delta / step);
+        double remainder = delta % step;
+
+        for (int i = 0; i < steps; i++)
+        {
+            OnUpdate?.Invoke(step);
+        }
+
+        if (remainder > 0)
+        {
+            OnUpdate?.Invoke(remainder);
         }
     }
 }

@@ -36,6 +36,7 @@ public class Spell
 
     public void Cast(Unit caster, List<Unit> targets)
     {
+        SimLoop.Instance.Update(CastTime); //TODO: Add support for Haste.
         OnCast?.Invoke(caster, this, targets);
         RemainingCooldown = Cooldown;  // Reset cooldown after casting
     }

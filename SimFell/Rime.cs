@@ -21,7 +21,39 @@ public class Rime : Unit
                 UpdateAnima(3);
             }
         );
+
+        var burstingIce = new Spell(
+            id: "bursting-ice",
+            name:"Bursting Ice",
+            cooldown: 15,
+            castTime: 2.0f,
+            onCast: (unit, spell, targets) =>
+            {
+                var primaryTarget = targets.FirstOrDefault();
+                primaryTarget?.ApplyDebuff(new Aura(
+                    id: "bursting-ice",
+                    name:"Bursting Ice",
+                    duration:3.15,
+                    tickInterval:0.5,
+                    onTick: (target) =>
+                    {
+                        int animaGained = 0;
+                        int maxAnimaGainedPerTick = 3;
+                        
+                        foreach (var unit in targets)
+                        {
+                            animaGained += 1;
+                            DealDamage(unit, 61, spell);
+                        }
+                        
+                        //Maximum of 3 Anima gained per tick.
+                        UpdateAnima(Math.Min(maxAnimaGainedPerTick, animaGained));
+                    }
+                ));
+            }
+        );
         
+        SpellBook.Add(burstingIce);
         SpellBook.Add(frostBolt);
     }
     

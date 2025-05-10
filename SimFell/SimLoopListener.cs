@@ -9,6 +9,11 @@ public abstract class SimLoopListener
 
     protected abstract void Update(double deltaTime);
 
+    public void Stop()
+    {
+        SimLoop.Instance.OnUpdate -= Update;
+    }
+
     ~SimLoopListener()
     {
         SimLoop.Instance.OnUpdate -= Update;

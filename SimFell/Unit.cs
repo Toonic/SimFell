@@ -23,9 +23,9 @@ public class Unit(
     public double DamageReceivedMultiplier { get; set; } = 1.0f;
     
     //Const.
-    private readonly double PointEffectiveness = 0.21; //Base effectivenes per point. (0.21%).
-    private readonly double[] BreakPoints = [10.0, 15.0, 20.0, 25.0]; //Percent Threasholds for Break Points.
-    private readonly double[] BreakPointMultipliers = [1,0.9,0.8,0.7,0.6];
+    private const double PointEffectiveness = 0.21; //Base effectivenes per point. (0.21%).
+    private readonly double[] _breakPoints = [10.0, 15.0, 20.0, 25.0]; //Percent Threasholds for Break Points.
+    private readonly double[] _breakPointMultipliers = [1,0.9,0.8,0.7,0.6];
 
     public void SetPrimaryStats(int mainStat, int criticalStrikeStat, int expertiseStat, int hasteStat, int spiritStat)
     {
@@ -54,9 +54,9 @@ public class Unit(
         {
             double effectiveIncrease = PointEffectiveness;
             
-            if (breakpointIndex < BreakPoints.Length && statPercentage >= BreakPoints[breakpointIndex])
+            if (breakpointIndex < _breakPoints.Length && statPercentage >= _breakPoints[breakpointIndex])
             {
-                effectiveIncrease *= BreakPointMultipliers[breakpointIndex];
+                effectiveIncrease *= _breakPointMultipliers[breakpointIndex];
                 breakpointIndex++;
             }
             
@@ -67,17 +67,18 @@ public class Unit(
     }
     
     /// <summary>
-    /// Returns the Critical Strike Stat with modifiers.
+    /// Returns the current Critical Strike Stat, including modifiers.
     /// </summary>
     /// <returns>As percentage.</returns>
     private float GetCriticalStrikeStat()
     {
         float stat = GetStatAsPercentage(_critcalStrikeStat);
+        stat += 5; //Base 5% Critical Strike chance for everyone.
         return stat;
     }
     
     /// <summary>
-    /// Returns the Expertise Stat with modifiers.
+    /// Returns the current Expertise Stat, including modifiers.
     /// </summary>
     /// <returns>As percentage.</returns>
     private float GetExpertiseStat()
@@ -175,5 +176,12 @@ public class Unit(
         {
             spell.UpdateCooldown(deltaTime);
         }
+    }
+
+    public void Died()
+    {
+        Console.WriteLine($"{Name} is dead.");
+        //TODO: Future cleanup.
+        Stop();
     }
 }
