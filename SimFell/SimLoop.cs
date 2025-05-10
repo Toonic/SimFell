@@ -1,4 +1,5 @@
 using SimFell.SimFileParser.Models;
+using SimFell.Logging;
 
 namespace SimFell;
 
@@ -71,15 +72,15 @@ public class SimLoop
             enemy.OnDamageReceived -= OnDamageReceived;
         }
 
-        Console.WriteLine("--------------");
-        Console.WriteLine($"Damage Dealt: {damageDealt}");
-        Console.WriteLine($"DPS: {damageDealt / elapsed}");
+        Logger.LevelThree("--------------");
+        Logger.LevelThree($"Damage Dealt: {damageDealt}");
+        Logger.LevelThree($"DPS: {damageDealt / elapsed}");
     }
 
-    private void OnDamageReceived(Unit unit, float damageRecieved, object source)
+    private void OnDamageReceived(Unit unit, float damageReceived, object source)
     {
         //In the future we can keep track of the damage source in a dict and output what each damage was.
-        damageDealt += damageRecieved;
+        damageDealt += damageReceived;
     }
 
     public void Update(double delta)
@@ -102,6 +103,6 @@ public class SimLoop
 
     public static void ShowConfig(SimFellConfiguration config)
     {
-        Console.WriteLine(config.ToStringFormatted);
+        Logger.LevelThree(config.ToStringFormatted);
     }
 }

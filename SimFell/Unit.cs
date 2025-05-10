@@ -1,3 +1,4 @@
+using SimFell.Logging;
 namespace SimFell;
 
 public class Unit(
@@ -99,7 +100,7 @@ public class Unit(
     public void ApplyBuff(Aura buff)
     {
         Buffs.Add(buff);
-        Console.WriteLine($"{Name} gains buff: {buff.Name}");
+        Logger.SimulationEvent($"{Name} gains buff: {buff.Name}", "💪");
         buff.OnApply?.Invoke(this);
     }
 
@@ -110,7 +111,7 @@ public class Unit(
     public void ApplyDebuff(Aura debuff)
     {
         Debuffs.Add(debuff);
-        Console.WriteLine($"{Name} gains debuff: {debuff.Name}");
+        Logger.SimulationEvent($"{Name} gains debuff: {debuff.Name}", "💔");
         debuff.OnApply?.Invoke(this);
     }
 
@@ -142,12 +143,12 @@ public class Unit(
     {
         var totalDamage = (int)(amount * DamageReceivedMultiplier);
 
-        if (damageSource is Spell spell) Console.Write($"{spell.Name} ");
-        else if (damageSource is Aura aura) Console.Write($"{aura.Name} ");
-        else Console.Write("Unknown ");
-
-        Console.Write($"hits {Name} for {totalDamage}. ");
-        Console.WriteLine($"{(isCritical ? " (Critical Strike)" : "")}");
+        // Log damage event with coloring for critical hits
+        var sourceName = damageSource is Spell spell ? spell.Name
+                         : damageSource is Aura aura ? aura.Name
+                         : "Unknown";
+        var message = $"{sourceName} hits {Name} for {totalDamage}.{(isCritical ? " (Critical Strike)" : "")}";
+        Logger.SimulationEvent(message, isCritical ? "💥" : null);
 
         OnDamageReceived?.Invoke(this, totalDamage, damageSource);
         Health -= totalDamage;
@@ -161,7 +162,7 @@ public class Unit(
             Buffs[i].Update(deltaTime, this);
             if (Buffs[i].IsExpired)
             {
-                Console.WriteLine($"{Name} loses buff: {Buffs[i].Name}");
+                Logger.SimulationEvent($"{Name} loses buff: {Buffs[i].Name}", "💪🛑");
                 Buffs[i].OnRemove?.Invoke(this);
                 Buffs.RemoveAt(i);
             }
@@ -173,7 +174,7 @@ public class Unit(
             Debuffs[i].Update(deltaTime, this);
             if (Debuffs[i].IsExpired)
             {
-                Console.WriteLine($"{Name} loses debuff: {Debuffs[i].Name}");
+                Logger.SimulationEvent($"{Name} loses debuff: {Debuffs[i].Name}", "💔🛑");
                 Debuffs[i].OnRemove?.Invoke(this);
                 Debuffs.RemoveAt(i);
             }
@@ -197,7 +198,7 @@ public class Unit(
 
     public void Died()
     {
-        Console.WriteLine($"{Name} is dead.");
+        Logger.SimulationEvent($"{Name} is dead.", "💀");
         //TODO: Future cleanup.
         Stop();
     }

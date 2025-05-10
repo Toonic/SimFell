@@ -1,4 +1,13 @@
 using SimFell;
+using Microsoft.Extensions.Configuration;
+using SimFell.Logging;
+
+// Build configuration and initialize logging
+var configuration = new ConfigurationBuilder()
+    .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
+    .AddJsonFile("appsettings.json", optional: true)
+    .Build();
+Logger.Configure(configuration);
 
 var config = SimFell.SimFileParser.SimfellParser.ParseFile("..\\test.simfell");
 
