@@ -6,6 +6,7 @@ public class Unit(
 )
     : SimLoopListener
 {
+    // Base Variables
     public string Name { get; set; } = name;
     public int Health { get; set; } = health;
     public List<Aura> Buffs { get; set; } = [];
@@ -26,6 +27,9 @@ public class Unit(
     private const double PointEffectiveness = 0.21; //Base effectivenes per point. (0.21%).
     private readonly double[] _breakPoints = [10.0, 15.0, 20.0, 25.0]; //Percent Threasholds for Break Points.
     private readonly double[] _breakPointMultipliers = [1,0.9,0.8,0.7,0.6];
+    
+    //Events
+    public Action<Unit, float, object> OnDamageReceived { get; set; }
 
     public void SetPrimaryStats(int mainStat, int criticalStrikeStat, int expertiseStat, int hasteStat, int spiritStat)
     {
@@ -115,34 +119,33 @@ public class Unit(
     /// </summary>
     /// <param name="target">Target for the damage.</param>
     /// <param name="damagePercent">Damage percentage as full XX.X%</param>
-    /// <param name="source">Optional: Source of the damage. (EG: Spell, Aura, etc.) Used mostly for debugging.</param>
-    public void DealDamage(Unit target, float damagePercent, object? source = null)
+    /// <param name="damageSource">Source of the damage. (EG: Spell, Aura, etc.) Used mostly for debugging.</param>
+    public void DealDamage(Unit target, float damagePercent, object damageSource)
     {
         var damage = (damagePercent / 100f) * GetMainStat(); // Adds the Damage as Main Stat.
         damage *= 1 + (GetExpertiseStat() / 100f); // Modifies the damage based on expertise.
         var isCritical = SimRandom.Roll(GetCriticalStrikeStat());
         damage *= isCritical ? 2 : 1; //Doubles the damage if there is a Critical Hit.
         
-        Console.Write($"{Name}'s ");
-        
-        if (source is Spell spell) Console.Write($"{spell.Name} ");
-        else if (source is Aura aura) Console.Write($"{aura.Name} ");
-        else Console.Write("Unknown ");
-        
-        Console.Write($"hits {target.Name} for ");
-        target.TakeDamage(damage);
-        Console.WriteLine($"{(isCritical ? " (Critical Strike)" : "")}");
+        target.TakeDamage(damage, isCritical, damageSource);
     }
-    
+
     /// <summary>
     /// Called when a target takes damage. Takes into consideration any debuffs on the target, along with any extra
     /// modifiers.
     /// </summary>
     /// <param name="amount">Incoming Damage amount.</param>
-    public void TakeDamage(float amount)
+    /// <param name="isCritical">If the damage was a critical hit.</param>
+    /// <param name="damageSource">Source of the Damage.</param>
+    public void TakeDamage(float amount, bool isCritical, object damageSource)
     {
         var totalDamage = (int)(amount * DamageReceivedMultiplier);
-        Console.Write($"{totalDamage}.");
+        if (damageSource is Spell spell) Console.Write($"{spell.Name} ");
+        else if (damageSource is Aura aura) Console.Write($"{aura.Name} ");
+        else Console.Write("Unknown ");
+        Console.Write($"hits {{target.Name}} for {totalDamage}. ");
+        Console.WriteLine($"{(isCritical ? " (Critical Strike)" : "")}");
+        OnDamageReceived?.Invoke(this, totalDamage, damageSource);
         Health -= totalDamage;
     }
 

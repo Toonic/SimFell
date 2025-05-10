@@ -24,7 +24,7 @@ public class Mage : Unit
                     var firstTarget = targets.FirstOrDefault();
                     //Ensure the first target isn't Null. Safety first!
                     if (firstTarget == null) return;
-                    caster.DealDamage(firstTarget, (int)(Intellect * 0.25f));
+                    // DealDamage(firstTarget, (int)(Intellect * 0.25f));
                     // This is an example just showing you can use id: etc.
                     var burning = new Aura(
                         id: "02",

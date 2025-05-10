@@ -52,8 +52,70 @@ public class Rime : Unit
                 ));
             }
         );
+
+        var coldSnap = new Spell(
+            id: "cold-snap",
+            name:"Cold Snap",
+            cooldown: 8,
+            castTime: 0,
+            onCast: (unit, spell, targets) =>
+            {
+                DealDamage(targets.FirstOrDefault(), 73, spell);
+                UpdateWinterOrbs(1);
+            }
+        );
+
+        var danceOfSwallows = new Spell(
+            id: "dance-of-swallows",
+            name:"Dance of Swallows",
+            cooldown: 60,
+            castTime: 0,
+            canCast: () => WinterOrbs >= 2,
+            onCast: (unit, spell, targets) =>
+            {
+                UpdateWinterOrbs(-2);
+                var target = targets.FirstOrDefault();
+                
+                // Builds the OnDamage Event.
+                Action<Unit, float, object> onDamageEvent = (unit, damage, source) =>
+                {
+                    // If the source is from ColdSnap, deal bonus damage.
+                    if (source == coldSnap)
+                    {
+                        const int danceOfSwallowsTriggers = 10;
+                        for (int i = 0; i < danceOfSwallowsTriggers; i++)
+                        {
+                            DealDamage(unit, 53, spell);
+                        }
+                    }
+                    
+                    //TODO: Check to see if the damage source is from Soulfrost/Freezing Torrent.
+                };
+                
+                // Applies the Debuff to the Primary target.
+                target.ApplyDebuff(new Aura(
+                    id: "dance-of-swallows",
+                    name:"Dance of Swallows",
+                    duration:20,
+                    tickInterval:0,
+                    onApply: (unit) =>
+                    {
+                        //Subscribes to the Units OnDamageRecieved event.
+                        unit.OnDamageReceived += onDamageEvent;
+                    },
+                    onRemove: (unit) =>
+                    {
+                        //UnSubscribes to the Units OnDamageRecieved event.
+                        unit.OnDamageReceived -= onDamageEvent;
+                    }
+                ));
+            }
+        );
         
+        //Spell Priority Order because why not?
+        SpellBook.Add(danceOfSwallows);
         SpellBook.Add(burstingIce);
+        SpellBook.Add(coldSnap);
         SpellBook.Add(frostBolt);
     }
     
