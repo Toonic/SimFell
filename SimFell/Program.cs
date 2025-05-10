@@ -1,13 +1,29 @@
-﻿// See https://aka.ms/new-console-template for more information
-
 using SimFell;
 
-var player = new Rime("Rime", 100);
-player.SetPrimaryStats(100, 0,0,0,0);
-var enemies = new List<Unit>
+var config = SimFell.SimFileParser.SimfellParser.ParseFile("..\\test.simfell");
+
+var player = config.Hero switch
 {
-    new("Goblin1", 10000)
+    "Rime" => new Rime("Rime", 100),
+    _ => throw new Exception($"Hero {config.Hero} not found")
 };
-//SimRandom.DisableDeterminism();
+
+player.SetPrimaryStats(
+    config.Intellect,
+    (int)config.Crit,
+    (int)config.Expertise,
+    (int)config.Haste,
+    (int)config.Spirit
+);
+
+var enemies = new List<Unit>();
+for (int i = 0; i < config.Enemies; i++)
+{
+    enemies.Add(new("Goblin #" + (i + 1), 1000));
+}
+
 SimRandom.EnableDeterminism();
-SimLoop.Instance.Start(player, enemies, SimLoop.SimulationMode.Time, 60);
+
+SimLoop.ShowConfig(config);
+
+SimLoop.Instance.Start(player, enemies, SimLoop.SimulationMode.Time, config.Duration);

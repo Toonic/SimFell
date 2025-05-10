@@ -12,25 +12,25 @@ public class Unit(
     public List<Aura> Buffs { get; set; } = [];
     public List<Aura> Debuffs { get; set; } = [];
     public List<Spell> SpellBook { get; set; } = [];
-    public Unit PrimaryTarget { get; set; } = null;
-    
+    public Unit? PrimaryTarget { get; set; }
+
     // Baseline stats are always flat 100. As point values.
     private int _mainStat = 100;
     private int _critcalStrikeStat = 100;
     private int _expertiseStat = 100;
     private int _hasteStat = 100;
     private int _spiritStat = 100;
-    
+
     // Multipliers
     public double DamageReceivedMultiplier { get; set; } = 1.0f;
-    
+
     //Const.
     private const double PointEffectiveness = 0.21; //Base effectivenes per point. (0.21%).
     private readonly double[] _breakPoints = [10.0, 15.0, 20.0, 25.0]; //Percent Threasholds for Break Points.
-    private readonly double[] _breakPointMultipliers = [1,0.9,0.8,0.7,0.6];
-    
+    private readonly double[] _breakPointMultipliers = [1, 0.9, 0.8, 0.7, 0.6];
+
     //Events
-    public Action<Unit, float, object>? OnDamageReceived { get; set; }
+    public Action<Unit, float, object> OnDamageReceived { get; set; } = (unit, damage, source) => { };
 
     public void SetPrimaryStats(int mainStat, int criticalStrikeStat, int expertiseStat, int hasteStat, int spiritStat)
     {
@@ -40,7 +40,7 @@ public class Unit(
         _hasteStat = hasteStat;
         _spiritStat = spiritStat;
     }
-    
+
     /// <summary>
     /// Returns the Main Stat with modifiers.
     /// </summary>
@@ -54,23 +54,23 @@ public class Unit(
     {
         double statPercentage = 0;
         int breakpointIndex = 0;
-        
+
         for (int i = 0; i < statPoints; i++)
         {
             double effectiveIncrease = PointEffectiveness;
-            
+
             if (breakpointIndex < _breakPoints.Length && statPercentage >= _breakPoints[breakpointIndex])
             {
                 effectiveIncrease *= _breakPointMultipliers[breakpointIndex];
                 breakpointIndex++;
             }
-            
+
             statPercentage += effectiveIncrease;
         }
 
         return (float)statPercentage;
     }
-    
+
     /// <summary>
     /// Returns the current Critical Strike Stat, including modifiers.
     /// </summary>
@@ -81,7 +81,7 @@ public class Unit(
         stat += 5; //Base 5% Critical Strike chance for everyone.
         return stat;
     }
-    
+
     /// <summary>
     /// Returns the current Expertise Stat, including modifiers.
     /// </summary>
@@ -91,7 +91,7 @@ public class Unit(
         float stat = GetStatAsPercentage(_expertiseStat);
         return stat;
     }
-    
+
     /// <summary>
     /// Applies a buff to the Unit and invokes OnApply.
     /// </summary>
@@ -102,7 +102,7 @@ public class Unit(
         Console.WriteLine($"{Name} gains buff: {buff.Name}");
         buff.OnApply?.Invoke(this);
     }
-    
+
     /// <summary>
     /// Applies a debuff to the Unit and invokes OnApply.
     /// </summary>
@@ -113,7 +113,7 @@ public class Unit(
         Console.WriteLine($"{Name} gains debuff: {debuff.Name}");
         debuff.OnApply?.Invoke(this);
     }
-    
+
     /// <summary>
     /// Deals damage to the target based on the passed in Damage Percent. Takes into consideration current MainStat,
     /// Expertise, Critical Hit Chance, and Critical Hit Power.
@@ -127,7 +127,7 @@ public class Unit(
         damage *= 1 + (GetExpertiseStat() / 100f); // Modifies the damage based on expertise.
         var isCritical = SimRandom.Roll(GetCriticalStrikeStat());
         damage *= isCritical ? 2 : 1; //Doubles the damage if there is a Critical Hit.
-        
+
         target.TakeDamage(damage, isCritical, damageSource);
     }
 
@@ -141,11 +141,14 @@ public class Unit(
     public void TakeDamage(float amount, bool isCritical, object damageSource)
     {
         var totalDamage = (int)(amount * DamageReceivedMultiplier);
+
         if (damageSource is Spell spell) Console.Write($"{spell.Name} ");
         else if (damageSource is Aura aura) Console.Write($"{aura.Name} ");
         else Console.Write("Unknown ");
+
         Console.Write($"hits {Name} for {totalDamage}. ");
         Console.WriteLine($"{(isCritical ? " (Critical Strike)" : "")}");
+
         OnDamageReceived?.Invoke(this, totalDamage, damageSource);
         Health -= totalDamage;
     }

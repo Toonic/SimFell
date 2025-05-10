@@ -1,0 +1,41 @@
+# Character Information
+name="Rime - ST/General Talents"
+hero=Rime
+
+# Test Attributes
+# intellect=300
+# crit=90
+# expertise=160
+# haste=120
+# spirit=50
+
+intellect=331
+crit=120
+expertise=109
+haste=146
+spirit=107
+
+talents=2-12-3 # Stands for Talents 1.2, 2.1, 2.2, 3.3
+
+# Gear
+gear_helmet=Test Helm Name,int=14,stam=17,exp=23,crit=4,gem_bonus=33,gem=emerald_t1,ilvl=150,tier=6
+gear_shoulder=Test Shoulder Name,int=12,stam=15,crit=13,haste=6,set=Wyrmling Vigor,ilvl=150,tier=6
+
+# Trinkets
+# trinket1=drums
+# trinket2=drums
+
+# Sim Information
+duration=5
+enemies=1
+run_count=2000
+
+# Actions
+action=/wrath_of_winter
+actions+=/ice_blitz
+actions+=/dance_of_swallows,if=spell.cold_snap.cooldown<2
+actions+=/cold_snap,if=debuff.dance_of_swallows.duration>0 and character.anima<5 and character.winter_orbs<4
+actions+=/bursting_ice
+actions+=/freezing_torrent
+actions+=/glacial_blast
+actions+=/frost_bolt

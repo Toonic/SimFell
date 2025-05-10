@@ -1,3 +1,5 @@
+using SimFell.SimFileParser.Models;
+
 namespace SimFell;
 
 public class SimLoop
@@ -9,7 +11,7 @@ public class SimLoop
 
     private double elapsed;
     private double damageDealt;
-    
+
     public enum SimulationMode
     {
         Health,
@@ -25,7 +27,7 @@ public class SimLoop
             targets.Add(enemy);
             enemy.OnDamageReceived += OnDamageReceived;
         }
-        
+
         while (true)
         {
             // Stop condition: Time mode
@@ -39,7 +41,7 @@ public class SimLoop
             // Stop condition: Health mode
             if (mode == SimulationMode.Health && targets.Count == 0)
                 break;
-            
+
             player.SetPrimaryTarget(targets[0]); //Used mostly for auto-casting abilities. Like Anima Spikes on Rime.
             OnUpdate?.Invoke(step);
             elapsed += step;
@@ -63,12 +65,12 @@ public class SimLoop
                 }
             }
         }
-        
+
         foreach (var enemy in enemies)
         {
             enemy.OnDamageReceived -= OnDamageReceived;
         }
-        
+
         Console.WriteLine("--------------");
         Console.WriteLine($"Damage Dealt: {damageDealt}");
         Console.WriteLine($"DPS: {damageDealt / elapsed}");
@@ -96,5 +98,10 @@ public class SimLoop
             OnUpdate?.Invoke(remainder);
             elapsed += remainder;
         }
+    }
+
+    public static void ShowConfig(SimFellConfiguration config)
+    {
+        Console.WriteLine(config.ToStringFormatted);
     }
 }

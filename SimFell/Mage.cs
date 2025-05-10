@@ -16,7 +16,7 @@ public class Mage : Unit
                 //Confirms if we can cast the spell or not.
                 canCast: () => Mana >= 30,
                 //Defines the OnCast event.
-                onCast: (caster,spell, targets) =>
+                onCast: (caster, spell, targets) =>
                 {
                     //Reduce Mana.
                     // Mana -= 30;
@@ -41,15 +41,10 @@ public class Mage : Unit
         SpellBook.Add(
             new Spell("03", "Bloodlust", 300f, 0,
                 canCast: () => Mana >= 60,
-                onCast: (caster,spell, targets) =>
+                onCast: (caster, spell, targets) =>
                 {
-                    // var mage_caster = caster as Mage ?? throw new Exception("Caster is not a Mage");
-                    // var originalIntellect = mage_caster.Intellect;
-                    // var mage_caster = caster as Mage ?? throw new Exception("Caster is not a Mage");
-                    // var originalIntellect = mage_caster.Intellect;
-                    
                     var bonusIntellect = (int)(Intellect * 1.2f);
-                    
+
                     var bloodlustBuff = new Aura(
                         id: "04",
                         name: "Bloodlust Buff",
