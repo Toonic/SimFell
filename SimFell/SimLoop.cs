@@ -72,9 +72,9 @@ public class SimLoop
             enemy.OnDamageReceived -= OnDamageReceived;
         }
 
-        Logger.LevelThree("--------------");
-        Logger.LevelThree($"Damage Dealt: {damageDealt}");
-        Logger.LevelThree($"DPS: {damageDealt / elapsed}");
+        ConsoleLogger.Log(SimulationLogLevel.All, "--------------");
+        ConsoleLogger.Log(SimulationLogLevel.All, $"Damage Dealt: {damageDealt}");
+        ConsoleLogger.Log(SimulationLogLevel.All, $"DPS: {damageDealt / elapsed}");
     }
 
     private void OnDamageReceived(Unit unit, float damageReceived, object source)
@@ -103,6 +103,6 @@ public class SimLoop
 
     public static void ShowConfig(SimFellConfiguration config)
     {
-        Logger.LevelThree(config.ToStringFormatted);
+        ConsoleLogger.Log(SimulationLogLevel.All, config.ToStringFormatted);
     }
 }

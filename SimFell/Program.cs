@@ -7,7 +7,8 @@ var configuration = new ConfigurationBuilder()
     .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
     .AddJsonFile("appsettings.json", optional: true)
     .Build();
-Logger.Configure(configuration);
+ConsoleLogger.Configure(configuration);
+FileLogger.Configure(configuration);
 
 string configFolder = Path.Combine(AppContext.BaseDirectory, "Configs");
 string fullPath = Path.Combine(configFolder, "test.simfell");

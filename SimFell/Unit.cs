@@ -100,7 +100,7 @@ public class Unit(
     public void ApplyBuff(Aura buff)
     {
         Buffs.Add(buff);
-        Logger.SimulationEvent($"{Name} gains buff: {buff.Name}", "💪");
+        ConsoleLogger.Log(SimulationLogLevel.TypeA, $"{Name} gains buff: {buff.Name}", "💪");
         buff.OnApply?.Invoke(this);
     }
 
@@ -111,7 +111,7 @@ public class Unit(
     public void ApplyDebuff(Aura debuff)
     {
         Debuffs.Add(debuff);
-        Logger.SimulationEvent($"{Name} gains debuff: {debuff.Name}", "💔");
+        ConsoleLogger.Log(SimulationLogLevel.TypeA, $"{Name} gains debuff: {debuff.Name}", "💔");
         debuff.OnApply?.Invoke(this);
     }
 
@@ -148,7 +148,7 @@ public class Unit(
                          : damageSource is Aura aura ? aura.Name
                          : "Unknown";
         var message = $"{sourceName} hits {Name} for {totalDamage}.{(isCritical ? " (Critical Strike)" : "")}";
-        Logger.SimulationEvent(message, isCritical ? "💥" : null);
+        ConsoleLogger.Log(SimulationLogLevel.TypeA, message, isCritical ? "💥" : null);
 
         OnDamageReceived?.Invoke(this, totalDamage, damageSource);
         Health -= totalDamage;
@@ -162,7 +162,7 @@ public class Unit(
             Buffs[i].Update(deltaTime, this);
             if (Buffs[i].IsExpired)
             {
-                Logger.SimulationEvent($"{Name} loses buff: {Buffs[i].Name}", "💪🛑");
+                ConsoleLogger.Log(SimulationLogLevel.TypeA, $"{Name} loses buff: {Buffs[i].Name}", "💪🛑");
                 Buffs[i].OnRemove?.Invoke(this);
                 Buffs.RemoveAt(i);
             }
@@ -174,7 +174,7 @@ public class Unit(
             Debuffs[i].Update(deltaTime, this);
             if (Debuffs[i].IsExpired)
             {
-                Logger.SimulationEvent($"{Name} loses debuff: {Debuffs[i].Name}", "💔🛑");
+                ConsoleLogger.Log(SimulationLogLevel.TypeA, $"{Name} loses debuff: {Debuffs[i].Name}", "💔🛑");
                 Debuffs[i].OnRemove?.Invoke(this);
                 Debuffs.RemoveAt(i);
             }
@@ -198,7 +198,7 @@ public class Unit(
 
     public void Died()
     {
-        Logger.SimulationEvent($"{Name} is dead.", "💀");
+        ConsoleLogger.Log(SimulationLogLevel.TypeA, $"{Name} is dead.", "💀");
         //TODO: Future cleanup.
         Stop();
     }
