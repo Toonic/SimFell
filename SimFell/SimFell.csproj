@@ -20,4 +20,14 @@
       <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="6.0.0" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="SimFell\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="Configs\**\*">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
+
 </Project>

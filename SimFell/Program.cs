@@ -9,7 +9,10 @@ var configuration = new ConfigurationBuilder()
     .Build();
 Logger.Configure(configuration);
 
-var config = SimFell.SimFileParser.SimfellParser.ParseFile("..\\test.simfell");
+string configFolder = Path.Combine(AppContext.BaseDirectory, "Configs");
+string fullPath = Path.Combine(configFolder, "test.simfell");
+
+var config = SimFell.SimFileParser.SimfellParser.ParseFile(fullPath);
 
 var player = config.Hero switch
 {
