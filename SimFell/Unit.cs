@@ -12,6 +12,7 @@ public class Unit(
     public List<Aura> Buffs { get; set; } = [];
     public List<Aura> Debuffs { get; set; } = [];
     public List<Spell> SpellBook { get; set; } = [];
+    public Unit PrimaryTarget { get; set; } = null;
     
     // Baseline stats are always flat 100. As point values.
     private int _mainStat = 100;
@@ -29,7 +30,7 @@ public class Unit(
     private readonly double[] _breakPointMultipliers = [1,0.9,0.8,0.7,0.6];
     
     //Events
-    public Action<Unit, float, object> OnDamageReceived { get; set; }
+    public Action<Unit, float, object>? OnDamageReceived { get; set; }
 
     public void SetPrimaryStats(int mainStat, int criticalStrikeStat, int expertiseStat, int hasteStat, int spiritStat)
     {
@@ -143,7 +144,7 @@ public class Unit(
         if (damageSource is Spell spell) Console.Write($"{spell.Name} ");
         else if (damageSource is Aura aura) Console.Write($"{aura.Name} ");
         else Console.Write("Unknown ");
-        Console.Write($"hits {{target.Name}} for {totalDamage}. ");
+        Console.Write($"hits {Name} for {totalDamage}. ");
         Console.WriteLine($"{(isCritical ? " (Critical Strike)" : "")}");
         OnDamageReceived?.Invoke(this, totalDamage, damageSource);
         Health -= totalDamage;
@@ -179,6 +180,16 @@ public class Unit(
         {
             spell.UpdateCooldown(deltaTime);
         }
+    }
+
+    public void SetPrimaryTarget(Unit target)
+    {
+        PrimaryTarget = target;
+    }
+
+    public bool IsDead()
+    {
+        return Health <= 0;
     }
 
     public void Died()

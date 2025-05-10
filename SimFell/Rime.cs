@@ -8,8 +8,11 @@ public class Rime : Unit
     private const int MaxAnima = 10;
     private const int MaxWinterOrbs = 5;
 
+    private Spell animaSpikes;
+    
     public Rime(string name, int health) : base(name, health)
     {
+        // Frostboll Spell
         var frostBolt = new Spell(
             id: "frost-bolt",
             name:"Frost Bolt",
@@ -21,7 +24,8 @@ public class Rime : Unit
                 UpdateAnima(3);
             }
         );
-
+        
+        // Bursting Ice
         var burstingIce = new Spell(
             id: "bursting-ice",
             name:"Bursting Ice",
@@ -52,7 +56,8 @@ public class Rime : Unit
                 ));
             }
         );
-
+        
+        // Cold Snap
         var coldSnap = new Spell(
             id: "cold-snap",
             name:"Cold Snap",
@@ -64,7 +69,8 @@ public class Rime : Unit
                 UpdateWinterOrbs(1);
             }
         );
-
+        
+        // Dance of Swallows
         var danceOfSwallows = new Spell(
             id: "dance-of-swallows",
             name:"Dance of Swallows",
@@ -77,7 +83,7 @@ public class Rime : Unit
                 var target = targets.FirstOrDefault();
                 
                 // Builds the OnDamage Event.
-                Action<Unit, float, object> onDamageEvent = (unit, damage, source) =>
+                Action<Unit, float, object>? onDamageEvent = (unit, damage, source) =>
                 {
                     // If the source is from ColdSnap, deal bonus damage.
                     if (source == coldSnap)
@@ -112,10 +118,66 @@ public class Rime : Unit
             }
         );
         
+        // Freezing Torrent
+        var freezingTorrent = new Spell(
+            id: "freezing-torrent",
+            name:"Freezing Torrent",
+            cooldown: 10,
+            castTime: 0,
+            onCast: (unit, spell, targets) =>
+            {
+                var target = targets.FirstOrDefault();
+                double channelDuration = 2.0; //TODO: Get the channel duration based on Haste.
+                double channelTickInterval = 0.4;
+                
+                //Note: This could cause some inaccuracies. But I'm not 100% sure on that yet.
+                
+                for (double t = 0; t < channelDuration; t += channelTickInterval)
+                {
+                    SimLoop.Instance.Update(channelTickInterval);
+                    if (target.IsDead()) break;
+                    DealDamage(target, 65, spell);
+                    UpdateAnima(1);
+                }
+            }
+        );
+        
+        //Glacial Blast
+        var glacialBlast = new Spell(
+            id: "glacial-blast",
+            name:"Glacial Blast",
+            cooldown: 0,
+            castTime: 2.0,
+            canCast: () => WinterOrbs >= 2,
+            onCast: (unit, spell, targets) =>
+            {
+                var target = targets.FirstOrDefault();
+                UpdateWinterOrbs(-2);
+                DealDamage(target, 504,spell);
+            }
+        );
+        
+        //Anima Spikes
+        animaSpikes = new Spell(
+            id: "anima-spikes",
+            name:"Anima Spikes",
+            cooldown: 0,
+            castTime: 0,
+            onCast: (unit, spell, targets) =>
+            {
+                var target = targets.FirstOrDefault();
+                DealDamage(target,36, spell);
+                DealDamage(target,36, spell);
+                DealDamage(target,36, spell);
+            }
+        );
+        
         //Spell Priority Order because why not?
         SpellBook.Add(danceOfSwallows);
-        SpellBook.Add(burstingIce);
         SpellBook.Add(coldSnap);
+        SpellBook.Add(burstingIce);
+        SpellBook.Add(freezingTorrent);
+        SpellBook.Add(glacialBlast);
         SpellBook.Add(frostBolt);
     }
     
@@ -142,5 +204,6 @@ public class Rime : Unit
     {
         WinterOrbs += winterOrbsDelta;
         WinterOrbs = Math.Clamp(WinterOrbs, 0, MaxWinterOrbs);
+        animaSpikes.Cast(this, new List<Unit>(){PrimaryTarget});
     }
 }

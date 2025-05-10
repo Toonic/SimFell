@@ -6,9 +6,8 @@ var player = new Rime("Rime", 100);
 player.SetPrimaryStats(100, 0,0,0,0);
 var enemies = new List<Unit>
 {
-    new("Goblin1", 10000),
-    new("Goblin2", 10000)
+    new("Goblin1", 10000)
 };
-SimRandom.DisableDeterminism();
-//SimRandom.EnableDeterminism();
-SimLoop.Instance.Start(player, enemies);
+//SimRandom.DisableDeterminism();
+SimRandom.EnableDeterminism();
+SimLoop.Instance.Start(player, enemies, SimLoop.SimulationMode.Time, 60);
