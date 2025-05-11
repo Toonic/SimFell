@@ -32,7 +32,7 @@ public class Rime : Unit
             id: "bursting-ice",
             name: "Bursting Ice",
             cooldown: 15,
-            castTime: 2.0f,
+            castTime: 2.0,
             onCast: (unit, spell, targets) =>
             {
                 var primaryTarget = targets.FirstOrDefault();

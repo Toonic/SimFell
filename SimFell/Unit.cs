@@ -10,6 +10,8 @@ public class Unit : SimLoopListener
     public List<Aura> Debuffs { get; set; } = [];
     public List<Spell> SpellBook { get; set; } = [];
     public Unit? PrimaryTarget { get; set; }
+    
+    public double GCD { get; set; }
 
     // Baseline stats are always flat 100. As point values.
     public Stat MainStat = new Stat(100);
@@ -155,11 +157,15 @@ public class Unit : SimLoopListener
                 Debuffs.RemoveAt(i);
             }
         }
-
+        
+        // Update the Cooldowns for the Unit.
         foreach (var spell in SpellBook)
         {
             spell.UpdateCooldown(deltaTime);
         }
+        
+        //Update the GCD for the Unit.
+        GCD = Math.Max(0, GCD - deltaTime);
     }
 
     public void SetPrimaryTarget(Unit target)
@@ -177,5 +183,11 @@ public class Unit : SimLoopListener
         ConsoleLogger.Log(SimulationLogLevel.DamageEvents, $"{Name} is dead.", "💀");
         //TODO: Future cleanup.
         Stop();
+    }
+
+    public void SetGCD(double gcd)
+    {
+        if(gcd != 0) ConsoleLogger.Log(SimulationLogLevel.CastEvents, $"GCD: {gcd}");
+        GCD = gcd;
     }
 }

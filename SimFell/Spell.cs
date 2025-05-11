@@ -37,7 +37,7 @@ public class Spell
 
     public bool CheckCanCast(Unit caster)
     {
-        return (CanCast?.Invoke() ?? true) && RemainingCooldown <= 0;
+        return (CanCast?.Invoke() ?? true) && RemainingCooldown <= 0 && caster.GCD <= 0;
     }
 
     public double GetCastTime(Unit caster)
@@ -70,15 +70,17 @@ public class Spell
 
     public void Cast(Unit caster, List<Unit> targets)
     {
-        double timeToMove = Math.Max(0, GetGCD(caster) - GetCastTime(caster) - GetChannelTime(caster));
-
         //Handle the GCD. 90% of the time we assume we're full channeling.
         //Until someone tells me clipping is better. In which case I'll hate myself.
-        ConsoleLogger.Log(SimulationLogLevel.CastEvents, $"{Name} - {timeToMove}");
-        SimLoop.Instance.Update(timeToMove);
-        //Handles the Cast Time.
+        ConsoleLogger.Log(SimulationLogLevel.CastEvents, $"Casting {Name}");
         SimLoop.Instance.Update(GetCastTime(caster));
         OnCast?.Invoke(caster, this, targets);
+        
+        //Sets the GCD on the Unit.
+        double calculatedGCD = Math.Max(0, GetGCD(caster) - GetCastTime(caster) - GetChannelTime(caster));
+        caster.SetGCD(calculatedGCD);
+        
+        //Sets the cooldown.
         RemainingCooldown = Cooldown;  // Reset cooldown after casting
     }
 }
