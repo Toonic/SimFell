@@ -83,22 +83,9 @@ public class Rime : Unit
             name: "Freezing Torrent",
             cooldown: 10,
             castTime: 0,
-            onCast: (unit, spell, targets) =>
-            {
-                var target = targets.FirstOrDefault() ?? throw new Exception("No valid targets");
-                double channelDuration = 2.0; //TODO: Get the channel duration based on Haste.
-                double channelTickInterval = 0.4;
-
-                //Note: This could cause some inaccuracies. But I'm not 100% sure on that yet.
-
-                for (double t = 0; t < channelDuration; t += channelTickInterval)
-                {
-                    //SimLoop.Instance.Update(channelTickInterval);
-                    if (target.IsDead()) break;
-                    DealDamage(target, 65, spell);
-                    UpdateAnima(1);
-                }
-            },
+            channel: true,
+            channelTime: 2,
+            tickRate: 0.4,
             onTick: (unit, spell, targets) =>
             {
                 //TODO: Check to see if target is dead instead of getting first.
@@ -223,12 +210,12 @@ public class Rime : Unit
 
         //Spell Priority Order because why not?
         //SpellBook.Add(icyBlitz);
-        SpellBook.Add(danceOfSwallows);
-        SpellBook.Add(coldSnap);
-        SpellBook.Add(burstingIce);
-        //SpellBook.Add(freezingTorrent);
-        SpellBook.Add(glacialBlast);
-        SpellBook.Add(frostBolt);
+        //SpellBook.Add(danceOfSwallows);
+        //SpellBook.Add(coldSnap);
+        //SpellBook.Add(burstingIce);
+        SpellBook.Add(freezingTorrent);
+        //SpellBook.Add(glacialBlast);
+        //SpellBook.Add(frostBolt);
     }
 
     /// <summary>

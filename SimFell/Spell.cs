@@ -10,21 +10,25 @@ public class Spell
     public double Cooldown { get; set; }
     public double OffCooldown { get; private set; }
     public double CastTime { get; set; }
+    public bool Channel { get; set; }
     public double ChannelTime { get; set; }
+    public double TickRate { get; set; }
     public Boolean HasGCD { get; set; }
     public Action<Unit, Spell, List<Unit>>? OnCast { get; set; }
     public Action<Unit, Spell, List<Unit>>? OnTick { get; set; }
     public Func<bool>? CanCast { get; set; }
 
     public Spell(
-        string id, string name, double cooldown, double castTime, double channelTime = 0, bool hasGCD = true,
+        string id, string name, double cooldown, double castTime, bool channel = false, double channelTime = 0, double tickRate = 0, bool hasGCD = true,
         Func<bool>? canCast = null, Action<Unit, Spell, List<Unit>>? onCast = null, Action<Unit, Spell, List<Unit>>? onTick = null)
     {
         ID = id;
         Name = name;
         Cooldown = cooldown;
         CastTime = castTime;
+        Channel = channel;
         ChannelTime = channelTime;
+        TickRate = tickRate;
         HasGCD = hasGCD;
         OnCast = onCast;
         OnTick = onTick;
@@ -54,7 +58,12 @@ public class Spell
 
     public double GetChannelTime(Unit caster)
     {
-        return caster.GetHastedValue(ChannelTime);
+        return caster.GetHastedValue(ChannelTime);;
+    }
+    
+    public double GetTickRate(Unit caster)
+    {
+        return caster.GetHastedValue(TickRate);
     }
 
     public double GetGCD(Unit caster)
@@ -62,11 +71,6 @@ public class Spell
         if (!HasGCD) return 0;
         //TODO: Load in Config for Global GCD.
         return caster.GetHastedValue(1.5);
-    }
-
-    public double GetTickRate(Unit caster, double baseRate)
-    {
-        return caster.GetHastedValue(baseRate);
     }
 
     public void Cast(Unit caster, List<Unit> targets)
@@ -78,7 +82,7 @@ public class Spell
 
     public void Tick(Unit caster, List<Unit> targets)
     {
-        OnCast?.Invoke(caster,this,targets);
+        OnTick?.Invoke(caster,this,targets);
         //TODO: Tick Rate handling.
     }
 }

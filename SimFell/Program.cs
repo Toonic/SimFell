@@ -32,12 +32,11 @@ player.SetPrimaryStats(
 //     config.Intellect,
 //     (int)config.Crit,
 //     (int)config.Expertise,
-//     //55 - 11.55%
+//     //55 - 11.55%, 130 - 27.1% -     
 //     130,
 //     (int)config.Spirit
 // );
 
-Console.WriteLine("Haste: " + player.HasteStat.GetValue());
 
 var enemies = new List<Unit>();
 for (int i = 0; i < config.Enemies; i++)
