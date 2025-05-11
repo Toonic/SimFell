@@ -60,14 +60,14 @@ public class Unit : SimLoopListener
     /// Applies a buff to the Unit and invokes OnApply.
     /// </summary>
     /// <param name="buff"></param>
-    public void ApplyBuff(Aura buff)
+    public void ApplyBuff(Unit caster, Unit target, Aura buff)
     {
         var existing = Buffs.Where(aura => aura.ID == buff.ID).ToList();
         if (existing.Count >= buff.MaxStacks)
             Console.WriteLine("TODO: Refresh");
         else
         {
-            buff.Apply(this);
+            buff.Apply(caster,target);
             Buffs.Add(buff);
         }
 
@@ -82,7 +82,7 @@ public class Unit : SimLoopListener
     /// Applies a debuff to the Unit and invokes OnApply.
     /// </summary>
     /// <param name="debuff"></param>
-    public void ApplyDebuff(Aura debuff)
+    public void ApplyDebuff(Unit caster, Unit target, Aura debuff)
     {
         var existing = Debuffs.Where(aura => aura.ID == debuff.ID).ToList();
         if (existing.Count >= debuff.MaxStacks)
@@ -90,7 +90,7 @@ public class Unit : SimLoopListener
             Console.WriteLine("TODO: Refresh");
         else
         {
-            debuff.Apply(this);
+            debuff.Apply(caster,target);
             Debuffs.Add(debuff);
         }
 
@@ -150,7 +150,7 @@ public class Unit : SimLoopListener
         // Update buffs
         for (int i = Buffs.Count - 1; i >= 0; i--)
         {
-            Buffs[i].Update(SimLoop.Instance.GetElapsed(), this);
+            Buffs[i].Update(SimLoop.Instance.GetElapsed());
             if (Buffs[i].IsExpired)
             {
                 ConsoleLogger.Log(
@@ -158,7 +158,7 @@ public class Unit : SimLoopListener
                     $"\u001b[1;34m{Name}\u001b[0;30m loses buff: \u001b[1;33m{Buffs[i].Name}\u001b[0;30m",
                     "💪🛑"
                 );
-                Buffs[i].OnRemove?.Invoke(this);
+                Buffs[i].Remove();
                 Buffs.RemoveAt(i);
             }
         }
@@ -166,7 +166,7 @@ public class Unit : SimLoopListener
         // Update debuffs
         for (int i = Debuffs.Count - 1; i >= 0; i--)
         {
-            Debuffs[i].Update(SimLoop.Instance.GetElapsed(), this);
+            Debuffs[i].Update(SimLoop.Instance.GetElapsed());
             if (Debuffs[i].IsExpired)
             {
                 ConsoleLogger.Log(
@@ -174,7 +174,7 @@ public class Unit : SimLoopListener
                     $"\u001b[1;34m{Name}\u001b[0;30m loses debuff: \u001b[1;33m{Debuffs[i].Name}\u001b[0;30m",
                     "💔🛑"
                 );
-                Debuffs[i].OnRemove?.Invoke(this);
+                Debuffs[i].Remove();
                 Debuffs.RemoveAt(i);
             }
         }
@@ -194,6 +194,12 @@ public class Unit : SimLoopListener
             }
             //TODO: Handle Tick Events.
         }
+    }
+
+    public double GetHastedValue(double baseRate)
+    {
+        if (baseRate == 0) return 0;
+        return baseRate / (1 + HasteStat.GetValue() / 100);
     }
 
     public void SetPrimaryTarget(Unit target)
@@ -240,6 +246,11 @@ public class Unit : SimLoopListener
         //TODO: Channel.
         IsCasting = true;
         if (spell.HasGCD) SetGCD(spell.GetGCD(this));
+        if (spell.GetCastTime(this) == 0 || spell.GetChannelTime(this) == 0)
+        {
+            spell.Cast(this, targets);
+            StopCasting();
+        }
     }
 
     public void StopCasting()

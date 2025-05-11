@@ -47,30 +47,24 @@ public class Spell
 
     public double GetCastTime(Unit caster)
     {
-        return GetFaster(caster, CastTime);
+        return caster.GetHastedValue(CastTime);
     }
 
     public double GetChannelTime(Unit caster)
     {
-        return GetFaster(caster, ChannelTime);
+        return caster.GetHastedValue(ChannelTime);
     }
 
     public double GetGCD(Unit caster)
     {
         if (!HasGCD) return 0;
         //TODO: Load in Config for Global GCD.
-        return GetFaster(caster, 1.5);
+        return caster.GetHastedValue(1.5);
     }
 
     public double GetTickRate(Unit caster, double baseRate)
     {
-        return GetFaster(caster, baseRate);
-    }
-
-    private double GetFaster(Unit caster, double baseRate)
-    {
-        if (baseRate == 0) return 0;
-        return baseRate / (1 + caster.HasteStat.GetValue() / 100);
+        return caster.GetHastedValue(baseRate);
     }
 
     public void Cast(Unit caster, List<Unit> targets)

@@ -9,21 +9,23 @@ public class Aura
     public int MaxStacks { get; set; }
 
     // Runtime Data
+    private Unit _caster;
+    private Unit _target;
     private double _removeAt;
     private double _nextTick;
     private bool _expired;
 
     //Owner its on.
-    public Action<Unit>? OnTick;
-    public Action<Unit>? OnApply;
-    public Action<Unit>? OnRemove;
+    public Action<Unit,Unit>? OnTick;
+    public Action<Unit,Unit>? OnApply;
+    public Action<Unit,Unit>? OnRemove;
 
     public bool IsExpired => _expired;
 
     public Aura(string id, string name, double duration, double tickInterval, int maxStacks = 1000,
-        Action<Unit>? onTick = null,
-        Action<Unit>? onApply = null,
-        Action<Unit>? onRemove = null)
+        Action<Unit,Unit>? onTick = null,
+        Action<Unit,Unit>? onApply = null,
+        Action<Unit,Unit>? onRemove = null)
     {
         ID = id;
         Name = name;
@@ -33,8 +35,7 @@ public class Aura
         OnTick = onTick;
         OnApply = onApply;
         OnRemove = onRemove;
-
-        _removeAt = 0;
+        
         _expired = false;
     }
 
@@ -44,24 +45,32 @@ public class Aura
         _removeAt = Duration + SimLoop.Instance.GetElapsed();
     }
 
-    public void Apply(Unit unit)
+    public void Apply(Unit caster, Unit target)
     {
+        _caster = caster;
+        _target = target;
         _removeAt = Duration + SimLoop.Instance.GetElapsed();
-        //TODO: TickInterval should take into consideration haste.
-        _nextTick = TickInterval + SimLoop.Instance.GetElapsed();
-        OnApply?.Invoke(unit);
+        _nextTick = _caster.GetHastedValue(TickInterval) + SimLoop.Instance.GetElapsed();
+        OnApply?.Invoke(caster,target);
     }
 
-    public void Update(double simTime, Unit owner)
+    public void Remove()
+    {
+        OnRemove?.Invoke(_caster, _target);
+    }
+
+    public void Update(double simTime)
     {
         if (_expired) return;
-
-        while (simTime >= _nextTick)
+        if (TickInterval > 0)
         {
-            _nextTick += TickInterval;
-            OnTick?.Invoke(owner);
+            while (simTime >= _nextTick)
+            {
+                _nextTick += _caster.GetHastedValue(TickInterval);
+                OnTick?.Invoke(_caster, _target);
+            }
         }
-        
+
         if (simTime >= _removeAt)
         {
             _expired = true;

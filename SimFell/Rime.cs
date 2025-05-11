@@ -38,20 +38,20 @@ public class Rime : Unit
             onCast: (unit, spell, targets) =>
             {
                 var primaryTarget = targets.FirstOrDefault();
-                primaryTarget?.ApplyDebuff(new Aura(
+                primaryTarget?.ApplyDebuff(unit, primaryTarget, new Aura(
                     id: "bursting-ice",
                     name: "Bursting Ice",
                     duration: 3.15,
                     tickInterval: 0.5,
-                    onTick: (target) =>
+                    onTick: (caster,target) =>
                     {
                         int animaGained = 0;
                         int maxAnimaGainedPerTick = 3;
 
-                        foreach (var unit in targets)
+                        foreach (var targ in targets)
                         {
                             animaGained += 1;
-                            DealDamage(unit, 61, spell);
+                            DealDamage(targ, 61, spell);
                         }
 
                         //Maximum of 3 Anima gained per tick.
@@ -133,20 +133,20 @@ public class Rime : Unit
                 };
 
                 // Applies the Debuff to the Primary target.
-                target.ApplyDebuff(new Aura(
+                target.ApplyDebuff(unit, target,new Aura(
                     id: "dance-of-swallows",
                     name: "Dance of Swallows",
                     duration: 20,
                     tickInterval: 0,
-                    onApply: (unit) =>
+                    onApply: (caster,target) =>
                     {
                         //Subscribes to the Units OnDamageRecieved event.
-                        unit.OnDamageReceived += onDamageEvent;
+                        target.OnDamageReceived += onDamageEvent;
                     },
-                    onRemove: (unit) =>
+                    onRemove: (caster,target) =>
                     {
                         //UnSubscribes to the Units OnDamageRecieved event.
-                        unit.OnDamageReceived -= onDamageEvent;
+                        target.OnDamageReceived -= onDamageEvent;
                     }
                 ));
             }
@@ -177,18 +177,18 @@ public class Rime : Unit
             //TODO: Can Cast while Casting.
             onCast: (unit, spell, targets) =>
             {
-                unit.ApplyBuff(new Aura(
+                unit.ApplyBuff(unit, unit, new Aura(
                     id: "icy-blitz",
                     name: "Icy Blitz",
                     maxStacks: 1,
                     duration: 20,
                     tickInterval: 0,
-                    onApply: (unit) =>
+                    onApply: (caster,target) =>
                     {
-                        unit.DamageBuffs.AddModifier(new StatModifier(StatModifier.StatModType.Multiplicative, 15,
+                        target.DamageBuffs.AddModifier(new StatModifier(StatModifier.StatModType.Multiplicative, 15,
                             spell));
                     },
-                    onRemove: (unit) =>
+                    onRemove: (caster,target) =>
                     {
                         unit.DamageBuffs.RemoveModifier(spell);
                     }
@@ -214,11 +214,11 @@ public class Rime : Unit
 
         //Spell Priority Order because why not?
         //SpellBook.Add(icyBlitz);
-        //SpellBook.Add(danceOfSwallows);
-        //SpellBook.Add(coldSnap);
+        SpellBook.Add(danceOfSwallows);
+        SpellBook.Add(coldSnap);
         SpellBook.Add(burstingIce);
         //SpellBook.Add(freezingTorrent);
-        //SpellBook.Add(glacialBlast);
+        SpellBook.Add(glacialBlast);
         SpellBook.Add(frostBolt);
     }
 
