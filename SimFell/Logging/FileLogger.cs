@@ -43,10 +43,9 @@ public static class FileLogger
     /// <summary>
     /// Log a simulation event; always at Information level.
     /// </summary>
-    public static void SimulationEvent(string message, string? emoji = null)
+    public static void SimulationEvent(SimulationLogLevel level, string formatted)
     {
-        var formatted = emoji is null ? message : $"{emoji} {message}";
-        _logger.LogInformation(formatted);
+        _logger.LogInformation($"[{level}] {formatted}");
     }
 }
 

@@ -10,7 +10,7 @@ public class SimLoop
     public event Action<double>? OnUpdate;
     private const double step = 0.1; // Simulate 0.1 th of a second.
 
-    private double elapsed;
+    private double p_Elapsed;
     private double damageDealt;
 
     public enum SimulationMode
@@ -21,7 +21,7 @@ public class SimLoop
 
     public void Start(Unit player, List<Unit> enemies, SimulationMode mode = SimulationMode.Time, double duration = 60)
     {
-        elapsed = 0;
+        p_Elapsed = 0;
         List<Unit> targets = new List<Unit>();
         foreach (var enemy in enemies)
         {
@@ -32,7 +32,7 @@ public class SimLoop
         while (true)
         {
             // Stop condition: Time mode
-            if (mode == SimulationMode.Time && elapsed >= duration)
+            if (mode == SimulationMode.Time && p_Elapsed >= duration)
                 break;
             if (mode == SimulationMode.Time)
             {
@@ -45,7 +45,7 @@ public class SimLoop
 
             player.SetPrimaryTarget(targets[0]); //Used mostly for auto-casting abilities. Like Anima Spikes on Rime.
             OnUpdate?.Invoke(step);
-            elapsed += step;
+            // p_Elapsed += step;
 
             // Then cast the spell that should cast last.
             foreach (var spell in player.SpellBook)
@@ -65,6 +65,8 @@ public class SimLoop
                     targets.RemoveAt(i);
                 }
             }
+
+            p_Elapsed += step;
         }
 
         foreach (var enemy in enemies)
@@ -72,9 +74,9 @@ public class SimLoop
             enemy.OnDamageReceived -= OnDamageReceived;
         }
 
-        ConsoleLogger.Log(SimulationLogLevel.All, "--------------");
-        ConsoleLogger.Log(SimulationLogLevel.All, $"Damage Dealt: {damageDealt}");
-        ConsoleLogger.Log(SimulationLogLevel.All, $"DPS: {damageDealt / elapsed}");
+        ConsoleLogger.Log(SimulationLogLevel.DamageEvents, "--------------");
+        ConsoleLogger.Log(SimulationLogLevel.DamageEvents, $"Damage Dealt: {damageDealt}");
+        ConsoleLogger.Log(SimulationLogLevel.DamageEvents, $"DPS: {damageDealt / p_Elapsed}");
     }
 
     private void OnDamageReceived(Unit unit, float damageReceived, object source)
@@ -85,30 +87,30 @@ public class SimLoop
 
     public void Update(double delta)
     {
-        if (delta != 0) Console.WriteLine($"Time Delta: {delta}");
+        if (delta != 0) ConsoleLogger.Log(SimulationLogLevel.Debug, $"Time Delta: {delta}");
         int steps = (int)(delta / step);
         double remainder = delta % step;
 
         for (int i = 0; i < steps; i++)
         {
             OnUpdate?.Invoke(step);
-            elapsed += step;
+            p_Elapsed += step;
         }
 
-        if (remainder > 0)
+        if (remainder >= step)
         {
             OnUpdate?.Invoke(remainder);
-            elapsed += remainder;
+            p_Elapsed += remainder;
         }
     }
 
     public double GetElapsed()
     {
-        return elapsed;
+        return p_Elapsed;
     }
 
     public static void ShowConfig(SimFellConfiguration config)
     {
-        ConsoleLogger.Log(SimulationLogLevel.All, config.ToStringFormatted);
+        ConsoleLogger.Log(SimulationLogLevel.Debug, config.ToStringFormatted);
     }
 }

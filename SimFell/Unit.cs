@@ -1,7 +1,7 @@
 using SimFell.Logging;
 namespace SimFell;
 
-public class Unit  : SimLoopListener
+public class Unit : SimLoopListener
 {
     // Base Variables
     public string Name { get; set; }
@@ -13,7 +13,7 @@ public class Unit  : SimLoopListener
 
     // Baseline stats are always flat 100. As point values.
     public Stat MainStat = new Stat(100);
-    public Stat CritcalStrikeStat = new Stat(0,true);
+    public Stat CritcalStrikeStat = new Stat(0, true);
     public Stat ExpertiseStat = new Stat(0, true);
     public Stat HasteStat = new Stat(0, true);
     public Stat SpiritStat = new Stat(0, true);
@@ -67,8 +67,8 @@ public class Unit  : SimLoopListener
             buff.OnApply?.Invoke(this);
             Buffs.Add(buff);
         }
-        
-        ConsoleLogger.Log(SimulationLogLevel.TypeA, $"{Name} gains buff: {buff.Name}", "💪");
+
+        ConsoleLogger.Log(SimulationLogLevel.BuffEvents, $"{Name} gains buff: {buff.Name}", "💪");
     }
 
     /// <summary>
@@ -86,7 +86,7 @@ public class Unit  : SimLoopListener
             Debuffs.Add(debuff);
         }
 
-        ConsoleLogger.Log(SimulationLogLevel.TypeA, $"{Name} gains debuff: {debuff.Name}", "💔");
+        ConsoleLogger.Log(SimulationLogLevel.DebuffEvents, $"{Name} gains debuff: {debuff.Name}", "💔");
     }
 
     /// <summary>
@@ -101,7 +101,7 @@ public class Unit  : SimLoopListener
         var damage = (damagePercent / 100f) * MainStat.GetValue(); // Adds the Damage as Main Stat.
         damage *= 1 + (ExpertiseStat.GetValue() / 100f); // Modifies the damage based on expertise.
         damage = DamageBuffs.GetValue(damage);
-        
+
         var isCritical = SimRandom.Roll(CritcalStrikeStat.GetValue());
         damage *= isCritical ? 2 : 1; //Doubles the damage if there is a Critical Hit.
 
@@ -123,7 +123,7 @@ public class Unit  : SimLoopListener
                          : damageSource is Aura aura ? aura.Name
                          : "Unknown";
         var message = $"{sourceName} hits {Name} for {totalDamage}.{(isCritical ? " (Critical Strike)" : "")}";
-        ConsoleLogger.Log(SimulationLogLevel.TypeA, message, isCritical ? "💥" : null);
+        ConsoleLogger.Log(SimulationLogLevel.DamageEvents, message, isCritical ? "💥" : null);
 
         OnDamageReceived?.Invoke(this, totalDamage, damageSource);
         Health -= totalDamage;
@@ -137,7 +137,7 @@ public class Unit  : SimLoopListener
             Buffs[i].Update(deltaTime, this);
             if (Buffs[i].IsExpired)
             {
-                ConsoleLogger.Log(SimulationLogLevel.TypeA, $"{Name} loses buff: {Buffs[i].Name}", "💪🛑");
+                ConsoleLogger.Log(SimulationLogLevel.BuffEvents, $"{Name} loses buff: {Buffs[i].Name}", "💪🛑");
                 Buffs[i].OnRemove?.Invoke(this);
                 Buffs.RemoveAt(i);
             }
@@ -149,7 +149,7 @@ public class Unit  : SimLoopListener
             Debuffs[i].Update(deltaTime, this);
             if (Debuffs[i].IsExpired)
             {
-                ConsoleLogger.Log(SimulationLogLevel.TypeA, $"{Name} loses debuff: {Debuffs[i].Name}", "💔🛑");
+                ConsoleLogger.Log(SimulationLogLevel.DebuffEvents, $"{Name} loses debuff: {Debuffs[i].Name}", "💔🛑");
                 Debuffs[i].OnRemove?.Invoke(this);
                 Debuffs.RemoveAt(i);
             }
@@ -173,7 +173,7 @@ public class Unit  : SimLoopListener
 
     public void Died()
     {
-        ConsoleLogger.Log(SimulationLogLevel.TypeA, $"{Name} is dead.", "💀");
+        ConsoleLogger.Log(SimulationLogLevel.DamageEvents, $"{Name} is dead.", "💀");
         //TODO: Future cleanup.
         Stop();
     }

@@ -1,3 +1,5 @@
+using SimFell.Logging;
+
 namespace SimFell;
 
 public class Spell
@@ -9,7 +11,7 @@ public class Spell
     public double CastTime { get; set; }
     public double ChannelTime { get; set; }
     public Boolean HasGCD { get; set; }
-    public Action<Unit,Spell,List<Unit>>? OnCast { get; set; }
+    public Action<Unit, Spell, List<Unit>>? OnCast { get; set; }
     public Func<bool>? CanCast { get; set; }
 
     public Spell(
@@ -40,23 +42,24 @@ public class Spell
 
     public double GetCastTime(Unit caster)
     {
-        return GetFaster(caster,CastTime);
+        return GetFaster(caster, CastTime);
     }
-    
+
     public double GetChannelTime(Unit caster)
     {
-        return GetFaster(caster,ChannelTime);
+        return GetFaster(caster, ChannelTime);
     }
-    
+
     public double GetGCD(Unit caster)
     {
         if (!HasGCD) return 0;
         //TODO: Load in Config for Global GCD.
-        return GetFaster(caster,1.5);
+        return GetFaster(caster, 1.5);
     }
-    
-    public double GetTickRate(Unit caster, double baseRate){
-        return GetFaster(caster,baseRate);
+
+    public double GetTickRate(Unit caster, double baseRate)
+    {
+        return GetFaster(caster, baseRate);
     }
 
     private double GetFaster(Unit caster, double baseRate)
@@ -67,10 +70,12 @@ public class Spell
 
     public void Cast(Unit caster, List<Unit> targets)
     {
+        double timeToMove = Math.Max(0, GetGCD(caster) - GetCastTime(caster) - GetChannelTime(caster));
+
         //Handle the GCD. 90% of the time we assume we're full channeling.
         //Until someone tells me clipping is better. In which case I'll hate myself.
-        Console.WriteLine(Name + " - " + Math.Max(0,GetGCD(caster) - GetCastTime(caster) - GetChannelTime(caster)));
-        SimLoop.Instance.Update(Math.Max(0,GetGCD(caster) - GetCastTime(caster) - GetChannelTime(caster)));
+        ConsoleLogger.Log(SimulationLogLevel.CastEvents, $"{Name} - {timeToMove}");
+        SimLoop.Instance.Update(timeToMove);
         //Handles the Cast Time.
         SimLoop.Instance.Update(GetCastTime(caster));
         OnCast?.Invoke(caster, this, targets);

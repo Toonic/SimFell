@@ -8,12 +8,24 @@ public static class ConsoleLogger
 
     public static void Configure(IConfiguration config)
     {
-        var simConfig = config.GetSection("SimulationLogging");
-        var levelStr = simConfig.GetValue<string>("MinimumLevel") ?? SimulationLogLevel.All.ToString();
-        if (!Enum.TryParse<SimulationLogLevel>(levelStr, true, out _enabledLevels))
+        var levelsSection = config.GetSection("SimulationLogging").GetSection("Levels");
+        var levelNames = levelsSection.Exists()
+            ? levelsSection.GetChildren().Select(c => c.Value).ToArray()
+            : Array.Empty<string>();
+
+        if (levelNames.Length > 0)
         {
-            _enabledLevels = SimulationLogLevel.All;
+            SimulationLogLevel flags = 0;
+            foreach (var name in levelNames)
+            {
+                if (Enum.TryParse<SimulationLogLevel>(name, true, out var lvl))
+                {
+                    flags |= lvl;
+                }
+            }
+            _enabledLevels = flags;
         }
+        else _enabledLevels = SimulationLogLevel.All;
     }
 
     public static void Log(SimulationLogLevel level, string message, string? emoji = null)
@@ -25,7 +37,7 @@ public static class ConsoleLogger
 
         var formatted = emoji is null ? message : $"{emoji} {message}";
         Console.WriteLine($"Time {SimLoop.Instance.GetElapsed():F2}: {formatted}");
-        FileLogger.SimulationEvent(message, emoji);
+        FileLogger.SimulationEvent(level, $"{SimLoop.Instance.GetElapsed():F2}s -> {formatted}");
     }
 }
 
