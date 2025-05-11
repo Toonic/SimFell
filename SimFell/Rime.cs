@@ -48,7 +48,6 @@ public class Rime : Unit
                         int animaGained = 0;
                         int maxAnimaGainedPerTick = 3;
                         
-                        ConsoleLogger.Log(SimulationLogLevel.Debug, "Hit");
                         foreach (var unit in targets)
                         {
                             animaGained += 1;

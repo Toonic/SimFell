@@ -235,7 +235,10 @@ public class Unit : SimLoopListener
 
     public void StartCasting(Spell spell, List<Unit> targets)
     {
-        ConsoleLogger.Log(SimulationLogLevel.CastEvents, $"Casting {spell.Name}");
+        ConsoleLogger.Log(
+            SimulationLogLevel.CastEvents,
+            $"Casting \u001b[1;34m{spell.Name}\u001b[0;30m"
+        );
         _currentSpell = spell;
         _targets = targets;
         _castProgress = 0;
