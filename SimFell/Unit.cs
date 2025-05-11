@@ -10,7 +10,7 @@ public class Unit : SimLoopListener
     public List<Aura> Debuffs { get; set; } = [];
     public List<Spell> SpellBook { get; set; } = [];
     public Unit? PrimaryTarget { get; private set; }
-    
+
     // Casting
     public bool IsCasting = false;
     private Spell? _currentSpell;
@@ -178,27 +178,28 @@ public class Unit : SimLoopListener
             }
         }
 
-        // Update the Cooldowns for the Unit.
-        foreach (var spell in SpellBook)
-        {
-            spell.UpdateCooldown(deltaTime);
-        }
-
         //Update the GCD for the Unit.
         GCD = Math.Max(0, GCD - deltaTime);
-        
+        // if (GCD > 0) ConsoleLogger.Log(SimulationLogLevel.Debug, $"GCD in Update: {GCD}");
+
         // Updates Casting.
         if (IsCasting && _currentSpell != null)
         {
             _castProgress += deltaTime;
             _tickProgress += deltaTime;
             //If the casting is done.
-            if (_castProgress >= _currentSpell.CastTime)
+            if (_castProgress >= _currentSpell.GetCastTime(this))
             {
-                _currentSpell.Cast(this,_targets);
+                _currentSpell.Cast(this, _targets);
                 StopCasting();
             }
             //TODO: Handle Tick Events.
+        }
+
+        // Update the Cooldowns for the Unit.
+        foreach (var spell in SpellBook)
+        {
+            spell.UpdateCooldown(deltaTime);
         }
     }
 
@@ -239,23 +240,30 @@ public class Unit : SimLoopListener
             SimulationLogLevel.CastEvents,
             $"Casting \u001b[1;34m{spell.Name}\u001b[0;30m"
         );
+
         _currentSpell = spell;
         _targets = targets;
         _castProgress = 0;
         _tickProgress = 0;
         IsCasting = true;
         if (spell.HasGCD) SetGCD(spell.GetGCD(this));
-        
+        // ConsoleLogger.Log(SimulationLogLevel.Debug, $"GCD in StartCasting: {GCD} ({spell.HasGCD})");
+
         //Instant Cast spells should be triggered same game tick.
         if (spell.ChannelTime == 0 && spell.CastTime == 0)
         {
-            _currentSpell.Cast(this,_targets);
+            _currentSpell.Cast(this, _targets);
             StopCasting();
         }
     }
 
     public void StopCasting()
     {
+        // ConsoleLogger.Log(
+        //     SimulationLogLevel.Debug,
+        //     $"Time after casting: \u001b[1;36m{SimLoop.Instance.GetElapsed()}\u001b[0;30m"
+        // );
+
         IsCasting = false;
         _currentSpell = null;
         _tickProgress = 0;

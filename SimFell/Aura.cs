@@ -10,7 +10,7 @@ public class Aura
 
     // Runtime Data
     private double _timeRemaining;
-    private double _tickTimer;
+    private int _ticksOccurred;
     private bool _expired;
 
     //Owner its on.
@@ -35,35 +35,40 @@ public class Aura
         OnRemove = onRemove;
 
         _timeRemaining = duration;
-        _tickTimer = 0;
+        _ticksOccurred = 0;
         _expired = false;
     }
-    
+
     public double RemainingTime => _timeRemaining;
 
     public void Refresh()
     {
         //TODO: Pandemic for dots/buffs??
         _timeRemaining = Duration;
-        _tickTimer = 0;
+        _ticksOccurred = 0;
     }
 
     public void Update(double deltaTime, Unit owner)
     {
         if (_expired) return;
 
-        _timeRemaining -= deltaTime;
-        _tickTimer += deltaTime;
-
-        if (_tickTimer >= TickInterval)
+        // Determine how many ticks should have occurred based on elapsed time
+        double elapsed = Duration - _timeRemaining;
+        int ticksShouldHaveOccurred = (int)Math.Floor(elapsed / TickInterval);
+        // Fire any missed ticks
+        while (_ticksOccurred < ticksShouldHaveOccurred)
         {
-            _tickTimer = 0;
             OnTick?.Invoke(owner);
+            _ticksOccurred++;
         }
 
+        // Expire the aura if time is up
         if (_timeRemaining <= 0)
         {
             _expired = true;
         }
+
+        // Reduce remaining duration
+        _timeRemaining -= deltaTime;
     }
 }
