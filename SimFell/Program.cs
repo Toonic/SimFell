@@ -11,10 +11,10 @@ ConsoleLogger.Configure(configuration);
 FileLogger.Configure(configuration);
 
 string configFolder = Path.Combine(AppContext.BaseDirectory, "Configs");
-string fullPath = Path.Combine(configFolder, "test.simfell");
+//string fullPath = Path.Combine(configFolder, "test.simfell");
+string fullPath = Path.Combine(configFolder, "Rime-NoStats.simfell");
 
 var config = SimFell.SimFileParser.SimfellParser.ParseFile(fullPath);
-
 var player = config.Hero switch
 {
     "Rime" => new Rime("Rime", 100),

@@ -24,7 +24,7 @@ public static class ConsoleLogger
         }
 
         var formatted = emoji is null ? message : $"{emoji} {message}";
-        Console.WriteLine(formatted);
+        Console.WriteLine($"Time {SimLoop.Instance.GetElapsed():F2}: {formatted}");
         FileLogger.SimulationEvent(message, emoji);
     }
 }

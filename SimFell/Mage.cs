@@ -67,9 +67,9 @@ public class Mage : Unit
                         id: "05",
                         name: "Feared",
                         duration: 10,
-                        tickInterval: 1,
-                        onApply: unit => unit.DamageReceivedMultiplier = 1.2f,
-                        onRemove: unit => unit.DamageReceivedMultiplier = 1.0f
+                        tickInterval: 1
+                        // onApply: unit => unit.DamageReceivedMultiplier = 1.2f,
+                        // onRemove: unit => unit.DamageReceivedMultiplier = 1.0f
                     );
                     foreach (var target in targets)
                     {

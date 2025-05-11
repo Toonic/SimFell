@@ -38,6 +38,15 @@ public class Aura
         _tickTimer = 0;
         _expired = false;
     }
+    
+    public double RemainingTime => _timeRemaining;
+
+    public void Refresh()
+    {
+        //TODO: Pandemic for dots/buffs??
+        _timeRemaining = Duration;
+        _tickTimer = 0;
+    }
 
     public void Update(double deltaTime, Unit owner)
     {

@@ -85,6 +85,7 @@ public class SimLoop
 
     public void Update(double delta)
     {
+        if (delta != 0) Console.WriteLine($"Time Delta: {delta}");
         int steps = (int)(delta / step);
         double remainder = delta % step;
 
@@ -99,6 +100,11 @@ public class SimLoop
             OnUpdate?.Invoke(remainder);
             elapsed += remainder;
         }
+    }
+
+    public double GetElapsed()
+    {
+        return elapsed;
     }
 
     public static void ShowConfig(SimFellConfiguration config)

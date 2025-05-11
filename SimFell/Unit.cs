@@ -1,29 +1,26 @@
 using SimFell.Logging;
 namespace SimFell;
 
-public class Unit(
-    string name,
-    int health = 100
-)
-    : SimLoopListener
+public class Unit  : SimLoopListener
 {
     // Base Variables
-    public string Name { get; set; } = name;
-    public int Health { get; set; } = health;
+    public string Name { get; set; }
+    public int Health { get; set; }
     public List<Aura> Buffs { get; set; } = [];
     public List<Aura> Debuffs { get; set; } = [];
     public List<Spell> SpellBook { get; set; } = [];
     public Unit? PrimaryTarget { get; set; }
 
     // Baseline stats are always flat 100. As point values.
-    private int _mainStat = 100;
-    private int _critcalStrikeStat = 100;
-    private int _expertiseStat = 100;
-    private int _hasteStat = 100;
-    private int _spiritStat = 100;
+    public Stat MainStat = new Stat(100);
+    public Stat CritcalStrikeStat = new Stat(0,true);
+    public Stat ExpertiseStat = new Stat(0, true);
+    public Stat HasteStat = new Stat(0, true);
+    public Stat SpiritStat = new Stat(0, true);
 
-    // Multipliers
-    public double DamageReceivedMultiplier { get; set; } = 1.0f;
+    // Other Stat Buffs
+    public Stat DamageBuffs = new Stat(0);
+    public Stat DamageTakenDebuffs = new Stat(0);
 
     //Const.
     private const double PointEffectiveness = 0.21; //Base effectivenes per point. (0.21%).
@@ -33,64 +30,27 @@ public class Unit(
     //Events
     public Action<Unit, float, object> OnDamageReceived { get; set; } = (unit, damage, source) => { };
 
+    public Unit(string name, int health)
+    {
+        Name = name;
+        Health = health;
+        //Add base 5% Crit.
+        CritcalStrikeStat.AddModifier(new StatModifier(StatModifier.StatModType.BasePercentage, 5, this));
+    }
+
+    public Unit(string name, int health, int mainStat, int critcalStrikeStat, int expertiseStat, int hasteStat,
+        int spiritStat) : this(name, health)
+    {
+        SetPrimaryStats(mainStat, critcalStrikeStat, expertiseStat, hasteStat, spiritStat);
+    }
+
     public void SetPrimaryStats(int mainStat, int criticalStrikeStat, int expertiseStat, int hasteStat, int spiritStat)
     {
-        _mainStat = mainStat;
-        _critcalStrikeStat = criticalStrikeStat;
-        _expertiseStat = expertiseStat;
-        _hasteStat = hasteStat;
-        _spiritStat = spiritStat;
-    }
-
-    /// <summary>
-    /// Returns the Main Stat with modifiers.
-    /// </summary>
-    /// <returns></returns>
-    private float GetMainStat()
-    {
-        return _mainStat;
-    }
-
-    private float GetStatAsPercentage(int statPoints)
-    {
-        double statPercentage = 0;
-        int breakpointIndex = 0;
-
-        for (int i = 0; i < statPoints; i++)
-        {
-            double effectiveIncrease = PointEffectiveness;
-
-            if (breakpointIndex < _breakPoints.Length && statPercentage >= _breakPoints[breakpointIndex])
-            {
-                effectiveIncrease *= _breakPointMultipliers[breakpointIndex];
-                breakpointIndex++;
-            }
-
-            statPercentage += effectiveIncrease;
-        }
-
-        return (float)statPercentage;
-    }
-
-    /// <summary>
-    /// Returns the current Critical Strike Stat, including modifiers.
-    /// </summary>
-    /// <returns>As percentage.</returns>
-    private float GetCriticalStrikeStat()
-    {
-        float stat = GetStatAsPercentage(_critcalStrikeStat);
-        stat += 5; //Base 5% Critical Strike chance for everyone.
-        return stat;
-    }
-
-    /// <summary>
-    /// Returns the current Expertise Stat, including modifiers.
-    /// </summary>
-    /// <returns>As percentage.</returns>
-    private float GetExpertiseStat()
-    {
-        float stat = GetStatAsPercentage(_expertiseStat);
-        return stat;
+        MainStat.BaseValue = mainStat;
+        CritcalStrikeStat.BaseValue = criticalStrikeStat;
+        ExpertiseStat.BaseValue = expertiseStat;
+        HasteStat.BaseValue = hasteStat;
+        SpiritStat.BaseValue = spiritStat;
     }
 
     /// <summary>
@@ -99,9 +59,16 @@ public class Unit(
     /// <param name="buff"></param>
     public void ApplyBuff(Aura buff)
     {
-        Buffs.Add(buff);
+        var existing = Buffs.Where(aura => aura.ID == buff.ID).ToList();
+        if (existing.Count >= buff.MaxStacks)
+            existing.MinBy(aura => aura.RemainingTime)?.Refresh();
+        else
+        {
+            buff.OnApply?.Invoke(this);
+            Buffs.Add(buff);
+        }
+        
         ConsoleLogger.Log(SimulationLogLevel.TypeA, $"{Name} gains buff: {buff.Name}", "💪");
-        buff.OnApply?.Invoke(this);
     }
 
     /// <summary>
@@ -110,9 +77,16 @@ public class Unit(
     /// <param name="debuff"></param>
     public void ApplyDebuff(Aura debuff)
     {
-        Debuffs.Add(debuff);
+        var existing = Debuffs.Where(aura => aura.ID == debuff.ID).ToList();
+        if (existing.Count >= debuff.MaxStacks)
+            existing.MinBy(aura => aura.RemainingTime)?.Refresh();
+        else
+        {
+            debuff.OnApply?.Invoke(this);
+            Debuffs.Add(debuff);
+        }
+
         ConsoleLogger.Log(SimulationLogLevel.TypeA, $"{Name} gains debuff: {debuff.Name}", "💔");
-        debuff.OnApply?.Invoke(this);
     }
 
     /// <summary>
@@ -124,9 +98,11 @@ public class Unit(
     /// <param name="damageSource">Source of the damage. (EG: Spell, Aura, etc.) Used mostly for debugging.</param>
     public void DealDamage(Unit target, float damagePercent, object damageSource)
     {
-        var damage = (damagePercent / 100f) * GetMainStat(); // Adds the Damage as Main Stat.
-        damage *= 1 + (GetExpertiseStat() / 100f); // Modifies the damage based on expertise.
-        var isCritical = SimRandom.Roll(GetCriticalStrikeStat());
+        var damage = (damagePercent / 100f) * MainStat.GetValue(); // Adds the Damage as Main Stat.
+        damage *= 1 + (ExpertiseStat.GetValue() / 100f); // Modifies the damage based on expertise.
+        damage = DamageBuffs.GetValue(damage);
+        
+        var isCritical = SimRandom.Roll(CritcalStrikeStat.GetValue());
         damage *= isCritical ? 2 : 1; //Doubles the damage if there is a Critical Hit.
 
         target.TakeDamage(damage, isCritical, damageSource);
@@ -141,8 +117,7 @@ public class Unit(
     /// <param name="damageSource">Source of the Damage.</param>
     public void TakeDamage(float amount, bool isCritical, object damageSource)
     {
-        var totalDamage = (int)(amount * DamageReceivedMultiplier);
-
+        var totalDamage = (int)DamageTakenDebuffs.GetValue(amount);
         // Log damage event with coloring for critical hits
         var sourceName = damageSource is Spell spell ? spell.Name
                          : damageSource is Aura aura ? aura.Name
