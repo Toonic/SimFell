@@ -13,11 +13,12 @@ public class Spell
     public double ChannelTime { get; set; }
     public Boolean HasGCD { get; set; }
     public Action<Unit, Spell, List<Unit>>? OnCast { get; set; }
+    public Action<Unit, Spell, List<Unit>>? OnTick { get; set; }
     public Func<bool>? CanCast { get; set; }
 
     public Spell(
         string id, string name, double cooldown, double castTime, double channelTime = 0, bool hasGCD = true,
-        Func<bool>? canCast = null, Action<Unit, Spell, List<Unit>>? onCast = null)
+        Func<bool>? canCast = null, Action<Unit, Spell, List<Unit>>? onCast = null, Action<Unit, Spell, List<Unit>>? onTick = null)
     {
         ID = id;
         Name = name;
@@ -26,6 +27,7 @@ public class Spell
         ChannelTime = channelTime;
         HasGCD = hasGCD;
         OnCast = onCast;
+        OnTick = onTick;
         CanCast = canCast;
         OffCooldown = 0;
     }
@@ -76,6 +78,7 @@ public class Spell
 
     public void Tick(Unit caster, List<Unit> targets)
     {
-        //TODO: Channeling
+        OnCast?.Invoke(caster,this,targets);
+        //TODO: Tick Rate handling.
     }
 }

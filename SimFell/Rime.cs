@@ -1,4 +1,5 @@
 using SimFell.Logging;
+using Spectre.Console;
 
 namespace SimFell;
 
@@ -97,6 +98,14 @@ public class Rime : Unit
                     DealDamage(target, 65, spell);
                     UpdateAnima(1);
                 }
+            },
+            onTick: (unit, spell, targets) =>
+            {
+                //TODO: Check to see if target is dead instead of getting first.
+                var target = targets.FirstOrDefault() ?? throw new Exception("No valid targets");
+                
+                DealDamage(target, 65, spell);
+                UpdateAnima(1);
             }
         );
 
