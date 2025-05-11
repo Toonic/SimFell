@@ -47,7 +47,7 @@ public class Rime : Unit
                     {
                         int animaGained = 0;
                         int maxAnimaGainedPerTick = 3;
-                        
+
                         foreach (var unit in targets)
                         {
                             animaGained += 1;
@@ -219,7 +219,7 @@ public class Rime : Unit
         SpellBook.Add(burstingIce);
         //SpellBook.Add(freezingTorrent);
         //SpellBook.Add(glacialBlast);
-        //SpellBook.Add(frostBolt);
+        // SpellBook.Add(frostBolt);
     }
 
     /// <summary>

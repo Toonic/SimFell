@@ -10,9 +10,9 @@ public class SimLoop
     private static SimLoop? _instance;
     public static SimLoop Instance => _instance ??= new();
     public event Action<double>? OnUpdate;
-    private const double step = 0.01; // Simulate 0.1 th of a second.
+    private const double step = 0.0001; // Simulate 0.1 th of a second.
 
-    private double p_Elapsed;
+    private long _ticks;
     private double damageDealt;
 
     public enum SimulationMode
@@ -23,7 +23,7 @@ public class SimLoop
 
     public void Start(Unit player, List<Unit> enemies, SimulationMode mode = SimulationMode.Time, double duration = 60)
     {
-        p_Elapsed = 0;
+        _ticks = 0;
         List<Unit> targets = new List<Unit>();
         foreach (var enemy in enemies)
         {
@@ -34,7 +34,7 @@ public class SimLoop
         while (true)
         {
             // Stop condition: Time mode
-            if (mode == SimulationMode.Time && p_Elapsed >= duration)
+            if (mode == SimulationMode.Time && GetElapsed() >= duration)
                 break;
             if (mode == SimulationMode.Time)
             {
@@ -68,9 +68,9 @@ public class SimLoop
                     targets.RemoveAt(i);
                 }
             }
-            
-            p_Elapsed += step;
+
             OnUpdate?.Invoke(step);
+            _ticks++;
         }
 
         foreach (var enemy in enemies)
@@ -80,7 +80,7 @@ public class SimLoop
 
         ConsoleLogger.Log(SimulationLogLevel.DamageEvents, "--------------");
         ConsoleLogger.Log(SimulationLogLevel.DamageEvents, $"Damage Dealt: {damageDealt}");
-        ConsoleLogger.Log(SimulationLogLevel.DamageEvents, $"DPS: {damageDealt / p_Elapsed}");
+        ConsoleLogger.Log(SimulationLogLevel.DamageEvents, $"DPS: {damageDealt / GetElapsed()}");
     }
 
     private void OnDamageReceived(Unit unit, float damageReceived, object source)
@@ -102,19 +102,20 @@ public class SimLoop
         for (int i = 0; i < steps; i++)
         {
             OnUpdate?.Invoke(step);
-            p_Elapsed += step;
+            _ticks++;
         }
 
-        if (remainder >= step)
+        if (remainder > 0)
         {
+            // advance one tick for the remainder; elapsed time includes remainder in GetElapsed()
             OnUpdate?.Invoke(remainder);
-            p_Elapsed += remainder;
+            _ticks++;
         }
     }
 
     public double GetElapsed()
     {
-        return p_Elapsed;
+        return _ticks * step;
     }
 
     public static void ShowConfig(SimFellConfiguration config)
