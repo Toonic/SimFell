@@ -103,6 +103,7 @@ public class Unit : SimLoopListener
         damage = DamageBuffs.GetValue(damage);
 
         var isCritical = SimRandom.Roll(CritcalStrikeStat.GetValue());
+        isCritical = SimRandom.Deterministic ? false : isCritical;
         damage *= isCritical ? 2 : 1; //Doubles the damage if there is a Critical Hit.
 
         target.TakeDamage(damage, isCritical, damageSource);
