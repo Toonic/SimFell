@@ -42,7 +42,7 @@ public class Spell
 
     public bool CheckCanCast(Unit caster)
     {
-        return (CanCast?.Invoke() ?? true) && OffCooldown <= SimLoop.Instance.GetElapsed() && caster.GCD <= 0;
+        return (CanCast?.Invoke() ?? true) && OffCooldown <= SimLoop.Instance.GetElapsed() && caster.GCD <= SimLoop.Instance.GetElapsed();
     }
 
     public double GetCastTime(Unit caster)

@@ -220,11 +220,11 @@ public class Unit : SimLoopListener
 
     public void SetGCD(double gcd)
     {
-        // if (gcd != 0) ConsoleLogger.Log(
-        //     SimulationLogLevel.CastEvents,
-        //     $"\u001b[1;34mGCD\u001b[0;30m: \u001b[1;36m{gcd}\u001b[0;30m"
-        // );
-        // GCD = gcd;
+        if (gcd != 0) ConsoleLogger.Log(
+            SimulationLogLevel.CastEvents,
+            $"\u001b[1;34mGCD\u001b[0;30m: \u001b[1;36m{gcd}\u001b[0;30m"
+        );
+        GCD = gcd + SimLoop.Instance.GetElapsed();
     }
 
     public void StartCasting(Spell spell, List<Unit> targets)
