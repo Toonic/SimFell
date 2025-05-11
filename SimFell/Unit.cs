@@ -10,7 +10,7 @@ public class Unit : SimLoopListener
     public List<Aura> Debuffs { get; set; } = [];
     public List<Spell> SpellBook { get; set; } = [];
     public Unit? PrimaryTarget { get; set; }
-    
+
     public double GCD { get; set; }
 
     // Baseline stats are always flat 100. As point values.
@@ -70,7 +70,11 @@ public class Unit : SimLoopListener
             Buffs.Add(buff);
         }
 
-        ConsoleLogger.Log(SimulationLogLevel.BuffEvents, $"{Name} gains buff: {buff.Name}", "💪");
+        ConsoleLogger.Log(
+            SimulationLogLevel.BuffEvents,
+            $"\u001b[1;34m{Name}\u001b[0;30m gains buff: \u001b[1;33m{buff.Name}\u001b[0;30m",
+            "💪"
+        );
     }
 
     /// <summary>
@@ -88,7 +92,11 @@ public class Unit : SimLoopListener
             Debuffs.Add(debuff);
         }
 
-        ConsoleLogger.Log(SimulationLogLevel.DebuffEvents, $"{Name} gains debuff: {debuff.Name}", "💔");
+        ConsoleLogger.Log(
+            SimulationLogLevel.DebuffEvents,
+            $"\u001b[1;34m{Name}\u001b[0;30m gains debuff: \u001b[1;33m{debuff.Name}\u001b[0;30m",
+            "💔"
+        );
     }
 
     /// <summary>
@@ -125,7 +133,10 @@ public class Unit : SimLoopListener
         var sourceName = damageSource is Spell spell ? spell.Name
                          : damageSource is Aura aura ? aura.Name
                          : "Unknown";
-        var message = $"{sourceName} hits {Name} for {totalDamage}.{(isCritical ? " (Critical Strike)" : "")}";
+        var message = $"\u001b[1;34m{sourceName}\u001b[0;30m"
+            + $" hits \u001b[1;33m{Name}\u001b[0;30m"
+            + $" for \u001b[1;35m{totalDamage}\u001b[0;30m "
+            + $"{(isCritical ? " (Critical Strike)" : "")}";
         ConsoleLogger.Log(SimulationLogLevel.DamageEvents, message, isCritical ? "💥" : null);
 
         OnDamageReceived?.Invoke(this, totalDamage, damageSource);
@@ -140,7 +151,11 @@ public class Unit : SimLoopListener
             Buffs[i].Update(deltaTime, this);
             if (Buffs[i].IsExpired)
             {
-                ConsoleLogger.Log(SimulationLogLevel.BuffEvents, $"{Name} loses buff: {Buffs[i].Name}", "💪🛑");
+                ConsoleLogger.Log(
+                    SimulationLogLevel.BuffEvents,
+                    $"\u001b[1;34m{Name}\u001b[0;30m loses buff: \u001b[1;33m{Buffs[i].Name}\u001b[0;30m",
+                    "💪🛑"
+                );
                 Buffs[i].OnRemove?.Invoke(this);
                 Buffs.RemoveAt(i);
             }
@@ -152,18 +167,22 @@ public class Unit : SimLoopListener
             Debuffs[i].Update(deltaTime, this);
             if (Debuffs[i].IsExpired)
             {
-                ConsoleLogger.Log(SimulationLogLevel.DebuffEvents, $"{Name} loses debuff: {Debuffs[i].Name}", "💔🛑");
+                ConsoleLogger.Log(
+                    SimulationLogLevel.DebuffEvents,
+                    $"\u001b[1;34m{Name}\u001b[0;30m loses debuff: \u001b[1;33m{Debuffs[i].Name}\u001b[0;30m",
+                    "💔🛑"
+                );
                 Debuffs[i].OnRemove?.Invoke(this);
                 Debuffs.RemoveAt(i);
             }
         }
-        
+
         // Update the Cooldowns for the Unit.
         foreach (var spell in SpellBook)
         {
             spell.UpdateCooldown(deltaTime);
         }
-        
+
         //Update the GCD for the Unit.
         GCD = Math.Max(0, GCD - deltaTime);
     }
@@ -180,14 +199,22 @@ public class Unit : SimLoopListener
 
     public void Died()
     {
-        ConsoleLogger.Log(SimulationLogLevel.DamageEvents, $"{Name} is dead.", "💀");
+        ConsoleLogger.Log(
+            SimulationLogLevel.DamageEvents,
+            $"\u001b[1;34m{Name}\u001b[0;30m is dead.",
+            "💀"
+        );
+
         //TODO: Future cleanup.
         Stop();
     }
 
     public void SetGCD(double gcd)
     {
-        if(gcd != 0) ConsoleLogger.Log(SimulationLogLevel.CastEvents, $"GCD: {gcd}");
+        if (gcd != 0) ConsoleLogger.Log(
+            SimulationLogLevel.CastEvents,
+            $"\u001b[1;34mGCD\u001b[0;30m: \u001b[1;36m{gcd}\u001b[0;30m"
+        );
         GCD = gcd;
     }
 }

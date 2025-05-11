@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Configuration;
+using Spectre.Console;
 
 namespace SimFell.Logging;
 
@@ -36,7 +37,7 @@ public static class ConsoleLogger
         }
 
         var formatted = emoji is null ? message : $"{emoji} {message}";
-        Console.WriteLine($"Time {SimLoop.Instance.GetElapsed():F2}: {formatted}");
+        AnsiConsole.Console.WriteLine($"\u001b[0;30mTime \u001b[1;36m{SimLoop.Instance.GetElapsed():F2}\u001b[0;30m: {formatted}");
         FileLogger.SimulationEvent(level, $"{SimLoop.Instance.GetElapsed():F2}s -> {formatted}");
     }
 }

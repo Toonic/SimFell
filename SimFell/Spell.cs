@@ -72,14 +72,17 @@ public class Spell
     {
         //Handle the GCD. 90% of the time we assume we're full channeling.
         //Until someone tells me clipping is better. In which case I'll hate myself.
-        ConsoleLogger.Log(SimulationLogLevel.CastEvents, $"Casting {Name}");
+        ConsoleLogger.Log(
+            SimulationLogLevel.CastEvents,
+            $"Casting \u001b[1;34m{Name}\u001b[0;30m"
+        );
         SimLoop.Instance.Update(GetCastTime(caster));
         OnCast?.Invoke(caster, this, targets);
-        
+
         //Sets the GCD on the Unit.
         double calculatedGCD = Math.Max(0, GetGCD(caster) - GetCastTime(caster) - GetChannelTime(caster));
         caster.SetGCD(calculatedGCD);
-        
+
         //Sets the cooldown.
         RemainingCooldown = Cooldown;  // Reset cooldown after casting
     }
