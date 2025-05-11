@@ -41,9 +41,9 @@ public static class ConsoleLogger
         var safeFormatted = Markup.Escape(formatted);
         var time = SimLoop.Instance.GetElapsed();
 
-        AnsiConsole.MarkupLine($"Time [aqua]{time:F4}[/]: {safeFormatted}");
+        AnsiConsole.MarkupLine($"Time [aqua]{time:F2}[/]: {safeFormatted}");
         // Console.WriteLine($"Time [aqua]{time:F4}[/]: {safeFormatted}");
-        FileLogger.SimulationEvent(level, $"{time:F4}s -> {formatted}");
+        FileLogger.SimulationEvent(level, $"{time:F2}s -> {formatted}");
     }
 }
 

@@ -10,7 +10,9 @@ public class SimLoop
     private static SimLoop? _instance;
     public static SimLoop Instance => _instance ??= new();
     public event Action? OnUpdate;
-    private const double step = 0.01; // Simulate 0.1 th of a second.
+    // Simulate 0.1 th of a second. Or 100 Ticks a Second.
+    // For reference, WoW servers run at around a 20 Tickrate.
+    private const double step = 0.01;
 
     private long _ticks;
     private double damageDealt;

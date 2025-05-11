@@ -237,6 +237,7 @@ public class Unit : SimLoopListener
         _currentSpell = spell;
         _targets = targets;
         _castTime = SimLoop.Instance.GetElapsed() + spell.GetCastTime(this);
+        //TODO: Channel.
         IsCasting = true;
         if (spell.HasGCD) SetGCD(spell.GetGCD(this));
     }
