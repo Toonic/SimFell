@@ -36,8 +36,13 @@ public static class ConsoleLogger
             return;
         }
 
+        //var formatted = emoji is null ? message : $"{emoji} {message}";
+        //AnsiConsole.Console.WriteLine($"\u001b[0;30mTime \u001b[1;36m{SimLoop.Instance.GetElapsed():F2}\u001b[0;30m: {formatted}");
         var formatted = emoji is null ? message : $"{emoji} {message}";
-        AnsiConsole.Console.WriteLine($"\u001b[0;30mTime \u001b[1;36m{SimLoop.Instance.GetElapsed():F2}\u001b[0;30m: {formatted}");
+        var safeFormatted = Markup.Escape(formatted);
+        var time = SimLoop.Instance.GetElapsed();
+
+        AnsiConsole.MarkupLine($"Time [aqua]{time:F2}[/]: {safeFormatted}");
         FileLogger.SimulationEvent(level, $"{SimLoop.Instance.GetElapsed():F2}s -> {formatted}");
     }
 }

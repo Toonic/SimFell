@@ -10,7 +10,7 @@ public class SimLoop
     private static SimLoop? _instance;
     public static SimLoop Instance => _instance ??= new();
     public event Action<double>? OnUpdate;
-    private const double step = 0.1; // Simulate 0.1 th of a second.
+    private const double step = 0.01; // Simulate 0.1 th of a second.
 
     private double p_Elapsed;
     private double damageDealt;
