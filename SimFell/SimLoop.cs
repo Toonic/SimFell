@@ -1,5 +1,7 @@
 using SimFell.SimFileParser.Models;
 using SimFell.Logging;
+using Spectre.Console;
+using System.Threading.Tasks.Dataflow;
 
 namespace SimFell;
 
@@ -90,7 +92,10 @@ public class SimLoop
     public void Update(double delta)
     {
         if (delta == 0) return;
-        if (delta != 0) ConsoleLogger.Log(SimulationLogLevel.Debug, $"Time Delta: {delta}");
+        ConsoleLogger.Log(
+            SimulationLogLevel.Debug,
+            $"Time Delta: \u001b[1;36m{delta}\u001b[0;30m"
+        );
         int steps = (int)(delta / step);
         double remainder = delta % step;
 
@@ -115,5 +120,51 @@ public class SimLoop
     public static void ShowConfig(SimFellConfiguration config)
     {
         ConsoleLogger.Log(SimulationLogLevel.Debug, config.ToStringFormatted);
+    }
+
+    public static void ShowPrettyConfig(SimFellConfiguration config)
+    {
+        var grid = new Grid();
+
+        grid.AddColumn();
+        grid.AddColumn();
+
+        grid.AddRow(
+            new Text("\u001b[1;34mHero\u001b[0m").Centered(),
+            new Text($"\u001b[1;33m{config.Hero}\u001b[0m").Centered()
+        );
+        grid.AddEmptyRow();
+        grid.AddRow(
+            new Text("\u001b[1;34mIntellect\u001b[0m").Centered(),
+            new Text($"\u001b[1;33m{config.Intellect}\u001b[0m").Centered()
+        );
+        grid.AddRow(
+            new Text("\u001b[1;34mCrit\u001b[0m").Centered(),
+            new Text($"\u001b[1;33m{config.Crit}\u001b[0m").Centered()
+        );
+        grid.AddRow(
+            new Text("\u001b[1;34mExpertise\u001b[0m").Centered(),
+            new Text($"\u001b[1;33m{config.Expertise}\u001b[0m").Centered()
+        );
+        grid.AddRow(
+            new Text("\u001b[1;34mHaste\u001b[0m").Centered(),
+            new Text($"\u001b[1;33m{config.Haste}\u001b[0m").Centered()
+        );
+        grid.AddRow(
+            new Text("\u001b[1;34mSpirit\u001b[0m").Centered(),
+            new Text($"\u001b[1;33m{config.Spirit}\u001b[0m").Centered()
+        );
+        grid.AddEmptyRow();
+        grid.AddRow(
+            new Text("\u001b[1;34mDuration\u001b[0m").Centered(),
+            new Text($"\u001b[1;33m{config.Duration}\u001b[0m").Centered()
+        );
+        grid.AddRow(
+            new Text("\u001b[1;34mEnemies\u001b[0m").Centered(),
+            new Text($"\u001b[1;33m{config.Enemies}\u001b[0m").Centered()
+        );
+
+        AnsiConsole.Write(grid);
+        AnsiConsole.WriteLine("\n");
     }
 }

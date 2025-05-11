@@ -11,7 +11,6 @@ ConsoleLogger.Configure(configuration);
 FileLogger.Configure(configuration);
 
 string configFolder = Path.Combine(AppContext.BaseDirectory, "Configs");
-//string fullPath = Path.Combine(configFolder, "test.simfell");
 string fullPath = Path.Combine(configFolder, "Rime-NoStats.simfell");
 
 var config = SimFell.SimFileParser.SimfellParser.ParseFile(fullPath);
@@ -37,6 +36,6 @@ for (int i = 0; i < config.Enemies; i++)
 
 SimRandom.EnableDeterminism();
 
-SimLoop.ShowConfig(config);
+SimLoop.ShowPrettyConfig(config);
 
 SimLoop.Instance.Start(player, enemies, SimLoop.SimulationMode.Time, config.Duration);

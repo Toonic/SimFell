@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-// using Microsoft.Extensions.Logging.Console;
 
 namespace SimFell.Logging;
 
@@ -45,7 +44,10 @@ public static class FileLogger
     /// </summary>
     public static void SimulationEvent(SimulationLogLevel level, string formatted)
     {
-        _logger.LogInformation($"[{level}] {formatted}");
+        // Remove ANSI escape codes from the formatted message
+        var cleanMessage = System.Text.RegularExpressions.Regex.Replace(formatted, "\u001b\\[[;\\d]*m", "");
+
+        _logger.LogInformation($"[{level}] {cleanMessage}");
     }
 }
 
