@@ -9,9 +9,15 @@ public class Unit : SimLoopListener
     public List<Aura> Buffs { get; set; } = [];
     public List<Aura> Debuffs { get; set; } = [];
     public List<Spell> SpellBook { get; set; } = [];
-    public Unit? PrimaryTarget { get; set; }
+    public Unit? PrimaryTarget { get; private set; }
     
-    public double GCD { get; set; }
+    // Casting
+    public bool IsCasting = false;
+    private Spell? _currentSpell;
+    private double _castProgress;
+    private double _tickProgress;
+    private List<Unit> _targets = new List<Unit>();
+    public double GCD { get; private set; }
 
     // Baseline stats are always flat 100. As point values.
     public Stat MainStat = new Stat(100);
@@ -23,11 +29,6 @@ public class Unit : SimLoopListener
     // Other Stat Buffs
     public Stat DamageBuffs = new Stat(0);
     public Stat DamageTakenDebuffs = new Stat(0);
-
-    //Const.
-    private const double PointEffectiveness = 0.21; //Base effectivenes per point. (0.21%).
-    private readonly double[] _breakPoints = [10.0, 15.0, 20.0, 25.0]; //Percent Threasholds for Break Points.
-    private readonly double[] _breakPointMultipliers = [1, 0.9, 0.8, 0.7, 0.6];
 
     //Events
     public Action<Unit, float, object> OnDamageReceived { get; set; } = (unit, damage, source) => { };
@@ -105,7 +106,7 @@ public class Unit : SimLoopListener
         damage = DamageBuffs.GetValue(damage);
 
         var isCritical = SimRandom.Roll(CritcalStrikeStat.GetValue());
-        isCritical = SimRandom.Deterministic ? false : isCritical;
+        isCritical = SimRandom.Deterministic ? false : isCritical; //TODO: Remove this/make it another setting.
         damage *= isCritical ? 2 : 1; //Doubles the damage if there is a Critical Hit.
 
         target.TakeDamage(damage, isCritical, damageSource);
@@ -166,6 +167,20 @@ public class Unit : SimLoopListener
         
         //Update the GCD for the Unit.
         GCD = Math.Max(0, GCD - deltaTime);
+        
+        // Updates Casting.
+        if (IsCasting && _currentSpell != null)
+        {
+            _castProgress += deltaTime;
+            _tickProgress += deltaTime;
+            //If the casting is done.
+            if (_castProgress >= _currentSpell.CastTime)
+            {
+                _currentSpell.Cast(this,_targets);
+                StopCasting();
+            }
+            //TODO: Handle Tick Events.
+        }
     }
 
     public void SetPrimaryTarget(Unit target)
@@ -187,7 +202,33 @@ public class Unit : SimLoopListener
 
     public void SetGCD(double gcd)
     {
-        if(gcd != 0) ConsoleLogger.Log(SimulationLogLevel.CastEvents, $"GCD: {gcd}");
+        ConsoleLogger.Log(SimulationLogLevel.DebuffEvents, $"GCD: {gcd}");
         GCD = gcd;
+    }
+
+    public void StartCasting(Spell spell, List<Unit> targets)
+    {
+        ConsoleLogger.Log(SimulationLogLevel.CastEvents, $"Casting {spell.Name}");
+        _currentSpell = spell;
+        _targets = targets;
+        _castProgress = 0;
+        _tickProgress = 0;
+        IsCasting = true;
+        if (spell.HasGCD) SetGCD(spell.GetGCD(this));
+        
+        //Instant Cast spells should be triggered same game tick.
+        if (spell.ChannelTime == 0 && spell.CastTime == 0)
+        {
+            _currentSpell.Cast(this,_targets);
+            StopCasting();
+        }
+    }
+
+    public void StopCasting()
+    {
+        IsCasting = false;
+        _currentSpell = null;
+        _tickProgress = 0;
+        _castProgress = 0;
     }
 }

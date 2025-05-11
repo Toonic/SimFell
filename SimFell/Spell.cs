@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using SimFell.Logging;
 
 namespace SimFell;
@@ -70,17 +71,13 @@ public class Spell
 
     public void Cast(Unit caster, List<Unit> targets)
     {
-        //Handle the GCD. 90% of the time we assume we're full channeling.
-        //Until someone tells me clipping is better. In which case I'll hate myself.
-        ConsoleLogger.Log(SimulationLogLevel.CastEvents, $"Casting {Name}");
-        SimLoop.Instance.Update(GetCastTime(caster));
         OnCast?.Invoke(caster, this, targets);
-        
-        //Sets the GCD on the Unit.
-        double calculatedGCD = Math.Max(0, GetGCD(caster) - GetCastTime(caster) - GetChannelTime(caster));
-        caster.SetGCD(calculatedGCD);
-        
         //Sets the cooldown.
         RemainingCooldown = Cooldown;  // Reset cooldown after casting
+    }
+
+    public void Tick(Unit caster, List<Unit> targets)
+    {
+        //TODO: Channeling
     }
 }

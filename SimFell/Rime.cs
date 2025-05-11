@@ -1,3 +1,5 @@
+using SimFell.Logging;
+
 namespace SimFell;
 
 public class Rime : Unit
@@ -45,7 +47,8 @@ public class Rime : Unit
                     {
                         int animaGained = 0;
                         int maxAnimaGainedPerTick = 3;
-
+                        
+                        ConsoleLogger.Log(SimulationLogLevel.Debug, "Hit");
                         foreach (var unit in targets)
                         {
                             animaGained += 1;
@@ -212,12 +215,12 @@ public class Rime : Unit
 
         //Spell Priority Order because why not?
         //SpellBook.Add(icyBlitz);
-        SpellBook.Add(danceOfSwallows);
-        SpellBook.Add(coldSnap);
+        //SpellBook.Add(danceOfSwallows);
+        //SpellBook.Add(coldSnap);
         SpellBook.Add(burstingIce);
-        SpellBook.Add(freezingTorrent);
-        SpellBook.Add(glacialBlast);
-        SpellBook.Add(frostBolt);
+        //SpellBook.Add(freezingTorrent);
+        //SpellBook.Add(glacialBlast);
+        //SpellBook.Add(frostBolt);
     }
 
     /// <summary>
