@@ -8,7 +8,7 @@ public class Spell
     public string ID { get; set; }
     public string Name { get; set; }
     public double Cooldown { get; set; }
-    public double RemainingCooldown { get; private set; }
+    public double OffCooldown { get; private set; }
     public double CastTime { get; set; }
     public double ChannelTime { get; set; }
     public Boolean HasGCD { get; set; }
@@ -27,18 +27,22 @@ public class Spell
         HasGCD = hasGCD;
         OnCast = onCast;
         CanCast = canCast;
-        RemainingCooldown = 0;
+        OffCooldown = 0;
     }
 
+    /// <summary>
+    /// Call when updating cooldown from other sources. (EG: On hit, reduce cooldown of X spell by Y).
+    /// </summary>
+    /// <param name="deltaTime"></param>
     public void UpdateCooldown(double deltaTime)
     {
-        if (RemainingCooldown > 0)
-            RemainingCooldown -= deltaTime;
+        if (OffCooldown > 0)
+            OffCooldown -= deltaTime;
     }
 
     public bool CheckCanCast(Unit caster)
     {
-        return (CanCast?.Invoke() ?? true) && RemainingCooldown <= 0 && caster.GCD <= 0;
+        return (CanCast?.Invoke() ?? true) && OffCooldown <= SimLoop.Instance.GetElapsed() && caster.GCD <= 0;
     }
 
     public double GetCastTime(Unit caster)
@@ -73,7 +77,7 @@ public class Spell
     {
         OnCast?.Invoke(caster, this, targets);
         //Sets the cooldown.
-        RemainingCooldown = Cooldown;  // Reset cooldown after casting
+        OffCooldown = Cooldown + SimLoop.Instance.GetElapsed();  // Reset cooldown after casting
     }
 
     public void Tick(Unit caster, List<Unit> targets)

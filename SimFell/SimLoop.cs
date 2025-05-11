@@ -9,8 +9,8 @@ public class SimLoop
 {
     private static SimLoop? _instance;
     public static SimLoop Instance => _instance ??= new();
-    public event Action<double>? OnUpdate;
-    private const double step = 0.0001; // Simulate 0.1 th of a second.
+    public event Action? OnUpdate;
+    private const double step = 0.01; // Simulate 0.1 th of a second.
 
     private long _ticks;
     private double damageDealt;
@@ -46,7 +46,7 @@ public class SimLoop
                 break;
 
             player.SetPrimaryTarget(targets[0]); //Used mostly for auto-casting abilities. Like Anima Spikes on Rime.
-
+            OnUpdate?.Invoke();
             // Then cast the spell that should cast last.
             if (!player.IsCasting)
             {
@@ -69,7 +69,7 @@ public class SimLoop
                 }
             }
 
-            OnUpdate?.Invoke(step);
+
             _ticks++;
         }
 
@@ -87,30 +87,6 @@ public class SimLoop
     {
         //In the future we can keep track of the damage source in a dict and output what each damage was.
         damageDealt += damageReceived;
-    }
-
-    public void Update(double delta)
-    {
-        if (delta == 0) return;
-        ConsoleLogger.Log(
-            SimulationLogLevel.Debug,
-            $"Time Delta: \u001b[1;36m{delta}\u001b[0;30m"
-        );
-        int steps = (int)(delta / step);
-        double remainder = delta % step;
-
-        for (int i = 0; i < steps; i++)
-        {
-            OnUpdate?.Invoke(step);
-            _ticks++;
-        }
-
-        if (remainder > 0)
-        {
-            // advance one tick for the remainder; elapsed time includes remainder in GetElapsed()
-            OnUpdate?.Invoke(remainder);
-            _ticks++;
-        }
     }
 
     public double GetElapsed()

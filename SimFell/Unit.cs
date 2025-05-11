@@ -14,8 +14,8 @@ public class Unit : SimLoopListener
     // Casting
     public bool IsCasting = false;
     private Spell? _currentSpell;
-    private double _castProgress;
-    private double _tickProgress;
+    private double _castTime;
+    private double _tickTime;
     private List<Unit> _targets = new List<Unit>();
     public double GCD { get; private set; }
 
@@ -64,10 +64,10 @@ public class Unit : SimLoopListener
     {
         var existing = Buffs.Where(aura => aura.ID == buff.ID).ToList();
         if (existing.Count >= buff.MaxStacks)
-            existing.MinBy(aura => aura.RemainingTime)?.Refresh();
+            Console.WriteLine("TODO: Refresh");
         else
         {
-            buff.OnApply?.Invoke(this);
+            buff.Apply(this);
             Buffs.Add(buff);
         }
 
@@ -86,10 +86,11 @@ public class Unit : SimLoopListener
     {
         var existing = Debuffs.Where(aura => aura.ID == debuff.ID).ToList();
         if (existing.Count >= debuff.MaxStacks)
-            existing.MinBy(aura => aura.RemainingTime)?.Refresh();
+            // existing.MinBy(aura => aura.RemainingTime)?.Refresh();
+            Console.WriteLine("TODO: Refresh");
         else
         {
-            debuff.OnApply?.Invoke(this);
+            debuff.Apply(this);
             Debuffs.Add(debuff);
         }
 
@@ -144,12 +145,12 @@ public class Unit : SimLoopListener
         Health -= totalDamage;
     }
 
-    protected override void Update(double deltaTime)
+    protected override void Update()
     {
         // Update buffs
         for (int i = Buffs.Count - 1; i >= 0; i--)
         {
-            Buffs[i].Update(deltaTime, this);
+            Buffs[i].Update(SimLoop.Instance.GetElapsed(), this);
             if (Buffs[i].IsExpired)
             {
                 ConsoleLogger.Log(
@@ -165,7 +166,7 @@ public class Unit : SimLoopListener
         // Update debuffs
         for (int i = Debuffs.Count - 1; i >= 0; i--)
         {
-            Debuffs[i].Update(deltaTime, this);
+            Debuffs[i].Update(SimLoop.Instance.GetElapsed(), this);
             if (Debuffs[i].IsExpired)
             {
                 ConsoleLogger.Log(
@@ -179,27 +180,19 @@ public class Unit : SimLoopListener
         }
 
         //Update the GCD for the Unit.
-        GCD = Math.Max(0, GCD - deltaTime);
+        // GCD = Math.Max(0, GCD - deltaTime);
         // if (GCD > 0) ConsoleLogger.Log(SimulationLogLevel.Debug, $"GCD in Update: {GCD}");
 
         // Updates Casting.
         if (IsCasting && _currentSpell != null)
         {
-            _castProgress += deltaTime;
-            _tickProgress += deltaTime;
             //If the casting is done.
-            if (_castProgress >= _currentSpell.GetCastTime(this))
+            if (SimLoop.Instance.GetElapsed() >= _castTime)
             {
                 _currentSpell.Cast(this, _targets);
                 StopCasting();
             }
             //TODO: Handle Tick Events.
-        }
-
-        // Update the Cooldowns for the Unit.
-        foreach (var spell in SpellBook)
-        {
-            spell.UpdateCooldown(deltaTime);
         }
     }
 
@@ -227,11 +220,11 @@ public class Unit : SimLoopListener
 
     public void SetGCD(double gcd)
     {
-        if (gcd != 0) ConsoleLogger.Log(
-            SimulationLogLevel.CastEvents,
-            $"\u001b[1;34mGCD\u001b[0;30m: \u001b[1;36m{gcd}\u001b[0;30m"
-        );
-        GCD = gcd;
+        // if (gcd != 0) ConsoleLogger.Log(
+        //     SimulationLogLevel.CastEvents,
+        //     $"\u001b[1;34mGCD\u001b[0;30m: \u001b[1;36m{gcd}\u001b[0;30m"
+        // );
+        // GCD = gcd;
     }
 
     public void StartCasting(Spell spell, List<Unit> targets)
@@ -243,30 +236,14 @@ public class Unit : SimLoopListener
 
         _currentSpell = spell;
         _targets = targets;
-        _castProgress = 0;
-        _tickProgress = 0;
+        _castTime = SimLoop.Instance.GetElapsed() + spell.GetCastTime(this);
         IsCasting = true;
         if (spell.HasGCD) SetGCD(spell.GetGCD(this));
-        // ConsoleLogger.Log(SimulationLogLevel.Debug, $"GCD in StartCasting: {GCD} ({spell.HasGCD})");
-
-        //Instant Cast spells should be triggered same game tick.
-        if (spell.ChannelTime == 0 && spell.CastTime == 0)
-        {
-            _currentSpell.Cast(this, _targets);
-            StopCasting();
-        }
     }
 
     public void StopCasting()
     {
-        // ConsoleLogger.Log(
-        //     SimulationLogLevel.Debug,
-        //     $"Time after casting: \u001b[1;36m{SimLoop.Instance.GetElapsed()}\u001b[0;30m"
-        // );
-
         IsCasting = false;
         _currentSpell = null;
-        _tickProgress = 0;
-        _castProgress = 0;
     }
 }

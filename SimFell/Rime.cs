@@ -92,7 +92,7 @@ public class Rime : Unit
 
                 for (double t = 0; t < channelDuration; t += channelTickInterval)
                 {
-                    SimLoop.Instance.Update(channelTickInterval);
+                    //SimLoop.Instance.Update(channelTickInterval);
                     if (target.IsDead()) break;
                     DealDamage(target, 65, spell);
                     UpdateAnima(1);
@@ -219,7 +219,7 @@ public class Rime : Unit
         SpellBook.Add(burstingIce);
         //SpellBook.Add(freezingTorrent);
         //SpellBook.Add(glacialBlast);
-        // SpellBook.Add(frostBolt);
+        SpellBook.Add(frostBolt);
     }
 
     /// <summary>

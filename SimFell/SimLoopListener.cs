@@ -7,7 +7,7 @@ public abstract class SimLoopListener
         SimLoop.Instance.OnUpdate += Update;
     }
 
-    protected abstract void Update(double deltaTime);
+    protected abstract void Update();
 
     public void Stop()
     {

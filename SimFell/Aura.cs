@@ -9,8 +9,8 @@ public class Aura
     public int MaxStacks { get; set; }
 
     // Runtime Data
-    private double _timeRemaining;
-    private int _ticksOccurred;
+    private double _removeAt;
+    private double _nextTick;
     private bool _expired;
 
     //Owner its on.
@@ -34,41 +34,37 @@ public class Aura
         OnApply = onApply;
         OnRemove = onRemove;
 
-        _timeRemaining = duration;
-        _ticksOccurred = 0;
+        _removeAt = 0;
         _expired = false;
     }
-
-    public double RemainingTime => _timeRemaining;
 
     public void Refresh()
     {
         //TODO: Pandemic for dots/buffs??
-        _timeRemaining = Duration;
-        _ticksOccurred = 0;
+        _removeAt = Duration + SimLoop.Instance.GetElapsed();
     }
 
-    public void Update(double deltaTime, Unit owner)
+    public void Apply(Unit unit)
+    {
+        _removeAt = Duration + SimLoop.Instance.GetElapsed();
+        //TODO: TickInterval should take into consideration haste.
+        _nextTick = TickInterval + SimLoop.Instance.GetElapsed();
+        OnApply?.Invoke(unit);
+    }
+
+    public void Update(double simTime, Unit owner)
     {
         if (_expired) return;
 
-        // Determine how many ticks should have occurred based on elapsed time
-        double elapsed = Duration - _timeRemaining;
-        int ticksShouldHaveOccurred = (int)Math.Floor(elapsed / TickInterval);
-        // Fire any missed ticks
-        while (_ticksOccurred < ticksShouldHaveOccurred)
+        while (simTime >= _nextTick)
         {
+            _nextTick += TickInterval;
             OnTick?.Invoke(owner);
-            _ticksOccurred++;
         }
-
-        // Expire the aura if time is up
-        if (_timeRemaining <= 0)
+        
+        if (simTime >= _removeAt)
         {
             _expired = true;
         }
-
-        // Reduce remaining duration
-        _timeRemaining -= deltaTime;
     }
 }
