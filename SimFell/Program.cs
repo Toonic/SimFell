@@ -39,15 +39,18 @@ foreach (var action in config.ConfigActions)
             var originalCanCast = spell.CanCast;
             spell.CanCast = caster =>
             {
+                // Long way to DEBUG
                 // bool check = true;
                 // foreach (var condition in action.Conditions)
                 // {
                 //     var condCheck = condition.Check(caster);
-                //     // ConsoleLogger.Log(SimulationLogLevel.Debug, $"Condition: {condition} => {condCheck}");
+                //     ConsoleLogger.Log(SimulationLogLevel.Debug, $"[{spell.Name}] Condition: {condition} => {condCheck}");
 
                 //     // TODO: Switch the order of the checks once debugged.
                 //     check = condCheck && check;
                 // }
+                // ConsoleLogger.Log(SimulationLogLevel.Debug, $"[{spell.Name}] Check: {check} AND {originalCanCast?.Invoke(caster) ?? true}");
+                // return (originalCanCast?.Invoke(caster) ?? true) && check;
 
                 return (originalCanCast?.Invoke(caster) ?? true) && action.Conditions.All(c => c.Check(caster));
             };

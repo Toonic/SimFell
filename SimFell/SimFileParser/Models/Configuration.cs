@@ -37,9 +37,9 @@ public class Condition
             case "spell":
                 if (parts.Length != 3)
                     return false;
-                var spellId = parts[1].Replace("-", "_");
+                var spellId = parts[1].Replace("_", "-");
                 var prop = parts[2].ToLowerInvariant();
-                var spell = caster.SpellBook.FirstOrDefault(s => s.ID == spellId);
+                var spell = caster.Rotation.FirstOrDefault(s => s.ID == spellId);
                 if (spell == null)
                     return false;
                 switch (prop)
@@ -47,6 +47,7 @@ public class Condition
                     case "cooldown":
                         var now = SimLoop.Instance.GetElapsed();
                         leftValue = spell.OffCooldown - now;
+                        // ConsoleLogger.Log(SimulationLogLevel.Debug, $"-> [{spell.Name}] Cooldown: {leftValue}");
                         break;
                     case "cast_time":
                         leftValue = spell.GetCastTime(caster);
@@ -94,7 +95,7 @@ public class Condition
             case "buff":
                 if (parts.Length != 3)
                     return false;
-                var buffId = parts[1];
+                var buffId = parts[1].Replace("_", "-");
                 var buffProp = parts[2].ToLowerInvariant();
                 var auraBuff = caster.Buffs.FirstOrDefault(a => a.ID == buffId);
                 if (auraBuff == null)
@@ -111,7 +112,7 @@ public class Condition
             case "debuff":
                 if (parts.Length != 3)
                     return false;
-                var debuffId = parts[1];
+                var debuffId = parts[1].Replace("_", "-");
                 var debuffProp = parts[2].ToLowerInvariant();
                 var auraDebuff = caster.Debuffs.FirstOrDefault(a => a.ID == debuffId);
                 if (auraDebuff == null)
