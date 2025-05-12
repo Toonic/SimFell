@@ -194,13 +194,12 @@ public class Unit : SimLoopListener
                 _currentSpell.Cast(this, _targets);
                 StopCasting();
             }
-
-            if (_currentSpell.Channel)
+            else if (_currentSpell.Channel)
             {
                 if (SimLoop.Instance.GetElapsed() >= _tickTime)
                 {
                     _currentSpell.Tick(this, _targets);
-                    _tickTime = Math.Round((_tickTime + _currentSpell.GetTickRate(this)),2);
+                    _tickTime = Math.Round(_tickTime + _currentSpell.GetTickRate(this), 2);
                 }
                 if (SimLoop.Instance.GetElapsed() >= _channelTime)
                 {
