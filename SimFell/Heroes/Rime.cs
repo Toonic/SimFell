@@ -12,11 +12,66 @@ public class Rime : Unit
     private const int MaxWinterOrbs = 5;
 
     private Spell _animaSpikes;
+    
+    //Spells for easy reference for Talents.
+    private Spell _frostBolt;
+    private Spell _burstingIce;
+    private Spell _coldSnap;
+    private Spell _freezingTorrent;
+    private Spell _danceOfSwallows;
+    private Spell _glacialBlast;
+    private Spell _icyBlitz;
 
-    public Rime(string name, int health) : base(name, health)
+    public Rime(int health) : base("Rime", health)
+    {
+        ConfigureSpellBook();
+        ConfigureTalents();
+        //Temp Example showing activating of talent.
+        ActivateTalent("chillblain");
+    }
+    
+    //TODO: Make this so it can also take in the gridpos/Different override?
+    public void ActivateTalent(string id)
+    {
+        var talent = Talents.FirstOrDefault(talent => talent.Id == id);
+        if (talent != null) talent.Activate(this);
+    }
+
+    public void ConfigureTalents()
+    {
+        Talents = new List<Talent>();
+        
+        //Chillblain Talent
+        var chillBlain = new Talent(
+            id:"chillblain",
+            name:"Chillblain",
+            gridPos:"1.1",
+            onActivate: unit =>
+            {
+                _freezingTorrent.DamageModifiers.AddModifier(new Modifier(Modifier.StatModType.MultiplicativePercent, 20, unit));
+                _freezingTorrent.OnTick += (caster, spell, targets) =>
+                {
+                    int maxTargets = 5;
+                    int targetsHit = 0;
+                    //Bonus damage on all except for the primary one
+                    for (int i = targets.Count - 1; i >= 1; i--)
+                    {
+                        //20% of base damage.
+                        DealDamage(targets[i], 65 * 0.2, spell);
+                        targetsHit++;
+                        if (maxTargets == targetsHit) break;
+                    }
+                };
+            }
+        );
+        
+        Talents.Add(chillBlain);
+    }
+
+    private void ConfigureSpellBook()
     {
         // Frostboll Spell
-        var frostBolt = new Spell(
+        _frostBolt = new Spell(
             id: "frost-bolt",
             name: "Frost Bolt",
             cooldown: 0,
@@ -31,7 +86,7 @@ public class Rime : Unit
         );
 
         // Bursting Ice
-        var burstingIce = new Spell(
+        _burstingIce = new Spell(
             id: "bursting-ice",
             name: "Bursting Ice",
             cooldown: 15,
@@ -63,7 +118,7 @@ public class Rime : Unit
         );
 
         // Cold Snap
-        var coldSnap = new Spell(
+        _coldSnap = new Spell(
             id: "cold-snap",
             name: "Cold Snap",
             cooldown: 8,
@@ -78,7 +133,7 @@ public class Rime : Unit
         );
 
         // Freezing Torrent
-        var freezingTorrent = new Spell(
+        _freezingTorrent = new Spell(
             id: "freezing-torrent",
             name: "Freezing Torrent",
             cooldown: 10,
@@ -97,7 +152,7 @@ public class Rime : Unit
         );
 
         // Dance of Swallows
-        var danceOfSwallows = new Spell(
+        _danceOfSwallows = new Spell(
             id: "dance-of-swallows",
             name: "Dance of Swallows",
             cooldown: 60,
@@ -110,10 +165,10 @@ public class Rime : Unit
                              ?? throw new Exception("No valid targets");
 
                 // Builds the OnDamage Event.
-                Action<Unit, double, object>? onDamageEvent = (unit, damage, source) =>
+                Action<Unit, double, Spell, Aura>? onDamageEvent = (unit, damage, spellSource, auraSource) =>
                 {
                     // If the source is from ColdSnap, deal bonus damage.
-                    if (source == coldSnap)
+                    if (spellSource == _coldSnap)
                     {
                         const int danceOfSwallowsTriggers = 10;
                         for (int i = 0; i < danceOfSwallowsTriggers; i++)
@@ -122,7 +177,7 @@ public class Rime : Unit
                         }
                     }
 
-                    if (source == freezingTorrent)
+                    if (spellSource == _freezingTorrent)
                     {
                         DealDamage(unit, 53, spell);
                     }
@@ -149,7 +204,7 @@ public class Rime : Unit
         );
 
         //Glacial Blast
-        var glacialBlast = new Spell(
+        _glacialBlast = new Spell(
             id: "glacial-blast",
             name: "Glacial Blast",
             cooldown: 0,
@@ -164,7 +219,7 @@ public class Rime : Unit
         );
 
         //Icy Blitz
-        var icyBlitz = new Spell(
+        _icyBlitz = new Spell(
             id: "icy-blitz",
             name: "Icy Blitz",
             cooldown: 120,
@@ -207,15 +262,14 @@ public class Rime : Unit
                 DealDamage(target, 36, spell);
             }
         );
-
-        //Spell Priority Order because why not?
-        SpellBook.Add(icyBlitz);
-        SpellBook.Add(danceOfSwallows);
-        SpellBook.Add(coldSnap);
-        SpellBook.Add(burstingIce);
-        SpellBook.Add(freezingTorrent);
-        SpellBook.Add(glacialBlast);
-        SpellBook.Add(frostBolt);
+        
+        SpellBook.Add(_icyBlitz);
+        SpellBook.Add(_danceOfSwallows);
+        SpellBook.Add(_coldSnap);
+        SpellBook.Add(_burstingIce);
+        SpellBook.Add(_freezingTorrent);
+        SpellBook.Add(_glacialBlast);
+        SpellBook.Add(_frostBolt);        
     }
 
     /// <summary>

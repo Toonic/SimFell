@@ -4,16 +4,22 @@ public class Talent
 {
     public string Id { get; }
     public string Name { get; }
+    public string GridPos { get; }
 
-    public Action<Unit>? OnApply { get; set; }
-    public Action<Unit>? OnRemove { get; set; }
+    public Action<Unit>? OnActivate { get; set; }
+    public Action<Unit>? OnDeactivate { get; set; }
 
-    public Action<Unit, object>? OnCrit { get; set; }
-    public Func<Unit, Spell, float, float>? ModifyCritChance { get; set; }
-
-    public Talent(string id, string name)
+    public Talent(string id, string name, string gridPos, Action<Unit>? onActivate = null, Action<Unit>? onDeactivate = null)
     {
         Id = id;
         Name = name;
+        GridPos = gridPos;
+        OnActivate = onActivate;
+        OnDeactivate = onDeactivate;
+    }
+
+    public void Activate(Unit unit)
+    {
+        OnActivate?.Invoke(unit);
     }
 }

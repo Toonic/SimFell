@@ -9,6 +9,7 @@ public class Unit : SimLoopListener
     public List<Aura> Buffs { get; set; } = [];
     public List<Aura> Debuffs { get; set; } = [];
     public List<Spell> SpellBook { get; set; } = [];
+    public List<Talent> Talents { get; set; } = [];
     public List<Spell> Rotation { get; set; } = [];
     public Unit? PrimaryTarget { get; private set; }
 
@@ -32,8 +33,10 @@ public class Unit : SimLoopListener
     public Stat DamageBuffs = new Stat(0);
     public Stat DamageTakenDebuffs = new Stat(0);
 
-    //Events
-    public Action<Unit, double, object> OnDamageReceived { get; set; } = (unit, damage, source) => { };
+    //Events 
+    public Action<Unit, double, Spell, Aura> OnDamageDealt { get; set; } = (unit, damage, spellSource, auraSource) => { }; 
+    public Action<Unit, double, Spell, Aura> OnDamageReceived { get; set; } = (unit, damage, spellSource, auraSource) => { };
+    public Action<Unit, double, Spell, Aura> OnCrit { get; set; } = (unit, damage, spellSource, auraSource) => { };
 
     public Unit(string name, int health)
     {
@@ -61,6 +64,8 @@ public class Unit : SimLoopListener
     /// <summary>
     /// Applies a buff to the Unit and invokes OnApply.
     /// </summary>
+    /// <param name="caster"></param>
+    /// /// <param name="target"></param>
     /// <param name="buff"></param>
     public void ApplyBuff(Unit caster, Unit target, Aura buff)
     {
@@ -83,6 +88,8 @@ public class Unit : SimLoopListener
     /// <summary>
     /// Applies a debuff to the Unit and invokes OnApply.
     /// </summary>
+    /// /// <param name="caster"></param>
+    /// <param name="target"></param>
     /// <param name="debuff"></param>
     public void ApplyDebuff(Unit caster, Unit target, Aura debuff)
     {
@@ -109,18 +116,37 @@ public class Unit : SimLoopListener
     /// </summary>
     /// <param name="target">Target for the damage.</param>
     /// <param name="damagePercent">Damage percentage as full XX.X%</param>
-    /// <param name="damageSource">Source of the damage. Usually a spell.</param>
-    public void DealDamage(Unit target, double damagePercent, object damageSource)
+    /// <param name="damageSource">Source of the damage. Usually a spell but can also be an Aura.</param>
+    public void DealDamage(Unit target, double damagePercent, Spell spellSource = null, Aura auraSource = null)
     {
+        var critPercent = CritcalStrikeStat.GetValue();
+        
+        if (spellSource != null)
+        {
+            damagePercent = spellSource.DamageModifiers.GetValue(damagePercent);
+            critPercent = spellSource.CritModifiers.GetValue(critPercent); 
+        }
+        
+        //Decide if we want to buff the Auras or the Spells casting them.
+        // else if (auraSource != null)
+        // {
+        //     damagePercent = auraSource.DamageModifiers.GetValue(damagePercent);
+        //     critPercent = auraSource.CritModifiers.GetValue(critPercent);
+        // }
+
+
+        //Converts the DamagePercent into a Damage Value.
         var damage = (damagePercent / 100f) * MainStat.GetValue(); // Adds the Damage as Main Stat.
         damage *= 1 + (ExpertiseStat.GetValue() / 100f); // Modifies the damage based on expertise.
         damage = DamageBuffs.GetValue(damage);
 
-        var isCritical = SimRandom.Roll(CritcalStrikeStat.GetValue());
+        var isCritical = SimRandom.Roll(critPercent);
         isCritical = SimRandom.Deterministic ? false : isCritical; //TODO: Remove this/make it another setting.
-        damage *= isCritical ? 2 : 1; //Doubles the damage if there is a Critical Hit.
-
-        target.TakeDamage(damage, isCritical, damageSource);
+        if (isCritical) OnCrit?.Invoke(target, damage, spellSource, auraSource); //On Crit events called.
+        damage *= isCritical ? 2 : 1; //Doubles the damage if there is a Critical Hit. TODO: Crit power.
+        
+        OnDamageDealt?.Invoke(this, damage, spellSource, auraSource); //Called when damage is dealt.
+        target.TakeDamage(damage, isCritical, spellSource, auraSource);
     }
 
     /// <summary>
@@ -130,12 +156,12 @@ public class Unit : SimLoopListener
     /// <param name="amount">Incoming Damage amount.</param>
     /// <param name="isCritical">If the damage was a critical hit.</param>
     /// <param name="damageSource">Source of the Damage. Usually a spell.</param>
-    public void TakeDamage(double amount, bool isCritical, object damageSource)
+    public void TakeDamage(double amount, bool isCritical, Spell spellSource = null, Aura auraSource = null)
     {
         var totalDamage = (int)DamageTakenDebuffs.GetValue(amount);
         // Log damage event with coloring for critical hits
-        var sourceName = damageSource is Spell spell ? spell.Name
-                         : damageSource is Aura aura ? aura.Name
+        var sourceName = spellSource != null ? spellSource.Name
+                         : auraSource != null  ? auraSource.Name
                          : "Unknown";
         var message = $"\u001b[1;34m{sourceName}\u001b[0;30m"
             + $" hits \u001b[1;33m{Name}\u001b[0;30m"
@@ -143,7 +169,7 @@ public class Unit : SimLoopListener
             + $"{(isCritical ? " (Critical Strike)" : "")}";
         ConsoleLogger.Log(SimulationLogLevel.DamageEvents, message, isCritical ? "💥" : null);
 
-        OnDamageReceived?.Invoke(this, totalDamage, damageSource);
+        OnDamageReceived?.Invoke(this, totalDamage, spellSource, auraSource);
         Health -= totalDamage;
     }
 

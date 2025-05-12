@@ -7,16 +7,20 @@ public class Spell
 {
     public string ID { get; set; }
     public string Name { get; set; }
-    private double Cooldown { get; set; }
-    public double OffCooldown { get; private set; }
-    public double CastTime { get; set; }
-    public bool Channel { get; set; }
-    public double ChannelTime { get; set; }
-    public double TickRate { get; set; }
+    private Stat Cooldown { get; set; }
+    public double OffCooldown { get; private set; } //When its off cooldown.
+    public Stat CastTime { get; set; }
+    public bool Channel { get; set; } //When the spell is a channeled spell.
+    public Stat ChannelTime { get; set; }
+    public Stat TickRate { get; set; }
     public Boolean HasGCD { get; set; }
     public Action<Unit, Spell, List<Unit>>? OnCast { get; set; }
     public Action<Unit, Spell, List<Unit>>? OnTick { get; set; }
     public Func<Unit, bool>? CanCast { get; set; }
+    
+    //Modifiers, used typically with Talents.
+    public Stat DamageModifiers { get; set; } = new Stat(0);
+    public Stat CritModifiers { get; set; }  = new Stat(0);
 
     public Spell(
         string id, string name, double cooldown, double castTime, bool channel = false, double channelTime = 0, double tickRate = 0, bool hasGCD = true,
@@ -24,11 +28,11 @@ public class Spell
     {
         ID = id;
         Name = name;
-        Cooldown = cooldown;
-        CastTime = castTime;
+        Cooldown = new Stat(cooldown);
+        CastTime = new Stat(castTime);
         Channel = channel;
-        ChannelTime = channelTime;
-        TickRate = tickRate;
+        ChannelTime = new Stat(channelTime);
+        TickRate = new Stat(tickRate);
         HasGCD = hasGCD;
         OnCast = onCast;
         OnTick = onTick;
@@ -53,17 +57,17 @@ public class Spell
 
     public double GetCastTime(Unit caster)
     {
-        return caster.GetHastedValue(CastTime);
+        return caster.GetHastedValue(CastTime.GetValue());
     }
 
     public double GetChannelTime(Unit caster)
     {
-        return caster.GetHastedValue(ChannelTime); ;
+        return caster.GetHastedValue(ChannelTime.GetValue()); ;
     }
 
     public double GetTickRate(Unit caster)
     {
-        return caster.GetHastedValue(TickRate);
+        return caster.GetHastedValue(TickRate.GetValue());
     }
 
     public double GetGCD(Unit caster)
@@ -77,7 +81,7 @@ public class Spell
     {
         OnCast?.Invoke(caster, this, targets);
         //Sets the cooldown.
-        OffCooldown = Cooldown + SimLoop.Instance.GetElapsed();  // Reset cooldown after casting
+        OffCooldown = Math.Round(Cooldown.GetValue() + SimLoop.Instance.GetElapsed(),2);  // Reset cooldown after casting
     }
 
     public void Tick(Unit caster, List<Unit> targets)
