@@ -1,6 +1,8 @@
 using Newtonsoft.Json;
-using System.Collections.Generic;
-
+using System.Reflection;
+using System.Globalization;
+using SimFell.Logging;
+using System.IO.Pipelines;
 namespace SimFell.SimFileParser.Models;
 
 /// <summary>
@@ -15,6 +17,142 @@ public class Condition
     public override string ToString()
     {
         return $"{Left} {Operator} {Right}";
+    }
+
+    public bool Check(Unit caster)
+    {
+        if (string.IsNullOrEmpty(Left) || string.IsNullOrEmpty(Operator) || Right == null)
+            return false;
+
+        if (!double.TryParse(Right.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var rightValue))
+            return false;
+
+        var parts = Left.Split('.');
+        if (parts.Length == 0)
+            return false;
+
+        double leftValue;
+        switch (parts[0].ToLowerInvariant())
+        {
+            case "spell":
+                if (parts.Length != 3)
+                    return false;
+                var spellId = parts[1].Replace("-", "_");
+                var prop = parts[2].ToLowerInvariant();
+                var spell = caster.SpellBook.FirstOrDefault(s => s.ID == spellId);
+                if (spell == null)
+                    return false;
+                switch (prop)
+                {
+                    case "cooldown":
+                        var now = SimLoop.Instance.GetElapsed();
+                        leftValue = spell.OffCooldown - now;
+                        break;
+                    case "cast_time":
+                        leftValue = spell.GetCastTime(caster);
+                        break;
+                    case "channel_time":
+                        leftValue = spell.GetChannelTime(caster);
+                        break;
+                    case "tick_rate":
+                        leftValue = spell.GetTickRate(caster);
+                        break;
+                    case "gcd":
+                        leftValue = spell.GetGCD(caster);
+                        break;
+                    default:
+                        return false;
+                }
+                break;
+            case "character":
+                if (parts.Length != 2)
+                    return false;
+                var charProp = parts[1].Replace("_", "");
+                var charType = caster.GetType();
+                var propertyInfo = charType.GetProperty(charProp, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                if (propertyInfo != null)
+                {
+                    var val = propertyInfo.GetValue(caster) ?? throw new Exception($"Property {charProp} not found on {caster.Name}");
+                    if (!TryConvertToDouble(val, out leftValue))
+                        return false;
+                }
+                else
+                {
+                    var fieldInfo = charType.GetField(charProp, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                    if (fieldInfo != null)
+                    {
+                        var val = fieldInfo.GetValue(caster) ?? throw new Exception($"Field {charProp} not found on {caster.Name}");
+                        if (!TryConvertToDouble(val, out leftValue))
+                            return false;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                break;
+            case "buff":
+                if (parts.Length != 3)
+                    return false;
+                var buffId = parts[1];
+                var buffProp = parts[2].ToLowerInvariant();
+                var auraBuff = caster.Buffs.FirstOrDefault(a => a.ID == buffId);
+                if (auraBuff == null)
+                    return false;
+                switch (buffProp)
+                {
+                    case "duration":
+                        leftValue = auraBuff.Duration;
+                        break;
+                    default:
+                        return false;
+                }
+                break;
+            case "debuff":
+                if (parts.Length != 3)
+                    return false;
+                var debuffId = parts[1];
+                var debuffProp = parts[2].ToLowerInvariant();
+                var auraDebuff = caster.Debuffs.FirstOrDefault(a => a.ID == debuffId);
+                if (auraDebuff == null)
+                    return false;
+                switch (debuffProp)
+                {
+                    case "duration":
+                        leftValue = auraDebuff.Duration;
+                        break;
+                    default:
+                        return false;
+                }
+                break;
+            default:
+                var exists = caster.Rotation.Any(s => s.ID == Left) || caster.SpellBook.Any(s => s.ID == Left);
+                leftValue = exists ? 1 : 0;
+                break;
+        }
+
+        var finalResult = Operator switch
+        {
+            "==" => leftValue == rightValue,
+            "!=" => leftValue != rightValue,
+            ">" => leftValue > rightValue,
+            ">=" => leftValue >= rightValue,
+            "<" => leftValue < rightValue,
+            "<=" => leftValue <= rightValue,
+            _ => false,
+        };
+
+        return finalResult;
+    }
+
+    private bool TryConvertToDouble(object val, out double result)
+    {
+        if (val is double d) { result = d; return true; }
+        if (val is float f) { result = f; return true; }
+        if (val is int i) { result = i; return true; }
+        if (val is long l) { result = l; return true; }
+        if (val is string s && double.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out var d2)) { result = d2; return true; }
+        result = 0; return false;
     }
 }
 

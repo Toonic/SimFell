@@ -28,15 +28,38 @@ player.SetPrimaryStats(
     (int)config.Spirit
 );
 
-// player.SetPrimaryStats(
-//     config.Intellect,
-//     (int)config.Crit,
-//     (int)config.Expertise,
-//     //55 - 11.55%, 130 - 27.1% -     
-//     130,
-//     (int)config.Spirit
-// );
+foreach (var action in config.ConfigActions)
+{
+    // Find the spell in the player's spellbook
+    var spell = player.SpellBook.FirstOrDefault(s => s.ID.Replace("-", "_") == action.Name);
+    if (spell != null)
+    {
+        if (action.Conditions.Count > 0)
+        {
+            var originalCanCast = spell.CanCast;
+            spell.CanCast = caster =>
+            {
+                // bool check = true;
+                // foreach (var condition in action.Conditions)
+                // {
+                //     var condCheck = condition.Check(caster);
+                //     // ConsoleLogger.Log(SimulationLogLevel.Debug, $"Condition: {condition} => {condCheck}");
 
+                //     // TODO: Switch the order of the checks once debugged.
+                //     check = condCheck && check;
+                // }
+
+                return (originalCanCast?.Invoke(caster) ?? true) && action.Conditions.All(c => c.Check(caster));
+            };
+        }
+
+        player.Rotation.Add(spell);
+    }
+    else
+    {
+        ConsoleLogger.Log(SimulationLogLevel.Error, $"Spell {action.Name} not found in spellbook");
+    }
+}
 
 var enemies = new List<Unit>();
 for (int i = 0; i < config.Enemies; i++)
@@ -46,6 +69,7 @@ for (int i = 0; i < config.Enemies; i++)
 
 SimRandom.EnableDeterminism();
 
-SimLoop.ShowPrettyConfig(config);
+SimLoop.ShowConfig(config);
+// SimLoop.ShowPrettyConfig(config);
 
 SimLoop.Instance.Start(player, enemies, SimLoop.SimulationMode.Time, config.Duration);

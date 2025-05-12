@@ -16,11 +16,11 @@ public class Spell
     public Boolean HasGCD { get; set; }
     public Action<Unit, Spell, List<Unit>>? OnCast { get; set; }
     public Action<Unit, Spell, List<Unit>>? OnTick { get; set; }
-    public Func<bool>? CanCast { get; set; }
+    public Func<Unit, bool>? CanCast { get; set; }
 
     public Spell(
         string id, string name, double cooldown, double castTime, bool channel = false, double channelTime = 0, double tickRate = 0, bool hasGCD = true,
-        Func<bool>? canCast = null, Action<Unit, Spell, List<Unit>>? onCast = null, Action<Unit, Spell, List<Unit>>? onTick = null)
+        Func<Unit, bool>? canCast = null, Action<Unit, Spell, List<Unit>>? onCast = null, Action<Unit, Spell, List<Unit>>? onTick = null)
     {
         ID = id;
         Name = name;
@@ -48,7 +48,7 @@ public class Spell
 
     public bool CheckCanCast(Unit caster)
     {
-        return (CanCast?.Invoke() ?? true) && OffCooldown <= SimLoop.Instance.GetElapsed() && caster.GCD <= SimLoop.Instance.GetElapsed();
+        return (CanCast?.Invoke(caster) ?? true) && OffCooldown <= SimLoop.Instance.GetElapsed() && caster.GCD <= SimLoop.Instance.GetElapsed();
     }
 
     public double GetCastTime(Unit caster)
@@ -58,9 +58,9 @@ public class Spell
 
     public double GetChannelTime(Unit caster)
     {
-        return caster.GetHastedValue(ChannelTime);;
+        return caster.GetHastedValue(ChannelTime); ;
     }
-    
+
     public double GetTickRate(Unit caster)
     {
         return caster.GetHastedValue(TickRate);
@@ -82,7 +82,7 @@ public class Spell
 
     public void Tick(Unit caster, List<Unit> targets)
     {
-        OnTick?.Invoke(caster,this,targets);
+        OnTick?.Invoke(caster, this, targets);
         //TODO: Tick Rate handling.
     }
 }
