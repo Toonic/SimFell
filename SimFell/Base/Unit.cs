@@ -22,12 +22,16 @@ public class Unit : SimLoopListener
     public List<Unit> Targets = new List<Unit>();
     public double GCD { get; private set; }
 
-    // Baseline stats are always flat 100. As point values.
+    // Baseline Stats.
     public Stat MainStat = new Stat(100);
     public Stat CritcalStrikeStat = new Stat(0, true);
     public Stat ExpertiseStat = new Stat(0, true);
     public Stat HasteStat = new Stat(0, true);
     public Stat SpiritStat = new Stat(0, true);
+    
+    //Spirit Value
+    public double Spirit = 100; //TODO: Proper Spirit Regen?
+    
 
     // Other Stat Buffs
     public Stat DamageBuffs = new Stat(0);

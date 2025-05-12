@@ -20,14 +20,15 @@ public class Rime : Unit
     private Spell _freezingTorrent;
     private Spell _danceOfSwallows;
     private Spell _glacialBlast;
-    private Spell _icyBlitz;
+    private Spell _iceBlitz;
     private Spell _iceComet;
+    private Spell _wintersBlessing;
+    private Spell _wrathOfWinter;
 
     public Rime(int health) : base("Rime", health)
     {
         ConfigureSpellBook();
         ConfigureTalents();
-        ActivateTalent(1, 3);
     }
 
     public void ActivateTalent(string id)
@@ -320,19 +321,19 @@ public class Rime : Unit
             }
         );
 
-        //Icy Blitz
-        _icyBlitz = new Spell(
-            id: "icy-blitz",
-            name: "Icy Blitz",
+        //Ice Blitz
+        _iceBlitz = new Spell(
+            id: "ice-blitz",
+            name: "Ice Blitz",
             cooldown: 120,
             castTime: 0,
-            //TODO: No GCD
+            hasGCD: false,
             //TODO: Can Cast while Casting.
             onCast: (unit, spell, targets) =>
             {
                 unit.ApplyBuff(unit, unit, new Aura(
-                    id: "icy-blitz",
-                    name: "Icy Blitz",
+                    id: "ice-blitz",
+                    name: "Ice Blitz",
                     maxStacks: 1,
                     duration: 20,
                     tickInterval: 0,
@@ -380,8 +381,69 @@ public class Rime : Unit
                 }
             }
         );
+        
+        //Winters Blessing
+        _wintersBlessing = new Spell(
+            id: "winters-blessing",
+            name: "Winters Blessing",
+            cooldown: 120,
+            castTime: 0,
+            hasGCD: false,
+            onCast: (caster, spell, targets) =>
+            {
+                //15% Damage Buff from Wrath of Winter.
+                Modifier spiritMod = new Modifier(Modifier.StatModType.MultiplicativePercent, 20, spell);
+                
+                caster.ApplyBuff(caster, caster, new Aura(
+                    id: "winters-blessing",
+                    name: "Winters Blessing",
+                    duration: 15,
+                    tickInterval: 0,
+                    onApply: (unit, target) => { unit.SpiritStat.AddModifier(spiritMod); },
+                    onRemove: (unit, target) => { unit.SpiritStat.RemoveModifier(spiritMod); }
+                ));
+            }
+        );
+        
+        //Wrath of Winter - Spirit Ability.
+        _wrathOfWinter = new Spell(
+            id: "wrath-of-winter",
+            name: "Wrath of Winter",
+            cooldown: 0,
+            castTime: 0,
+            canCast: (_) => Spirit >= 100,
+            onCast: (caster, spell, targets) =>
+            {
+                Spirit = 0; //Sets spirit to 0.
+                
+                //15% Damage Buff from Wrath of Winter.
+                Modifier damageMod = new Modifier(Modifier.StatModType.MultiplicativePercent, 15, spell);
+                //+30% Haste from Spirit of Heroism.
+                Modifier hasteMod = new Modifier(Modifier.StatModType.AdditivePercent, 30, spell);
+                
+                caster.ApplyBuff(caster, caster, new Aura(
+                    id: "wrath-of-winter",
+                    name: "Wrath of Winter",
+                    duration: 20,
+                    tickInterval: 2,
+                    onTick: (unit, target) => { UpdateWinterOrbs(1); },
+                    onApply: (unit, target) => { unit.DamageBuffs.AddModifier(damageMod); },
+                    onRemove: (unit, target) => { unit.DamageBuffs.RemoveModifier(damageMod); }
+                ));
+                
+                caster.ApplyBuff(caster, caster, new Aura(
+                    id: "spirit-of-heroism",
+                    name: "Spirit of Heroism",
+                    duration: 20,
+                    tickInterval: 0,
+                    onTick: (unit, target) => { UpdateWinterOrbs(1); },
+                    onApply: (unit, target) => { unit.DamageBuffs.AddModifier(hasteMod); },
+                    onRemove: (unit, target) => { unit.DamageBuffs.RemoveModifier(hasteMod); }
+                ));
+            }
+        );
 
-        SpellBook.Add(_icyBlitz);
+        SpellBook.Add(_iceBlitz);
         SpellBook.Add(_danceOfSwallows);
         SpellBook.Add(_coldSnap);
         SpellBook.Add(_burstingIce);
@@ -389,6 +451,8 @@ public class Rime : Unit
         SpellBook.Add(_glacialBlast);
         SpellBook.Add(_frostBolt);
         SpellBook.Add(_iceComet);
+        SpellBook.Add(_wintersBlessing);
+        SpellBook.Add(_wrathOfWinter);
     }
 
     /// <summary>

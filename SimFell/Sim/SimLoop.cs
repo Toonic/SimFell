@@ -47,7 +47,7 @@ public class SimLoop
                 break;
 
             player.SetPrimaryTarget(targets[0]); //Used mostly for auto-casting abilities. Like Anima Spikes on Rime.
-            OnUpdate?.Invoke();
+            OnUpdate?.Invoke(); //Update all Spells/Buffs to be removed first.
             // Then cast the spell that should cast last.
             if (!player.IsCasting)
             {
