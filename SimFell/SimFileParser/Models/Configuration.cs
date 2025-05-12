@@ -182,10 +182,10 @@ public class SimFellConfiguration
     public string Name { get; set; } = string.Empty;
     public string Hero { get; set; } = string.Empty;
     public int Intellect { get; set; }
-    public float Crit { get; set; }
-    public float Expertise { get; set; }
-    public float Haste { get; set; }
-    public float Spirit { get; set; }
+    public double Crit { get; set; }
+    public double Expertise { get; set; }
+    public double Haste { get; set; }
+    public double Spirit { get; set; }
     public string? Talents { get; set; }
     public string? Trinket1 { get; set; }
     public string? Trinket2 { get; set; }

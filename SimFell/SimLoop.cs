@@ -13,7 +13,7 @@ public class SimLoop
     // For reference, WoW servers run at around a 20 Tickrate.
     private const double step = 0.01;
 
-    private long _ticks;
+    private double _ticks;
     private double damageDealt;
 
     public enum SimulationMode
@@ -84,7 +84,7 @@ public class SimLoop
         ConsoleLogger.Log(SimulationLogLevel.DamageEvents, $"DPS: {damageDealt / GetElapsed()}");
     }
 
-    private void OnDamageReceived(Unit unit, float damageReceived, object source)
+    private void OnDamageReceived(Unit unit, double damageReceived, object source)
     {
         //In the future we can keep track of the damage source in a dict and output what each damage was.
         damageDealt += damageReceived;

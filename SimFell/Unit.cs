@@ -33,7 +33,7 @@ public class Unit : SimLoopListener
     public Stat DamageTakenDebuffs = new Stat(0);
 
     //Events
-    public Action<Unit, float, object> OnDamageReceived { get; set; } = (unit, damage, source) => { };
+    public Action<Unit, double, object> OnDamageReceived { get; set; } = (unit, damage, source) => { };
 
     public Unit(string name, int health)
     {
@@ -110,7 +110,7 @@ public class Unit : SimLoopListener
     /// <param name="target">Target for the damage.</param>
     /// <param name="damagePercent">Damage percentage as full XX.X%</param>
     /// <param name="damageSource">Source of the damage. (EG: Spell, Aura, etc.) Used mostly for debugging.</param>
-    public void DealDamage(Unit target, float damagePercent, object damageSource)
+    public void DealDamage(Unit target, double damagePercent, object damageSource)
     {
         var damage = (damagePercent / 100f) * MainStat.GetValue(); // Adds the Damage as Main Stat.
         damage *= 1 + (ExpertiseStat.GetValue() / 100f); // Modifies the damage based on expertise.
@@ -130,7 +130,7 @@ public class Unit : SimLoopListener
     /// <param name="amount">Incoming Damage amount.</param>
     /// <param name="isCritical">If the damage was a critical hit.</param>
     /// <param name="damageSource">Source of the Damage.</param>
-    public void TakeDamage(float amount, bool isCritical, object damageSource)
+    public void TakeDamage(double amount, bool isCritical, object damageSource)
     {
         var totalDamage = (int)DamageTakenDebuffs.GetValue(amount);
         // Log damage event with coloring for critical hits
@@ -200,7 +200,7 @@ public class Unit : SimLoopListener
                 if (SimLoop.Instance.GetElapsed() >= _tickTime)
                 {
                     _currentSpell.Tick(this, _targets);
-                    _tickTime += _currentSpell.GetTickRate(this);
+                    _tickTime = Math.Round((_tickTime + _currentSpell.GetTickRate(this)),2);
                 }
                 if (SimLoop.Instance.GetElapsed() >= _channelTime)
                 {

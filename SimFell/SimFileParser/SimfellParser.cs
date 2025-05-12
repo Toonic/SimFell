@@ -170,16 +170,16 @@ namespace SimFell.SimFileParser
                         config.Intellect = int.Parse(val);
                         break;
                     case "crit":
-                        config.Crit = float.Parse(val);
+                        config.Crit = double.Parse(val);
                         break;
                     case "expertise":
-                        config.Expertise = float.Parse(val);
+                        config.Expertise = double.Parse(val);
                         break;
                     case "haste":
-                        config.Haste = float.Parse(val);
+                        config.Haste = double.Parse(val);
                         break;
                     case "spirit":
-                        config.Spirit = float.Parse(val);
+                        config.Spirit = double.Parse(val);
                         break;
                     case "talents":
                         config.Talents = val;

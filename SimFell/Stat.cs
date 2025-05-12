@@ -3,7 +3,7 @@ namespace SimFell;
 public class Stat
 {
     //Base Value as points.
-    public float BaseValue { get; set; }
+    public double BaseValue { get; set; }
 
     private bool _hasDiminishingReturns;
     
@@ -11,7 +11,7 @@ public class Stat
     private readonly double[] _breakPoints = [10.0, 15.0, 20.0, 25.0]; //Percent Threasholds for Break Points.
     private readonly double[] _breakPointMultipliers = [1, 0.9, 0.8, 0.7, 0.6];
 
-    public Stat(float baseStat, bool hasDiminishingReturns = false)
+    public Stat(double baseStat, bool hasDiminishingReturns = false)
     {
         BaseValue = baseStat;
         _hasDiminishingReturns = hasDiminishingReturns;
@@ -23,16 +23,16 @@ public class Stat
     public void RemoveModifier(StatModifier modifier) => _modifiers.Remove(modifier);
     public void RemoveModifier(object source) => _modifiers.RemoveAll(mod => mod.Source == source);
 
-    public float GetValue()
+    public double GetValue()
     {
-        float value = BaseValue;
+        double value = BaseValue;
         if (_hasDiminishingReturns)
         {
             value = GetStatAsPercentage((int)value);
         }
         return GetValue(value);
     }
-    public float GetValue(float inValue)
+    public double GetValue(double inValue)
     {
         foreach (var mod in _modifiers)
         {
@@ -43,7 +43,7 @@ public class Stat
         return inValue;
     }
     
-    public float GetStatAsPercentage(int statPoints)
+    public double GetStatAsPercentage(int statPoints)
     {
         double statPercentage = _modifiers.FirstOrDefault(m => m.StatMod == StatModifier.StatModType.BasePercentage)?.Value ?? 0.0;
         int breakpointIndex = 0;
@@ -61,7 +61,7 @@ public class Stat
             statPercentage += effectiveIncrease;
         }
 
-        return (float)statPercentage;
+        return statPercentage;
     }
 
 }

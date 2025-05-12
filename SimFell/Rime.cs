@@ -110,7 +110,7 @@ public class Rime : Unit
                              ?? throw new Exception("No valid targets");
 
                 // Builds the OnDamage Event.
-                Action<Unit, float, object>? onDamageEvent = (unit, damage, source) =>
+                Action<Unit, double, object>? onDamageEvent = (unit, damage, source) =>
                 {
                     // If the source is from ColdSnap, deal bonus damage.
                     if (source == coldSnap)
