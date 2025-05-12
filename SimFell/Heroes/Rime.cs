@@ -311,17 +311,24 @@ public class Rime : Unit
 
                 _freezingTorrent.OnCast += (caster, spell, targets) =>
                 {
-                    if (unit.HasBuff(soulFrostAura) && spell == _freezingTorrent)
+                    if (caster.HasBuff(soulFrostAura))
                     {
                         hasUsed = true;
                         _freezingTorrent.ChannelTime.AddModifier(freezingTorrentChannelTimeMod);
                         _freezingTorrent.DamageModifiers.AddModifier(freezingTorrentDamageMod);
                     }
+                    else
+                    {
+                        foreach (var buffs in caster.Buffs)
+                        {
+                            Console.WriteLine(buffs.Name);
+                        }
+                    }
                 };
 
                 unit.OnCastDone += (caster, spell, targets) =>
                 {
-                    if (unit.HasBuff(soulFrostAura) && spell == _freezingTorrent)
+                    if (caster.HasBuff(soulFrostAura) && spell == _freezingTorrent)
                     {
                         hasUsed = false;
                         unit.RemoveBuff(soulFrostAura);

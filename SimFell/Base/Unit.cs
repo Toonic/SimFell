@@ -102,6 +102,11 @@ public class Unit : SimLoopListener
         var existing = Buffs.Where(aura => aura.ID == buff.ID).ToList();
         foreach (var aura in existing)
         {
+            ConsoleLogger.Log(
+                SimulationLogLevel.BuffEvents,
+                $"\u001b[1;34m{Name}\u001b[0;30m loses buff: \u001b[1;33m{buff.Name}\u001b[0;30m",
+                "💪🛑"
+            );
             aura.Remove();
             Buffs.Remove(aura);
         }
@@ -164,7 +169,7 @@ public class Unit : SimLoopListener
 
         var isCritical = SimRandom.Roll(critPercent);
         isCritical = SimRandom.CanCrit ? isCritical : false;
-        if (isCritical) OnCrit?.Invoke(target, damage, spellSource, auraSource); //On Crit events called.
+        if (isCritical) OnCrit?.Invoke(this, damage, spellSource, auraSource); //On Crit events called.
         damage *= isCritical ? 2 : 1; //Doubles the damage if there is a Critical Hit. TODO: Crit power.
 
         OnDamageDealt?.Invoke(this, damage, spellSource, auraSource); //Called when damage is dealt.
