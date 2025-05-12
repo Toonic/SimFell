@@ -121,7 +121,7 @@ public class Rime : Unit
                 //Stacking Buff for Instant Cast
                 int glacialAssaultStacks = 0;
                 int glacialAssaultMaxStacks = 4;
-                
+
                 //Mods for Glacial Blast when procs happen.
                 Modifier instantCastMod =
                     new Modifier(Modifier.StatModType.Multiplicative, 0, //Multiplies cast time by 0 for instance cast.
@@ -129,7 +129,7 @@ public class Rime : Unit
                 Modifier damageMod =
                     new Modifier(Modifier.StatModType.Multiplicative, 2, //Multiplies damage by 2x.
                         _glacialBlast);
-                
+
                 //Glacial Assault Aura buff for tracking.
                 //TODO: This should use Stack count where it gets applied every cast, and stacks are kept track in the
                 // On Apply. Not in the talent itself.
@@ -170,7 +170,7 @@ public class Rime : Unit
                 };
             }
         );
-        
+
         Talents.Add(chillBlain);
         Talents.Add(coalescingIce);
         Talents.Add(glacialAssault);
@@ -535,7 +535,7 @@ public class Rime : Unit
                 }
             }
         );
-        
+
         //Winters Blessing
         _wintersBlessing = new Spell(
             id: "winters-blessing",
@@ -547,7 +547,7 @@ public class Rime : Unit
             {
                 //15% Damage Buff from Wrath of Winter.
                 Modifier spiritMod = new Modifier(Modifier.StatModType.MultiplicativePercent, 20, spell);
-                
+
                 caster.ApplyBuff(caster, caster, new Aura(
                     id: "winters-blessing",
                     name: "Winters Blessing",
@@ -558,7 +558,7 @@ public class Rime : Unit
                 ));
             }
         );
-        
+
         //Wrath of Winter - Spirit Ability.
         _wrathOfWinter = new Spell(
             id: "wrath-of-winter",
@@ -569,12 +569,12 @@ public class Rime : Unit
             onCast: (caster, spell, targets) =>
             {
                 Spirit = 0; //Sets spirit to 0.
-                
+
                 //15% Damage Buff from Wrath of Winter.
                 Modifier damageMod = new Modifier(Modifier.StatModType.MultiplicativePercent, 15, spell);
                 //+30% Haste from Spirit of Heroism.
                 Modifier hasteMod = new Modifier(Modifier.StatModType.AdditivePercent, 30, spell);
-                
+
                 caster.ApplyBuff(caster, caster, new Aura(
                     id: "wrath-of-winter",
                     name: "Wrath of Winter",
@@ -584,7 +584,7 @@ public class Rime : Unit
                     onApply: (unit, target) => { unit.DamageBuffs.AddModifier(damageMod); },
                     onRemove: (unit, target) => { unit.DamageBuffs.RemoveModifier(damageMod); }
                 ));
-                
+
                 caster.ApplyBuff(caster, caster, new Aura(
                     id: "spirit-of-heroism",
                     name: "Spirit of Heroism",
