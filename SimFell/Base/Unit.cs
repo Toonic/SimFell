@@ -19,7 +19,7 @@ public class Unit : SimLoopListener
     private double _castTime;
     private double _channelTime;
     private double _tickTime;
-    private List<Unit> _targets = new List<Unit>();
+    public List<Unit> Targets = new List<Unit>();
     public double GCD { get; private set; }
 
     // Baseline stats are always flat 100. As point values.
@@ -83,6 +83,22 @@ public class Unit : SimLoopListener
             $"\u001b[1;34m{Name}\u001b[0;30m gains buff: \u001b[1;33m{buff.Name}\u001b[0;30m",
             "💪"
         );
+    }
+
+    public bool HasBuff(Aura buff)
+    {
+        var existing = Buffs.Where(aura => aura.ID == buff.ID).ToList();
+        return existing.Count > 0;
+    }
+
+    public void RemoveBuff(Aura buff)
+    {
+        var existing = Buffs.Where(aura => aura.ID == buff.ID).ToList();
+        foreach (var aura in existing)
+        {
+            aura.Remove();
+            Buffs.Remove(aura);
+        }
     }
 
     /// <summary>
@@ -217,14 +233,14 @@ public class Unit : SimLoopListener
             //If the casting is done.
             if (!_currentSpell.Channel && SimLoop.Instance.GetElapsed() >= _castTime)
             {
-                _currentSpell.Cast(this, _targets);
+                _currentSpell.Cast(this, Targets);
                 StopCasting();
             }
             else if (_currentSpell.Channel)
             {
                 if (SimLoop.Instance.GetElapsed() >= _tickTime)
                 {
-                    _currentSpell.Tick(this, _targets);
+                    _currentSpell.Tick(this, Targets);
                     _tickTime = Math.Round(_tickTime + _currentSpell.GetTickRate(this), 2);
                 }
                 if (SimLoop.Instance.GetElapsed() >= _channelTime)
@@ -280,7 +296,7 @@ public class Unit : SimLoopListener
         );
 
         _currentSpell = spell;
-        _targets = targets;
+        Targets = targets;
         _castTime = SimLoop.Instance.GetElapsed() + spell.GetCastTime(this);
 
         IsCasting = true;

@@ -45,6 +45,10 @@ public class Stat
         //Any extra Multiplicative Percentages.
         foreach (var mod in _modifiers.Where(m => m.StatMod == Modifier.StatModType.MultiplicativePercent))
             value *= 1 + (mod.Value / 100.0);
+        
+        //Flat multipliers. Eg 2.0
+        foreach (var mod in _modifiers.Where(m => m.StatMod == Modifier.StatModType.Multiplicative))
+            value *= mod.Value;
 
         return value;
     }
@@ -78,7 +82,7 @@ public class Stat
 
 public class Modifier
 {
-    public enum StatModType { Flat, BasePercentage, AdditivePercent, MultiplicativePercent }
+    public enum StatModType { Flat, BasePercentage, AdditivePercent, MultiplicativePercent, Multiplicative }
 
     public StatModType StatMod { get; }
     public float Value { get; }

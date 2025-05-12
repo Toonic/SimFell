@@ -21,14 +21,15 @@ public class Rime : Unit
     private Spell _danceOfSwallows;
     private Spell _glacialBlast;
     private Spell _icyBlitz;
+    private Spell _iceComet;
 
     public Rime(int health) : base("Rime", health)
     {
         ConfigureSpellBook();
         ConfigureTalents();
+        ActivateTalent(1, 3);
     }
 
-    //TODO: Make this so it can also take in the gridpos/Different override?
     public void ActivateTalent(string id)
     {
         var talent = Talents.FirstOrDefault(talent => talent.Id == id);
@@ -49,6 +50,8 @@ public class Rime : Unit
     {
         Talents = new List<Talent>();
 
+        #region Row 1
+
         //Chillblain Talent
         var chillBlain = new Talent(
             id: "chillblain",
@@ -56,7 +59,10 @@ public class Rime : Unit
             gridPos: "1.1",
             onActivate: unit =>
             {
-                _freezingTorrent.DamageModifiers.AddModifier(new Modifier(Modifier.StatModType.MultiplicativePercent, 20, unit));
+                // +20% Damage Buff to Torrent.
+                _freezingTorrent.DamageModifiers.AddModifier(new Modifier(Modifier.StatModType.MultiplicativePercent,
+                    20, unit));
+                // 20% AOE Damage to nearby targets.
                 _freezingTorrent.OnTick += (caster, spell, targets) =>
                 {
                     int maxTargets = 5;
@@ -73,7 +79,95 @@ public class Rime : Unit
             }
         );
 
+        //Coalescing Ice.
+        var coalescingIce = new Talent(
+            id: "coalescing-ice",
+            name: "Coalescing Ice",
+            gridPos: "1.2",
+            onActivate: unit =>
+            {
+                // +30% Damage buff to Bursting Ice.
+                _burstingIce.DamageModifiers.AddModifier(new Modifier(Modifier.StatModType.MultiplicativePercent, 30,
+                    unit));
+                // 3 Anima per Tick Instead of +1 if only fighting one target.
+                unit.OnDamageDealt += (caster, damage, spell, aura) =>
+                {
+                    if (spell == _burstingIce && caster.Targets.Count == 1)
+                    {
+                        UpdateAnima(+2);
+                    }
+                };
+            }
+        );
+
+        //Glacial Assault
+        var glacialAssault = new Talent(
+            id: "glacial-assault",
+            name: "Glacial Assault",
+            gridPos: "1.3",
+            onActivate: unit =>
+            {
+                //Flat 20% Crit Bonus.
+                _glacialBlast.CritModifiers.AddModifier(new Modifier(Modifier.StatModType.AdditivePercent, 20, unit));
+
+                //Stacking Buff for Instant Cast
+                int glacialAssaultStacks = 0;
+                int glacialAssaultMaxStacks = 4;
+                
+                //Mods for Glacial Blast when procs happen.
+                Modifier instantCastMod =
+                    new Modifier(Modifier.StatModType.Multiplicative, 0, //Multiplies cast time by 0 for instance cast.
+                        _glacialBlast);
+                Modifier damageMod =
+                    new Modifier(Modifier.StatModType.Multiplicative, 2, //Multiplies damage by 2x.
+                        _glacialBlast);
+                
+                //Glacial Assault Aura buff for tracking.
+                //TODO: This should use Stack count where it gets applied every cast, and stacks are kept track in the
+                // On Apply. Not in the talent itself.
+                Aura glacialAssaultAura = new Aura(
+                    id: "glacial-assault",
+                    name: "Glacial Assault",
+                    duration: 99999,
+                    tickInterval: 0,
+                    onApply: (unit1, unit2) =>
+                    {
+                        _glacialBlast.CastTime.AddModifier(instantCastMod);
+                        _glacialBlast.DamageModifiers.AddModifier(damageMod);
+                    },
+                    onRemove: (unit1, unit2) =>
+                    {
+                        _glacialBlast.CastTime.RemoveModifier(instantCastMod);
+                        _glacialBlast.DamageModifiers.RemoveModifier(damageMod);
+                        glacialAssaultStacks = 0;
+                    }
+                );
+
+                //On dealing damage, gain aura at maximum stacks.
+                unit.OnDamageDealt += (caster, damage, spell, aura) =>
+                {
+                    if (spell == _coldSnap)
+                    {
+                        glacialAssaultStacks++;
+                        if (glacialAssaultStacks == glacialAssaultMaxStacks)
+                        {
+                            caster.ApplyBuff(caster, caster, glacialAssaultAura);
+                        }
+                    }
+
+                    if (spell == _glacialBlast && caster.HasBuff(glacialAssaultAura))
+                    {
+                        caster.RemoveBuff(glacialAssaultAura);
+                    }
+                };
+            }
+        );
+        
         Talents.Add(chillBlain);
+        Talents.Add(coalescingIce);
+        Talents.Add(glacialAssault);
+
+        #endregion
     }
 
     private void ConfigureSpellBook()
@@ -247,10 +341,7 @@ public class Rime : Unit
                         target.DamageBuffs.AddModifier(new Modifier(Modifier.StatModType.MultiplicativePercent, 15,
                             spell));
                     },
-                    onRemove: (caster, target) =>
-                    {
-                        unit.DamageBuffs.RemoveModifier(spell);
-                    }
+                    onRemove: (caster, target) => { unit.DamageBuffs.RemoveModifier(spell); }
                 ));
             }
         );
@@ -271,6 +362,25 @@ public class Rime : Unit
             }
         );
 
+        //Ice Comet
+        _iceComet = new Spell(
+            id: "ice-comet",
+            name: "Ice Comet",
+            cooldown: 0,
+            castTime: 0,
+            hasGCD: false,
+            canCast: (_) => WinterOrbs >= 3,
+            onCast: (unit, spell, targets) =>
+            {
+                UpdateWinterOrbs(-2);
+
+                foreach (var target in targets)
+                {
+                    DealDamage(target, 300, spell);
+                }
+            }
+        );
+
         SpellBook.Add(_icyBlitz);
         SpellBook.Add(_danceOfSwallows);
         SpellBook.Add(_coldSnap);
@@ -278,6 +388,7 @@ public class Rime : Unit
         SpellBook.Add(_freezingTorrent);
         SpellBook.Add(_glacialBlast);
         SpellBook.Add(_frostBolt);
+        SpellBook.Add(_iceComet);
     }
 
     /// <summary>
@@ -304,7 +415,7 @@ public class Rime : Unit
         WinterOrbs += winterOrbsDelta;
         WinterOrbs = Math.Clamp(WinterOrbs, 0, MaxWinterOrbs);
 
-        if (PrimaryTarget != null)
+        if (winterOrbsDelta > 0 && PrimaryTarget != null)
             _animaSpikes.Cast(this, new List<Unit>() { PrimaryTarget });
     }
 }
