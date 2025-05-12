@@ -1,7 +1,6 @@
 using SimFell.SimFileParser.Models;
 using SimFell.Logging;
 using Spectre.Console;
-using System.Threading.Tasks.Dataflow;
 
 namespace SimFell;
 
@@ -52,7 +51,7 @@ public class SimLoop
             // Then cast the spell that should cast last.
             if (!player.IsCasting)
             {
-                foreach (var spell in player.SpellBook)
+                foreach (var spell in player.Rotation)
                 {
                     if (spell.CheckCanCast(player))
                     {

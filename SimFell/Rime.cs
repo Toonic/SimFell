@@ -17,7 +17,7 @@ public class Rime : Unit
     {
         // Frostboll Spell
         var frostBolt = new Spell(
-            id: "frost-bolt",
+            id: "frost_bolt",
             name: "Frost Bolt",
             cooldown: 0,
             castTime: 1.5f,
@@ -32,7 +32,7 @@ public class Rime : Unit
 
         // Bursting Ice
         var burstingIce = new Spell(
-            id: "bursting-ice",
+            id: "bursting_ice",
             name: "Bursting Ice",
             cooldown: 15,
             castTime: 2.0,
@@ -40,11 +40,11 @@ public class Rime : Unit
             {
                 var primaryTarget = targets.FirstOrDefault();
                 primaryTarget?.ApplyDebuff(unit, primaryTarget, new Aura(
-                    id: "bursting-ice",
+                    id: "bursting_ice",
                     name: "Bursting Ice",
                     duration: 3.15,
                     tickInterval: 0.5,
-                    onTick: (caster,target) =>
+                    onTick: (caster, target) =>
                     {
                         int animaGained = 0;
                         int maxAnimaGainedPerTick = 3;
@@ -64,7 +64,7 @@ public class Rime : Unit
 
         // Cold Snap
         var coldSnap = new Spell(
-            id: "cold-snap",
+            id: "cold_snap",
             name: "Cold Snap",
             cooldown: 8,
             castTime: 0,
@@ -79,7 +79,7 @@ public class Rime : Unit
 
         // Freezing Torrent
         var freezingTorrent = new Spell(
-            id: "freezing-torrent",
+            id: "freezing_torrent",
             name: "Freezing Torrent",
             cooldown: 10,
             castTime: 0,
@@ -90,7 +90,7 @@ public class Rime : Unit
             {
                 //TODO: Check to see if target is dead instead of getting first.
                 var target = targets.FirstOrDefault() ?? throw new Exception("No valid targets");
-                
+
                 DealDamage(target, 65, spell);
                 UpdateAnima(1);
             }
@@ -98,11 +98,11 @@ public class Rime : Unit
 
         // Dance of Swallows
         var danceOfSwallows = new Spell(
-            id: "dance-of-swallows",
+            id: "dance_of_swallows",
             name: "Dance of Swallows",
             cooldown: 60,
             castTime: 0,
-            canCast: () => WinterOrbs >= 2,
+            canCast: (_) => WinterOrbs >= 2,
             onCast: (unit, spell, targets) =>
             {
                 UpdateWinterOrbs(-2);
@@ -129,17 +129,17 @@ public class Rime : Unit
                 };
 
                 // Applies the Debuff to the Primary target.
-                target.ApplyDebuff(unit, target,new Aura(
-                    id: "dance-of-swallows",
+                target.ApplyDebuff(unit, target, new Aura(
+                    id: "dance_of_swallows",
                     name: "Dance of Swallows",
                     duration: 20,
                     tickInterval: 0,
-                    onApply: (caster,target) =>
+                    onApply: (caster, target) =>
                     {
                         //Subscribes to the Units OnDamageRecieved event.
                         target.OnDamageReceived += onDamageEvent;
                     },
-                    onRemove: (caster,target) =>
+                    onRemove: (caster, target) =>
                     {
                         //UnSubscribes to the Units OnDamageRecieved event.
                         target.OnDamageReceived -= onDamageEvent;
@@ -150,11 +150,11 @@ public class Rime : Unit
 
         //Glacial Blast
         var glacialBlast = new Spell(
-            id: "glacial-blast",
+            id: "glacial_blast",
             name: "Glacial Blast",
             cooldown: 0,
             castTime: 2.0,
-            canCast: () => WinterOrbs >= 2,
+            canCast: (_) => WinterOrbs >= 2,
             onCast: (unit, spell, targets) =>
             {
                 var target = targets.FirstOrDefault() ?? throw new Exception("No valid targets");
@@ -165,7 +165,7 @@ public class Rime : Unit
 
         //Icy Blitz
         var icyBlitz = new Spell(
-            id: "icy-blitz",
+            id: "icy_blitz",
             name: "Icy Blitz",
             cooldown: 120,
             castTime: 0,
@@ -174,17 +174,17 @@ public class Rime : Unit
             onCast: (unit, spell, targets) =>
             {
                 unit.ApplyBuff(unit, unit, new Aura(
-                    id: "icy-blitz",
+                    id: "icy_blitz",
                     name: "Icy Blitz",
                     maxStacks: 1,
                     duration: 20,
                     tickInterval: 0,
-                    onApply: (caster,target) =>
+                    onApply: (caster, target) =>
                     {
                         target.DamageBuffs.AddModifier(new StatModifier(StatModifier.StatModType.Multiplicative, 15,
                             spell));
                     },
-                    onRemove: (caster,target) =>
+                    onRemove: (caster, target) =>
                     {
                         unit.DamageBuffs.RemoveModifier(spell);
                     }
@@ -194,7 +194,7 @@ public class Rime : Unit
 
         //Anima Spikes
         _animaSpikes = new Spell(
-            id: "anima-spikes",
+            id: "anima_spikes",
             name: "Anima Spikes",
             cooldown: 0,
             castTime: 0,
@@ -209,13 +209,13 @@ public class Rime : Unit
         );
 
         //Spell Priority Order because why not?
-        //SpellBook.Add(icyBlitz);
-        //SpellBook.Add(danceOfSwallows);
-        //SpellBook.Add(coldSnap);
-        //SpellBook.Add(burstingIce);
+        SpellBook.Add(icyBlitz);
+        SpellBook.Add(danceOfSwallows);
+        SpellBook.Add(coldSnap);
+        SpellBook.Add(burstingIce);
         SpellBook.Add(freezingTorrent);
-        //SpellBook.Add(glacialBlast);
-        //SpellBook.Add(frostBolt);
+        SpellBook.Add(glacialBlast);
+        SpellBook.Add(frostBolt);
     }
 
     /// <summary>

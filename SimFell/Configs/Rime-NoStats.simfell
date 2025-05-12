@@ -31,11 +31,11 @@ enemies=1
 run_count=2000
 
 # Actions
-action=/wrath_of_winter
-actions+=/ice_blitz
-actions+=/dance_of_swallows,if=spell.cold_snap.cooldown<2
-actions+=/cold_snap,if=debuff.dance_of_swallows.duration>0 and character.anima<5 and character.winter_orbs<4
-actions+=/bursting_ice
-actions+=/freezing_torrent
-actions+=/glacial_blast
-actions+=/frost_bolt
+# action=/wrath_of_winter
+# actions+=/ice_blitz
+# actions+=/dance_of_swallows,if=spell.cold_snap.cooldown<2
+actions+=/cold_snap,if=character.anima<5 and character.winter_orbs<4 # and debuff.dance_of_swallows.duration>0
+# actions+=/bursting_ice
+# actions+=/freezing_torrent
+# actions+=/glacial_blast
+# actions+=/frost_bolt
