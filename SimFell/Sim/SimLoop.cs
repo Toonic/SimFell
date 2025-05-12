@@ -84,7 +84,7 @@ public class SimLoop
         ConsoleLogger.Log(SimulationLogLevel.DamageEvents, $"DPS: {damageDealt / GetElapsed()}");
     }
 
-    private void OnDamageReceived(Unit unit, double damageReceived, Spell spellSource, Aura auraSource)
+    private void OnDamageReceived(Unit unit, double damageReceived, Spell? spellSource, Aura? auraSource)
     {
         //In the future we can keep track of the damage source in a dict and output what each damage was.
         damageDealt += damageReceived;
