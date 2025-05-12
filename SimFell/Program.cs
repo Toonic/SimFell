@@ -33,7 +33,11 @@ if (config.Talents != null)
     var talentGroups = config.Talents.Split('-');
     for (int i = 0; i < talentGroups.Length; i++)
         for (int j = 0; j < talentGroups[i].Length; j++)
-            player.ActivateTalent(i + 1, j + 1);
+            if (talentGroups[i] != "0")
+                player.ActivateTalent(
+                    int.Parse(talentGroups[i]),
+                    int.Parse(talentGroups[i][j].ToString())
+                );
 }
 
 foreach (var action in config.ConfigActions)
