@@ -26,7 +26,7 @@ gear_shoulder=Test Shoulder Name,int=12,stam=15,crit=13,haste=6,set=Wyrmling Vig
 # trinket2=drums
 
 # Sim Information
-duration=60
+duration=120
 enemies=1
 run_count=2000
 

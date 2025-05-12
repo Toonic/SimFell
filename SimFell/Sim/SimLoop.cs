@@ -95,6 +95,11 @@ public class SimLoop
         return _ticks * step;
     }
 
+    public double GetStep()
+    {
+        return step;
+    }
+
     public static void ShowConfig(SimFellConfiguration config)
     {
         ConsoleLogger.Log(SimulationLogLevel.Debug, config.ToStringFormatted);

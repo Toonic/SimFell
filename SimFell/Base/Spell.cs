@@ -47,7 +47,7 @@ public class Spell
     public void UpdateCooldown(double deltaTime)
     {
         if (OffCooldown > 0)
-            OffCooldown -= deltaTime;
+            OffCooldown = Math.Round(OffCooldown - deltaTime,2);
     }
 
     public bool CheckCanCast(Unit caster)

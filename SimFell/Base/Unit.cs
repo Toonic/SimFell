@@ -30,8 +30,7 @@ public class Unit : SimLoopListener
     public Stat SpiritStat = new Stat(0, true);
 
     //Spirit Value
-    public double Spirit = 100; //TODO: Proper Spirit Regen?
-
+    public double Spirit = 50; //TODO: Proper Spirit Regen?
 
     // Other Stat Buffs
     public Stat DamageBuffs = new Stat(0);
@@ -195,6 +194,7 @@ public class Unit : SimLoopListener
 
     protected override void Update()
     {
+        Spirit = Math.Min(100, Spirit + (SimLoop.Instance.GetStep() * 0.2 * (1 + (SpiritStat.GetValue() / 100.0)))); //Base Spirit Regen is 0.2.
         // Update buffs
         for (int i = Buffs.Count - 1; i >= 0; i--)
         {
