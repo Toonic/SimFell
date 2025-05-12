@@ -9,6 +9,7 @@ public class Unit : SimLoopListener
     public List<Aura> Buffs { get; set; } = [];
     public List<Aura> Debuffs { get; set; } = [];
     public List<Spell> SpellBook { get; set; } = [];
+    public List<Spell> Rotation { get; set; } = [];
     public Unit? PrimaryTarget { get; private set; }
 
     // Casting
@@ -68,7 +69,7 @@ public class Unit : SimLoopListener
             Console.WriteLine("TODO: Refresh");
         else
         {
-            buff.Apply(caster,target);
+            buff.Apply(caster, target);
             Buffs.Add(buff);
         }
 
@@ -91,7 +92,7 @@ public class Unit : SimLoopListener
             Console.WriteLine("TODO: Refresh");
         else
         {
-            debuff.Apply(caster,target);
+            debuff.Apply(caster, target);
             Debuffs.Add(debuff);
         }
 
@@ -259,7 +260,7 @@ public class Unit : SimLoopListener
 
         IsCasting = true;
         if (spell.HasGCD) SetGCD(spell.GetGCD(this));
-        
+
         //Handle Channel Spells.
         if (spell.Channel)
         {
@@ -270,7 +271,7 @@ public class Unit : SimLoopListener
             _channelTime = SimLoop.Instance.GetElapsed() + spell.GetChannelTime(this);
             _tickTime = SimLoop.Instance.GetElapsed() + spell.GetTickRate(this);
         }
-        
+
         if (spell.GetCastTime(this) == 0 && spell.GetChannelTime(this) == 0)
         {
             spell.Cast(this, targets);

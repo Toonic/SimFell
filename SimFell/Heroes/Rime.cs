@@ -44,7 +44,7 @@ public class Rime : Unit
                     name: "Bursting Ice",
                     duration: 3.15,
                     tickInterval: 0.5,
-                    onTick: (caster,target) =>
+                    onTick: (caster, target) =>
                     {
                         int animaGained = 0;
                         int maxAnimaGainedPerTick = 3;
@@ -90,7 +90,7 @@ public class Rime : Unit
             {
                 //TODO: Check to see if target is dead instead of getting first.
                 var target = targets.FirstOrDefault() ?? throw new Exception("No valid targets");
-                
+
                 DealDamage(target, 65, spell);
                 UpdateAnima(1);
             }
@@ -102,7 +102,7 @@ public class Rime : Unit
             name: "Dance of Swallows",
             cooldown: 60,
             castTime: 0,
-            canCast: () => WinterOrbs >= 2,
+            canCast: (_) => WinterOrbs >= 2,
             onCast: (unit, spell, targets) =>
             {
                 UpdateWinterOrbs(-2);
@@ -129,17 +129,17 @@ public class Rime : Unit
                 };
 
                 // Applies the Debuff to the Primary target.
-                target.ApplyDebuff(unit, target,new Aura(
+                target.ApplyDebuff(unit, target, new Aura(
                     id: "dance-of-swallows",
                     name: "Dance of Swallows",
                     duration: 20,
                     tickInterval: 0,
-                    onApply: (caster,target) =>
+                    onApply: (caster, target) =>
                     {
                         //Subscribes to the Units OnDamageRecieved event.
                         target.OnDamageReceived += onDamageEvent;
                     },
-                    onRemove: (caster,target) =>
+                    onRemove: (caster, target) =>
                     {
                         //UnSubscribes to the Units OnDamageRecieved event.
                         target.OnDamageReceived -= onDamageEvent;
@@ -154,7 +154,7 @@ public class Rime : Unit
             name: "Glacial Blast",
             cooldown: 0,
             castTime: 2.0,
-            canCast: () => WinterOrbs >= 2,
+            canCast: (_) => WinterOrbs >= 2,
             onCast: (unit, spell, targets) =>
             {
                 var target = targets.FirstOrDefault() ?? throw new Exception("No valid targets");
@@ -179,12 +179,12 @@ public class Rime : Unit
                     maxStacks: 1,
                     duration: 20,
                     tickInterval: 0,
-                    onApply: (caster,target) =>
+                    onApply: (caster, target) =>
                     {
                         target.DamageBuffs.AddModifier(new StatModifier(StatModifier.StatModType.Multiplicative, 15,
                             spell));
                     },
-                    onRemove: (caster,target) =>
+                    onRemove: (caster, target) =>
                     {
                         unit.DamageBuffs.RemoveModifier(spell);
                     }
@@ -209,13 +209,13 @@ public class Rime : Unit
         );
 
         //Spell Priority Order because why not?
-        //SpellBook.Add(icyBlitz);
-        //SpellBook.Add(danceOfSwallows);
-        //SpellBook.Add(coldSnap);
-        //SpellBook.Add(burstingIce);
+        SpellBook.Add(icyBlitz);
+        SpellBook.Add(danceOfSwallows);
+        SpellBook.Add(coldSnap);
+        SpellBook.Add(burstingIce);
         SpellBook.Add(freezingTorrent);
-        //SpellBook.Add(glacialBlast);
-        //SpellBook.Add(frostBolt);
+        SpellBook.Add(glacialBlast);
+        SpellBook.Add(frostBolt);
     }
 
     /// <summary>
