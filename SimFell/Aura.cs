@@ -50,7 +50,7 @@ public class Aura
         _caster = caster;
         _target = target;
         _removeAt = Duration + SimLoop.Instance.GetElapsed();
-        _nextTick = _caster.GetHastedValue(TickInterval) + SimLoop.Instance.GetElapsed();
+        _nextTick = Math.Round(_caster.GetHastedValue(TickInterval) + SimLoop.Instance.GetElapsed(),2);
         OnApply?.Invoke(caster,target);
     }
 
@@ -66,7 +66,7 @@ public class Aura
         {
             while (simTime >= _nextTick)
             {
-                _nextTick += _caster.GetHastedValue(TickInterval);
+                _nextTick = Math.Round(_nextTick + _caster.GetHastedValue(TickInterval),2);
                 OnTick?.Invoke(_caster, _target);
             }
         }
