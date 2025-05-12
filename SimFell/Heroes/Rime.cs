@@ -464,7 +464,6 @@ public class Rime : Unit
         Anima += animaDelta;
         if (Anima > MaxAnima)
         {
-            //TODO: Anima Spikes Here? Or Winter Orb? Need to double check.
             Anima = 0;
             UpdateWinterOrbs(1);
         }
@@ -477,6 +476,7 @@ public class Rime : Unit
     public void UpdateWinterOrbs(int winterOrbsDelta)
     {
         WinterOrbs += winterOrbsDelta;
+        if (winterOrbsDelta < 0 && SimRandom.Roll(SpiritStat.GetValue())) WinterOrbs += winterOrbsDelta;
         WinterOrbs = Math.Clamp(WinterOrbs, 0, MaxWinterOrbs);
 
         if (winterOrbsDelta > 0 && PrimaryTarget != null)
