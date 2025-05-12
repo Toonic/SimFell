@@ -33,5 +33,5 @@ Currently working on:
   > Thank you for such early idea 🙏
 - [@EriiYenn](https://github.com/EriiYenn) - Putting up with me and my horrible Python Structure.
 
-### 😡 I hate SIMs.
+## 😡 I hate SIMs.
 [Please see the following link.](https://github.com/simulationcraft/simc/wiki/PremedititatedProvocation)
