@@ -17,48 +17,58 @@ public class Stat
         _hasDiminishingReturns = hasDiminishingReturns;
     }
     
-    private readonly List<StatModifier> _modifiers = new();
+    private readonly List<Modifier> _modifiers = new();
     
-    public void AddModifier(StatModifier modifier) => _modifiers.Add(modifier);
-    public void RemoveModifier(StatModifier modifier) => _modifiers.Remove(modifier);
+    public void AddModifier(Modifier modifier) => _modifiers.Add(modifier);
+    public void RemoveModifier(Modifier modifier) => _modifiers.Remove(modifier);
     public void RemoveModifier(object source) => _modifiers.RemoveAll(mod => mod.Source == source);
 
     public double GetValue()
     {
-        double value = BaseValue;
-        if (_hasDiminishingReturns)
-        {
-            value = GetStatAsPercentage((int)value);
-        }
-        return GetValue(value);
+        return GetValue(BaseValue);
     }
-    public double GetValue(double inValue)
+    public double GetValue(double inBaseValue)
     {
-        foreach (var mod in _modifiers)
-        {
-            if (mod.StatMod == StatModifier.StatModType.Additive) inValue += mod.Value;
-            if (mod.StatMod == StatModifier.StatModType.Multiplicative) inValue *= 1f + (mod.Value / 100f);
-        }
+        //Adds the Flat Modifiers. EG: For gear.
+        double raw = inBaseValue + _modifiers
+            .Where(m => m.StatMod == Modifier.StatModType.Flat)
+            .Sum(m => m.Value);
         
-        return inValue;
+        //If it has Diminishing Returns. Calculate the Diminishing Returns.
+        double value = _hasDiminishingReturns ? GetStatAsPercentage((int)raw) : raw;
+        
+        //Adds any Additive Percentages to the Value.
+        value += _modifiers
+            .Where(m => m.StatMod == Modifier.StatModType.AdditivePercent)
+            .Sum(m => m.Value);
+        
+        //Any extra Multiplicative Percentages.
+        foreach (var mod in _modifiers.Where(m => m.StatMod == Modifier.StatModType.MultiplicativePercent))
+            value *= 1 + (mod.Value / 100.0);
+
+        return value;
     }
     
     public double GetStatAsPercentage(int statPoints)
     {
-        double statPercentage = _modifiers.FirstOrDefault(m => m.StatMod == StatModifier.StatModType.BasePercentage)?.Value ?? 0.0;
+        //Adds Base Percentage. EG: 5% Base Crit.
+        double statPercentage = _modifiers
+            .Where(m => m.StatMod == Modifier.StatModType.BasePercentage)
+            .Sum(m => m.Value);
+
         int breakpointIndex = 0;
 
         for (int i = 0; i < statPoints; i++)
         {
-            double effectiveIncrease = PointEffectiveness;
+            double effective = PointEffectiveness;
 
             if (breakpointIndex < _breakPoints.Length && statPercentage >= _breakPoints[breakpointIndex])
             {
-                effectiveIncrease *= _breakPointMultipliers[breakpointIndex];
+                effective *= _breakPointMultipliers[breakpointIndex];
                 breakpointIndex++;
             }
 
-            statPercentage += effectiveIncrease;
+            statPercentage += effective;
         }
 
         return statPercentage;
@@ -66,15 +76,15 @@ public class Stat
 
 }
 
-public class StatModifier
+public class Modifier
 {
-    public enum StatModType { Additive, Multiplicative, BasePercentage }
+    public enum StatModType { Flat, BasePercentage, AdditivePercent, MultiplicativePercent }
 
     public StatModType StatMod { get; }
     public float Value { get; }
     public object Source { get; }
 
-    public StatModifier(StatModType statMod, float value, object source)
+    public Modifier(StatModType statMod, float value, object source)
     {
         StatMod = statMod;
         Value = value;

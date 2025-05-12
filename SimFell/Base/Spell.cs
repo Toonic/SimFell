@@ -7,7 +7,7 @@ public class Spell
 {
     public string ID { get; set; }
     public string Name { get; set; }
-    public double Cooldown { get; set; }
+    private double Cooldown { get; set; }
     public double OffCooldown { get; private set; }
     public double CastTime { get; set; }
     public bool Channel { get; set; }

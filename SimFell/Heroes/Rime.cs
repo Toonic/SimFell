@@ -181,7 +181,7 @@ public class Rime : Unit
                     tickInterval: 0,
                     onApply: (caster,target) =>
                     {
-                        target.DamageBuffs.AddModifier(new StatModifier(StatModifier.StatModType.Multiplicative, 15,
+                        target.DamageBuffs.AddModifier(new Modifier(Modifier.StatModType.MultiplicativePercent, 15,
                             spell));
                     },
                     onRemove: (caster,target) =>

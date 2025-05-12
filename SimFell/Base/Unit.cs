@@ -39,7 +39,7 @@ public class Unit : SimLoopListener
         Name = name;
         Health = health;
         //Add base 5% Crit.
-        CritcalStrikeStat.AddModifier(new StatModifier(StatModifier.StatModType.BasePercentage, 5, this));
+        CritcalStrikeStat.AddModifier(new Modifier(Modifier.StatModType.BasePercentage, 5, this));
     }
 
     public Unit(string name, int health, int mainStat, int critcalStrikeStat, int expertiseStat, int hasteStat,
@@ -108,7 +108,7 @@ public class Unit : SimLoopListener
     /// </summary>
     /// <param name="target">Target for the damage.</param>
     /// <param name="damagePercent">Damage percentage as full XX.X%</param>
-    /// <param name="damageSource">Source of the damage. (EG: Spell, Aura, etc.) Used mostly for debugging.</param>
+    /// <param name="damageSource">Source of the damage. Usually a spell.</param>
     public void DealDamage(Unit target, double damagePercent, object damageSource)
     {
         var damage = (damagePercent / 100f) * MainStat.GetValue(); // Adds the Damage as Main Stat.
@@ -128,7 +128,7 @@ public class Unit : SimLoopListener
     /// </summary>
     /// <param name="amount">Incoming Damage amount.</param>
     /// <param name="isCritical">If the damage was a critical hit.</param>
-    /// <param name="damageSource">Source of the Damage.</param>
+    /// <param name="damageSource">Source of the Damage. Usually a spell.</param>
     public void TakeDamage(double amount, bool isCritical, object damageSource)
     {
         var totalDamage = (int)DamageTakenDebuffs.GetValue(amount);
