@@ -22,4 +22,9 @@ public class Talent
     {
         OnActivate?.Invoke(unit);
     }
+
+    public void Deactivate(Unit unit)
+    {
+        OnDeactivate?.Invoke(unit);
+    }
 }
