@@ -12,7 +12,7 @@ public class Rime : Unit
     private const int MaxWinterOrbs = 5;
 
     private Spell _animaSpikes;
-    
+
     //Spells for easy reference for Talents.
     private Spell _frostBolt;
     private Spell _burstingIce;
@@ -26,10 +26,8 @@ public class Rime : Unit
     {
         ConfigureSpellBook();
         ConfigureTalents();
-        //Temp Example showing activating of talent.
-        ActivateTalent("chillblain");
     }
-    
+
     //TODO: Make this so it can also take in the gridpos/Different override?
     public void ActivateTalent(string id)
     {
@@ -37,15 +35,25 @@ public class Rime : Unit
         if (talent != null) talent.Activate(this);
     }
 
+    public void ActivateTalent(int row, int col)
+    {
+        var talent = Talents.FirstOrDefault(talent => talent.GridPos == $"{row}.{col}");
+        if (talent != null)
+        {
+            talent.Activate(this);
+            ConsoleLogger.Log(SimulationLogLevel.Debug, $"Activated talent '{talent.Name}'");
+        }
+    }
+
     public void ConfigureTalents()
     {
         Talents = new List<Talent>();
-        
+
         //Chillblain Talent
         var chillBlain = new Talent(
-            id:"chillblain",
-            name:"Chillblain",
-            gridPos:"1.1",
+            id: "chillblain",
+            name: "Chillblain",
+            gridPos: "1.1",
             onActivate: unit =>
             {
                 _freezingTorrent.DamageModifiers.AddModifier(new Modifier(Modifier.StatModType.MultiplicativePercent, 20, unit));
@@ -64,7 +72,7 @@ public class Rime : Unit
                 };
             }
         );
-        
+
         Talents.Add(chillBlain);
     }
 
@@ -262,14 +270,14 @@ public class Rime : Unit
                 DealDamage(target, 36, spell);
             }
         );
-        
+
         SpellBook.Add(_icyBlitz);
         SpellBook.Add(_danceOfSwallows);
         SpellBook.Add(_coldSnap);
         SpellBook.Add(_burstingIce);
         SpellBook.Add(_freezingTorrent);
         SpellBook.Add(_glacialBlast);
-        SpellBook.Add(_frostBolt);        
+        SpellBook.Add(_frostBolt);
     }
 
     /// <summary>

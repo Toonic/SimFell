@@ -28,6 +28,14 @@ player.SetPrimaryStats(
     (int)config.Spirit
 );
 
+if (config.Talents != null)
+{
+    var talentGroups = config.Talents.Split('-');
+    for (int i = 0; i < talentGroups.Length; i++)
+        for (int j = 0; j < talentGroups[i].Length; j++)
+            player.ActivateTalent(i + 1, j + 1);
+}
+
 foreach (var action in config.ConfigActions)
 {
     // Find the spell in the player's spellbook
