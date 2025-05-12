@@ -4,6 +4,7 @@ public static class SimRandom
 {
     private static Random _random;
     public static bool Deterministic { get; private set; } = false;
+    public static bool CanCrit { get; private set; } = true;
 
     // Default constructor with a seed for deterministic behavior
     static SimRandom()
@@ -12,10 +13,11 @@ public static class SimRandom
     }
 
     // Enable deterministic mode with an optional seed (defaults to 42)
-    public static void EnableDeterminism(int seed = 42)
+    public static void EnableDeterminism(bool canCrit = true, int seed = 42)
     {
         _random = new Random(seed);
         Deterministic = true;
+        CanCrit = canCrit;
     }
 
     // Disable deterministic mode (uses system time-based seed)
@@ -23,6 +25,7 @@ public static class SimRandom
     {
         _random = new Random(); // Non-deterministic, random seed based on system time
         Deterministic = false;
+        CanCrit = false;
     }
 
     /// <summary>

@@ -30,7 +30,7 @@ public class Unit : SimLoopListener
     public Stat SpiritStat = new Stat(0, true);
     
     //Spirit Value
-    public double Spirit = 50; //TODO: Proper Spirit Regen?
+    public double Spirit = 100; //TODO: Proper Spirit Regen?
     
 
     // Other Stat Buffs
@@ -41,6 +41,8 @@ public class Unit : SimLoopListener
     public Action<Unit, double, Spell, Aura> OnDamageDealt { get; set; } = (unit, damage, spellSource, auraSource) => { }; 
     public Action<Unit, double, Spell, Aura> OnDamageReceived { get; set; } = (unit, damage, spellSource, auraSource) => { };
     public Action<Unit, double, Spell, Aura> OnCrit { get; set; } = (unit, damage, spellSource, auraSource) => { };
+    public Action<Unit, Spell, List<Unit>> OnCast { get; set; } = (unit, spellSource, targets) => { };
+    public Action<Unit, Spell, List<Unit>> OnCastDone { get; set; } = (unit, spellSource, targets) => { };
 
     public Unit(string name, int health)
     {
@@ -161,7 +163,7 @@ public class Unit : SimLoopListener
         damage = DamageBuffs.GetValue(damage);
 
         var isCritical = SimRandom.Roll(critPercent);
-        isCritical = SimRandom.Deterministic ? false : isCritical; //TODO: Remove this/make it another setting.
+        isCritical = SimRandom.CanCrit ? isCritical : false;
         if (isCritical) OnCrit?.Invoke(target, damage, spellSource, auraSource); //On Crit events called.
         damage *= isCritical ? 2 : 1; //Doubles the damage if there is a Critical Hit. TODO: Crit power.
         
@@ -239,6 +241,7 @@ public class Unit : SimLoopListener
             if (!_currentSpell.Channel && SimLoop.Instance.GetElapsed() >= _castTime)
             {
                 _currentSpell.Cast(this, Targets);
+                OnCast?.Invoke(this, _currentSpell, Targets);
                 StopCasting();
             }
             else if (_currentSpell.Channel)
@@ -321,12 +324,14 @@ public class Unit : SimLoopListener
         if (spell.GetCastTime(this) == 0 && spell.GetChannelTime(this) == 0)
         {
             spell.Cast(this, targets);
+            OnCast?.Invoke(this, _currentSpell, Targets);
             StopCasting();
         }
     }
 
     public void StopCasting()
     {
+        OnCastDone?.Invoke(this, _currentSpell, Targets);
         IsCasting = false;
         _currentSpell = null;
     }

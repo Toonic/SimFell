@@ -24,6 +24,13 @@ public class Rime : Unit
     private Spell _iceComet;
     private Spell _wintersBlessing;
     private Spell _wrathOfWinter;
+    
+    // Modifiers for Talents.
+    private Modifier _iceBlitzBonusDamage;
+    
+    //Custom Rime Events.
+    private Action<int> OnWinterOrbUpdate { get; set; }
+    private Action<int> OnAnimaUpdate { get; set; }
 
     public Rime(int health) : base("Rime", health)
     {
@@ -168,6 +175,152 @@ public class Rime : Unit
         Talents.Add(coalescingIce);
         Talents.Add(glacialAssault);
 
+        #endregion
+        #region Row 2
+        
+        // Unrelenting Ice
+        var unrelentingIce = new Talent(
+            id: "unrelenting-ice",
+            name: "Unrelenting Ice",
+            gridPos: "2.1",
+            onActivate: unit =>
+            {
+                // Reduce bursting ice cooldown by 0.5 every tick.
+                _freezingTorrent.OnTick += (caster, spell, targets) =>
+                {
+                    _burstingIce.UpdateCooldown(0.5);
+                };
+            }
+        );
+
+        // Icy Flow
+        var icyFlow = new Talent(
+            id: "icy-flow",
+            name: "Ice Flow",
+            gridPos: "2.2",
+            onActivate: unit =>
+            {
+                unit.OnDamageDealt += (caster, damage, spell, aura) =>
+                {
+                    // Reduce freezing torrent cooldown by 0.2 every time a shard hits.
+                    if (spell == _animaSpikes)
+                    {
+                        _freezingTorrent.UpdateCooldown(0.2);
+                    }
+                };
+            }
+        );
+        
+        //Tundra Guard
+        var tundraGuard = new Talent(
+            id: "tundra-guard",
+            name: "Tundra Guard",
+            gridPos: "2.3"
+        );
+
+        Talents.Add(unrelentingIce);
+        Talents.Add(icyFlow);
+        Talents.Add(tundraGuard);
+        #endregion
+        #region Row 3
+        
+        // Avalanche
+        var avalanche = new Talent(
+            id: "avalanche",
+            name: "Avalanche",
+            gridPos: "3.1",
+            onActivate: unit =>
+            {
+                // Passive 5%
+                unit.CritcalStrikeStat.AddModifier(new Modifier(Modifier.StatModType.AdditivePercent, 5, unit));
+
+                _iceComet.OnCast += (caster, spell, targets) =>
+                {
+                    //20% Chance to fire off a second one.
+                    if (SimRandom.Roll(20))
+                    {
+                        foreach (var target in targets)
+                        {
+                            DealDamage(target, 300, spell);
+                        }
+
+                        //4% Chance to firee off a third one.
+                        if (SimRandom.Roll(4))
+                        {
+                            foreach (var target in targets)
+                            {
+                                DealDamage(target, 300, spell);
+                            }
+                        }
+                    }
+                };
+            }
+        );
+        
+        //Wisdom of the North
+        var wisdomOfTheNorth = new Talent(
+            id: "wisdom-of-the-north",
+            name: "Wisdom of The North",
+            gridPos: "3.2",
+            onActivate: unit =>
+            {
+                //Bonus Ice Blitz damage if this is active by 10%.
+                _iceBlitzBonusDamage = new Modifier(Modifier.StatModType.MultiplicativePercent, 15 + 10,  _iceBlitz);
+                
+                double cdr = 1;
+                OnWinterOrbUpdate += (delta) =>
+                {
+                    //For every winter orb spent reduce cooldowns.
+                    if (delta < 0)
+                    {
+                        _iceBlitz.UpdateCooldown(cdr);
+                        _danceOfSwallows.UpdateCooldown(cdr);
+                        _wintersBlessing.UpdateCooldown(cdr);
+                    }
+                };
+            }
+        );
+        
+        // Soulfrost Torrent.
+        var soulfrostTorrent = new Talent(
+            id: "soulfrost-torrent",
+            name: "Soulfrost Torrent",
+            gridPos: "3.3",
+            onActivate: unit =>
+            {
+                //Mods for Soulfrost Torrent.
+                var freezingTorrentChannelTimeMod = new Modifier(Modifier.StatModType.Multiplicative, 2.0f, unit);
+                var freezingTorrentDamageMod = new Modifier(Modifier.StatModType.Multiplicative, 2.0f, unit);
+                
+                var soulFrostRPPM = new RPPM(1.5);
+                var soulFrostActive = false;
+                unit.OnCrit += (caster, damage, spell, targets) =>
+                {
+                    if (!soulFrostActive && soulFrostRPPM.TryProc())
+                    {
+                        Console.WriteLine("Soulfrost Proc");
+                        soulFrostActive = true;
+                        _freezingTorrent.ChannelTime.AddModifier(freezingTorrentChannelTimeMod);
+                        _freezingTorrent.DamageModifiers.AddModifier(freezingTorrentDamageMod);
+                    }
+                };
+
+                unit.OnCastDone += (caster, spell, targets) =>
+                {
+                    if (soulFrostActive && spell == _freezingTorrent)
+                    {
+                        soulFrostActive = false;
+                        _freezingTorrent.ChannelTime.RemoveModifier(freezingTorrentChannelTimeMod);
+                        _freezingTorrent.DamageModifiers.RemoveModifier(freezingTorrentDamageMod);
+                    }
+                };
+            }
+        );
+
+        Talents.Add(avalanche);
+        Talents.Add(wisdomOfTheNorth);
+        Talents.Add(soulfrostTorrent);
+        
         #endregion
     }
 
@@ -322,6 +475,8 @@ public class Rime : Unit
         );
 
         //Ice Blitz
+        _iceBlitzBonusDamage = new Modifier(Modifier.StatModType.MultiplicativePercent, 15,  _iceBlitz);
+        
         _iceBlitz = new Spell(
             id: "ice-blitz",
             name: "Ice Blitz",
@@ -339,8 +494,7 @@ public class Rime : Unit
                     tickInterval: 0,
                     onApply: (caster, target) =>
                     {
-                        target.DamageBuffs.AddModifier(new Modifier(Modifier.StatModType.MultiplicativePercent, 15,
-                            spell));
+                        target.DamageBuffs.AddModifier(_iceBlitzBonusDamage);
                     },
                     onRemove: (caster, target) => { unit.DamageBuffs.RemoveModifier(spell); }
                 ));
@@ -399,7 +553,7 @@ public class Rime : Unit
                     name: "Winters Blessing",
                     duration: 15,
                     tickInterval: 0,
-                    onApply: (unit, target) => { unit.SpiritStat.AddModifier(spiritMod); },
+                    onApply: (unit, target) => { unit.ExpertiseStat.AddModifier(spiritMod); },
                     onRemove: (unit, target) => { unit.SpiritStat.RemoveModifier(spiritMod); }
                 ));
             }
@@ -467,6 +621,7 @@ public class Rime : Unit
             Anima = 0;
             UpdateWinterOrbs(1);
         }
+        OnAnimaUpdate?.Invoke(animaDelta);
     }
 
     /// <summary>
@@ -478,6 +633,8 @@ public class Rime : Unit
         WinterOrbs += winterOrbsDelta;
         if (winterOrbsDelta < 0 && SimRandom.Roll(SpiritStat.GetValue())) WinterOrbs += winterOrbsDelta;
         WinterOrbs = Math.Clamp(WinterOrbs, 0, MaxWinterOrbs);
+        
+        OnWinterOrbUpdate?.Invoke(winterOrbsDelta);
 
         if (winterOrbsDelta > 0 && PrimaryTarget != null)
             _animaSpikes.Cast(this, new List<Unit>() { PrimaryTarget });
