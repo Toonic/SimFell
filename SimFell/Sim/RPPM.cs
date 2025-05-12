@@ -23,7 +23,7 @@ public class RPPM
         if (deltaTime <= 0)
             return false;
 
-        double procChance = (_ppm * deltaTime) / 60.0;
+        double procChance = (_ppm * deltaTime) / 60.0 * 100.0;
 
         return SimRandom.Roll(procChance);
     }
