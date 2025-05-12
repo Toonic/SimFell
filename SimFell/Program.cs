@@ -31,7 +31,7 @@ player.SetPrimaryStats(
 foreach (var action in config.ConfigActions)
 {
     // Find the spell in the player's spellbook
-    var spell = player.SpellBook.FirstOrDefault(s => s.ID == action.Name);
+    var spell = player.SpellBook.FirstOrDefault(s => s.ID.Replace("-", "_") == action.Name);
     if (spell != null)
     {
         if (action.Conditions.Count > 0)

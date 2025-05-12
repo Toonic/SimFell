@@ -37,7 +37,7 @@ public class Condition
             case "spell":
                 if (parts.Length != 3)
                     return false;
-                var spellId = parts[1];
+                var spellId = parts[1].Replace("-", "_");
                 var prop = parts[2].ToLowerInvariant();
                 var spell = caster.SpellBook.FirstOrDefault(s => s.ID == spellId);
                 if (spell == null)
@@ -48,14 +48,14 @@ public class Condition
                         var now = SimLoop.Instance.GetElapsed();
                         leftValue = spell.OffCooldown - now;
                         break;
-                    case "casttime":
-                        leftValue = spell.CastTime;
+                    case "cast_time":
+                        leftValue = spell.GetCastTime(caster);
                         break;
-                    case "channeltime":
-                        leftValue = spell.ChannelTime;
+                    case "channel_time":
+                        leftValue = spell.GetChannelTime(caster);
                         break;
-                    case "tickrate":
-                        leftValue = spell.TickRate;
+                    case "tick_rate":
+                        leftValue = spell.GetTickRate(caster);
                         break;
                     case "gcd":
                         leftValue = spell.GetGCD(caster);

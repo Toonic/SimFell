@@ -17,7 +17,7 @@ public class Rime : Unit
     {
         // Frostboll Spell
         var frostBolt = new Spell(
-            id: "frost_bolt",
+            id: "frost-bolt",
             name: "Frost Bolt",
             cooldown: 0,
             castTime: 1.5f,
@@ -32,7 +32,7 @@ public class Rime : Unit
 
         // Bursting Ice
         var burstingIce = new Spell(
-            id: "bursting_ice",
+            id: "bursting-ice",
             name: "Bursting Ice",
             cooldown: 15,
             castTime: 2.0,
@@ -40,7 +40,7 @@ public class Rime : Unit
             {
                 var primaryTarget = targets.FirstOrDefault();
                 primaryTarget?.ApplyDebuff(unit, primaryTarget, new Aura(
-                    id: "bursting_ice",
+                    id: "bursting-ice",
                     name: "Bursting Ice",
                     duration: 3.15,
                     tickInterval: 0.5,
@@ -64,7 +64,7 @@ public class Rime : Unit
 
         // Cold Snap
         var coldSnap = new Spell(
-            id: "cold_snap",
+            id: "cold-snap",
             name: "Cold Snap",
             cooldown: 8,
             castTime: 0,
@@ -79,7 +79,7 @@ public class Rime : Unit
 
         // Freezing Torrent
         var freezingTorrent = new Spell(
-            id: "freezing_torrent",
+            id: "freezing-torrent",
             name: "Freezing Torrent",
             cooldown: 10,
             castTime: 0,
@@ -98,7 +98,7 @@ public class Rime : Unit
 
         // Dance of Swallows
         var danceOfSwallows = new Spell(
-            id: "dance_of_swallows",
+            id: "dance-of-swallows",
             name: "Dance of Swallows",
             cooldown: 60,
             castTime: 0,
@@ -130,7 +130,7 @@ public class Rime : Unit
 
                 // Applies the Debuff to the Primary target.
                 target.ApplyDebuff(unit, target, new Aura(
-                    id: "dance_of_swallows",
+                    id: "dance-of-swallows",
                     name: "Dance of Swallows",
                     duration: 20,
                     tickInterval: 0,
@@ -150,7 +150,7 @@ public class Rime : Unit
 
         //Glacial Blast
         var glacialBlast = new Spell(
-            id: "glacial_blast",
+            id: "glacial-blast",
             name: "Glacial Blast",
             cooldown: 0,
             castTime: 2.0,
@@ -165,7 +165,7 @@ public class Rime : Unit
 
         //Icy Blitz
         var icyBlitz = new Spell(
-            id: "icy_blitz",
+            id: "icy-blitz",
             name: "Icy Blitz",
             cooldown: 120,
             castTime: 0,
@@ -174,7 +174,7 @@ public class Rime : Unit
             onCast: (unit, spell, targets) =>
             {
                 unit.ApplyBuff(unit, unit, new Aura(
-                    id: "icy_blitz",
+                    id: "icy-blitz",
                     name: "Icy Blitz",
                     maxStacks: 1,
                     duration: 20,
@@ -194,7 +194,7 @@ public class Rime : Unit
 
         //Anima Spikes
         _animaSpikes = new Spell(
-            id: "anima_spikes",
+            id: "anima-spikes",
             name: "Anima Spikes",
             cooldown: 0,
             castTime: 0,
