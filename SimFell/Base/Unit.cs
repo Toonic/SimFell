@@ -39,7 +39,7 @@ public class Unit : SimLoopListener
 
     //Events 
     public Action<Unit, double, Spell?, Aura?> OnDamageDealt { get; set; } = (unit, damage, spellSource, auraSource) => { };
-    public Action<Unit, double, Spell?, Aura?> OnDamageReceived { get; set; } = (unit, damage, spellSource, auraSource) => { };
+    public Action<Unit, double, Spell?, Aura?>? OnDamageReceived { get; set; }
     public Action<Unit, double, Spell?, Aura?> OnCrit { get; set; } = (unit, damage, spellSource, auraSource) => { };
 
     public Unit(string name, int health)
