@@ -11,14 +11,35 @@ namespace SimFell.SimFileParser.Models;
 /// </remarks>
 public class GemTier
 {
-    public Gem Gem { get; set; }
-    public Tier Tier { get; set; }
+    public Gem Gem { get; }
+    public Tier Tier { get; }
+    public Stat Bonus { get; }
+
+    public GemTier(Gem gem, Tier tier, Stat bonus)
+    {
+        Gem = gem;
+        Tier = tier;
+        Bonus = bonus;
+    }
 
     /// <summary>
     /// Custom ToString method for the GemTier class.
     /// </summary>
     public override string ToString()
     {
-        return $"[{Tier}] {Gem.Name()}";
+        return $"[{Tier}] {Gem.Name()} giving {Bonus.GetValue()} bonus";
+    }
+}
+
+public static class GemBonusMapping
+{
+    private static readonly Dictionary<string, Stat> gemBonusDictionary = new()
+    {
+        { $"{Gem.EMERALD}_{Tier.T1}", new Stat(0) }
+    };
+
+    public static Stat GetBonus(string gemTier)
+    {
+        return gemBonusDictionary[gemTier];
     }
 }
