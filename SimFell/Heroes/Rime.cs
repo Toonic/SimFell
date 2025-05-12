@@ -289,17 +289,31 @@ public class Rime : Unit
             onActivate: unit =>
             {
                 //Mods for Soulfrost Torrent.
-                var freezingTorrentChannelTimeMod = new Modifier(Modifier.StatModType.Multiplicative, 2.0f, unit);
-                var freezingTorrentDamageMod = new Modifier(Modifier.StatModType.Multiplicative, 2.0f, unit);
+                var freezingTorrentChannelTimeMod = new Modifier(Modifier.StatModType.Multiplicative, 2.0f, _freezingTorrent);
+                var freezingTorrentDamageMod = new Modifier(Modifier.StatModType.Multiplicative, 2.0f, _freezingTorrent);
+
+                Aura soulFrostAura = new Aura(
+                    id: "soulfrost-torrent",
+                    name: "Soulfrost Torrent",
+                    duration: 9999,
+                    tickInterval:0
+                );
                 
                 var soulFrostRPPM = new RPPM(1.5);
-                var soulFrostActive = false;
+                var hasUsed = false;
                 unit.OnCrit += (caster, damage, spell, targets) =>
                 {
-                    if (!soulFrostActive && soulFrostRPPM.TryProc())
+                    if (soulFrostRPPM.TryProc())
                     {
-                        Console.WriteLine("Soulfrost Proc");
-                        soulFrostActive = true;
+                        caster.ApplyBuff(caster,caster, soulFrostAura);
+                    }
+                };
+
+                _freezingTorrent.OnCast += (caster, spell, targets) =>
+                {
+                    if (unit.HasBuff(soulFrostAura) && spell == _freezingTorrent)
+                    {
+                        hasUsed = true;
                         _freezingTorrent.ChannelTime.AddModifier(freezingTorrentChannelTimeMod);
                         _freezingTorrent.DamageModifiers.AddModifier(freezingTorrentDamageMod);
                     }
@@ -307,9 +321,10 @@ public class Rime : Unit
 
                 unit.OnCastDone += (caster, spell, targets) =>
                 {
-                    if (soulFrostActive && spell == _freezingTorrent)
+                    if (unit.HasBuff(soulFrostAura) && spell == _freezingTorrent)
                     {
-                        soulFrostActive = false;
+                        hasUsed = false;
+                        unit.RemoveBuff(soulFrostAura);
                         _freezingTorrent.ChannelTime.RemoveModifier(freezingTorrentChannelTimeMod);
                         _freezingTorrent.DamageModifiers.RemoveModifier(freezingTorrentDamageMod);
                     }
