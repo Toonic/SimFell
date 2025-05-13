@@ -9,5 +9,6 @@ public enum SimulationLogLevel
     DebuffEvents = 1 << 3,
     Debug = 1 << 4,
     Error = 1 << 5,
-    All = CastEvents | DamageEvents | BuffEvents | DebuffEvents | Debug | Error
+    Setup = 1 << 6,
+    All = CastEvents | DamageEvents | BuffEvents | DebuffEvents | Debug | Error | Setup
 }
