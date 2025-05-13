@@ -1,76 +1,148 @@
 # SimFell
 
-This project is a simple DPS simulator for the game Fellowship. It is a work in progress and does not yet include all features.
+A DPS (Damage Per Second) simulator for the game Fellowship.
 
-## 🚧 Work in Progress
+SimFell is a work-in-progress .NET 9.0 console application that simulates combat rotations, area-of-effect abilities, and more. It provides a flexible foundation for building and comparing DPS strategies.
 
-Currently working on:
+## Table of Contents
 
-| Feature               | Status            |
-| --------------------- | ----------------- |
-| SimC-like integration | ⚙️ Rough Draft    |
-| Rotation Opener       | 💡 To be Discussed |
-| Gems                  | Not Started  |
-| Armor                  | Not Started  |
-| Relics                  | Not Started  |
-| Area of Effect/Multi Target | Not Started        |
-| Multi Dotting | Not Started        |
-| Tariq | Not Started |
-| Ardeos | Started - Private Branch |
-| Mara | Started - Private Branch |
+- [SimFell](#simfell)
+  - [Table of Contents](#table-of-contents)
+  - [Features](#features)
+  - [Project Structure](#project-structure)
+  - [Prerequisites](#prerequisites)
+  - [Getting Started](#getting-started)
+  - [Usage](#usage)
+  - [Troubleshooting](#troubleshooting)
+  - [Contributing](#contributing)
+  - [Contact](#contact)
+  - [Credits](#credits)
+  - [😡 I hate SIMs](#-i-hate-sims)
 
-## 🚀 How to Run
+## Features
+
+| Feature                                           | Status        |
+| ------------------------------------------------- | ------------- |
+| General Rotation                                  | ✅ Implemented |
+| Area of Effect                                    | ✅ Implemented |
+| Rime                                              | ✅ Implemented |
+| SimC-like Integration                             | ⚙️ Rough Draft |
+| Rotation Opener                                   | 💡 To Discuss  |
+| Gems, Armor, Relics, Multi-dotting, Tariq Support | 🚧 Not Started |
+
+## Project Structure
+
+```text
+SimFell/
+├── SimFell.sln               # Solution file
+├── SimFell/                  # Main project directory
+│   ├── Base/                 # Core simulation abstractions
+│   ├── Heroes/               # Hero classes and abilities
+│   ├── Logging/              # Logging utilities
+│   ├── Sim/                  # Simulation engine
+│   ├── SimFileParser/        # Parser for input files (Enums, Models)
+│   ├── Configs/              # Project-specific configuration files
+│   ├── Program.cs            # Entry point
+│   └── SimFell.csproj        # Project file
+├── Configs/                  # Global/shared configuration files
+├── simulation.log            # Sample run output log
+├── README.md                 # This documentation
+└── LICENSE                   # License information
+```
+
+## Prerequisites
+
+- [.NET 9.0 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
+- A .NET-compatible IDE or editor (Visual Studio, Rider, VS Code, etc.)
 
 > [!TIP]
-> @Toonic: _I wont offer any help running or using this software. If you are unfamiliar with Python, I'm sorry but I can't help._
+> @Toonic: _I recommend using [Rider](https://www.jetbrains.com/rider/) because it will setup everything for you._
 
-1. Setup the environment by running the following command:
+## Getting Started
 
-  ```bash
-  python -m venv venv
-  ```
+1. Clone the repository:
 
-2. Activate the environment:
+   ```bash
+   git clone https://github.com/your-username/SimFell.git
+   cd SimFell
+   ```
 
-  ```bash
-  # Linux / MacOS:
-  source venv/bin/activate 
+2. Build and run the project:
 
-  # Windows:
-  venv\Scripts\activate
-  ```
+   - **Using an IDE**: Open `SimFell.sln`, set the `SimFell` project as the startup project, and run.
 
-3. Install the required packages:
+   - **From the command line**:
 
-  ```bash
-  pip install -r requirements.txt
-  ```
+     ```bash
+     # Restore dependencies and build
+     dotnet restore
+     dotnet build SimFell/SimFell.csproj
 
-**The program supports multiple arguments:**
+     # Run the simulator
+     dotnet run --project SimFell/SimFell.csproj
+     ```
 
-```bash
-python main.py -s average_dps -e 5 -d <duration_secs> -r <run_count> -g <stat_weights_gain> -t <talent_tree> -c <custom_character> -ch <Hero>
-```
+## Usage
 
-- `-s <sim_type>`: The type of simulation to run.
-- `-e <enemy_count>`: The number of enemies to simulate.
-- `-d <duration_secs>`: The duration of the simulation in seconds. Default is `120`.
-- `-r <run_count>`: The number of times to run the simulation. Default is `2000`.
-- `-g <stat_weights_gain>`: Stat increase constant when running the simulation. Default is `20`.
-- `-t <talent_tree>`: The talent tree to use. Format must be `{row1}-{row2}-{row3}`.
-- `-ch <Hero>` : The hero to use for the simulation.
-- `-c <custom_character>`: Use a custom character. Format must be `{intellect}-{crit}-{expertise}-{haste}-{spirit}`.
+Currently, SimFell runs as a command-line tool and outputs results to both the console and the `simulation.log` file in the root directory.
 
-### ✨ Example
+Example:
 
 ```bash
-python main.py -s average_dps -e 5 -d 120 -r 2000 -t 2-12-3 -ch Rime -c 100-20-30-40-50
+dotnet run --project SimFell/SimFell.csproj
 ```
 
-This will run the average DPS simulation with 5 enemies, using the Rime hero with custom stats of 100 intellect, 20 crit, 30 expertise, 40 haste, and 50 spirit. The simulation will run 2000 times for 120 seconds by default.
+Future releases will include a graphical interface and additional configuration options.
 
-## 👑 Hall of Fame / Credits
+## Troubleshooting
 
-- [@michaelsherwood](https://github.com/michaelsherwood) - Progress Bar + Pretty print idea
-  > Thank you for such early idea 🙏
-- [@EriiYenn](https://github.com/EriiYenn) - Putting up with me and my horrible Python Structure.
+- **Missing .NET runtime**: Verify installation with `dotnet --version`; it should output `9.0.x`.
+- **Build failures**: Try cleaning and restoring with:
+
+  ```bash
+  dotnet clean
+  dotnet restore
+  ```
+
+- **No output or empty log**: Ensure your `Configs/` files (`*.simfell`) are correctly configured.
+
+## Contributing
+
+Contributions are welcome! Please follow these steps:
+
+1. Fork this repository.
+2. Create a feature branch:
+
+   ```bash
+   git checkout -b feature/your-feature
+   ```
+
+3. Commit your changes:
+
+   ```bash
+   git commit -m "Add feature: ..."
+   ```
+
+4. Push to your branch:
+
+   ```bash
+   git push origin feature/your-feature
+   ```
+
+5. Open a Pull Request against `main`.
+
+- Follow the existing C# coding conventions.
+- Add unit tests for new features when applicable.
+
+## Contact
+
+You can catch us on the [Fellowship Discord](https://discord.gg/fellowship)!
+
+## Credits
+
+- [michaelsherwood](https://github.com/michaelsherwood) — Progress bar and pretty-print ideas.
+- [EriiYenn](https://github.com/EriiYenn) — Initial Python project structure.
+
+## 😡 I hate SIMs
+
+[Please see the following link.](https://github.com/simulationcraft/simc/wiki/PremedititatedProvocation)

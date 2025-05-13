@@ -1,6 +1,7 @@
 using SimFell.SimFileParser.Models;
 using SimFell.Logging;
 using Spectre.Console;
+using System.Runtime.CompilerServices;
 
 namespace SimFell;
 
@@ -55,8 +56,17 @@ public class SimLoop
                 {
                     if (spell.CheckCanCast(player))
                     {
-                        player.StartCasting(spell, targets);
-                        break; // Only cast one spell at a time
+                        if (!spell.HasGCD)
+                        {
+                            spell.Cast(player, targets);
+                            player.OnCast?.Invoke(player, spell, targets);
+                            continue;
+                        }
+                        else
+                        {
+                            player.StartCasting(spell, targets);
+                            break; // Only cast one spell at a time
+                        }
                     }
                 }
             }
@@ -69,7 +79,6 @@ public class SimLoop
                     targets.RemoveAt(i);
                 }
             }
-
 
             _ticks++;
         }
@@ -107,47 +116,80 @@ public class SimLoop
 
     public static void ShowPrettyConfig(SimFellConfiguration config)
     {
-        var grid = new Grid();
+        var table = new Table();
+        table.Title = new TableTitle(
+            $"{config.Hero} DPS Simulation\n",
+            new Style(Color.Grey, decoration: Decoration.Italic)
+        );
+        table.Border = TableBorder.None;
+        table.Width = 50;
 
-        grid.AddColumn();
-        grid.AddColumn();
+        table.AddColumn(new TableColumn(new Text("Attribute", new Style(Color.MediumPurple4, decoration: Decoration.Bold)).Centered()).Width(20));
+        table.AddColumn(new TableColumn(new Text("Value", new Style(Color.MediumPurple4, decoration: Decoration.Bold)).Centered()));
+        table.AddRow(new Rule(), new Rule());
 
-        grid.AddRow(
-            new Text("\u001b[1;34mHero\u001b[0m").Centered(),
-            new Text($"\u001b[1;33m{config.Hero}\u001b[0m").Centered()
+        table.AddRow(
+            new Text("Enemy Count", "blue").Centered(),
+            new Text($"{config.Enemies}", "yellow").Centered()
         );
-        grid.AddEmptyRow();
-        grid.AddRow(
-            new Text("\u001b[1;34mIntellect\u001b[0m").Centered(),
-            new Text($"\u001b[1;33m{config.Intellect}\u001b[0m").Centered()
+        table.AddRow(
+            new Text("Duration", "blue").Centered(),
+            new Text($"{config.Duration}s", "yellow").Centered()
         );
-        grid.AddRow(
-            new Text("\u001b[1;34mCrit\u001b[0m").Centered(),
-            new Text($"\u001b[1;33m{config.Crit}\u001b[0m").Centered()
-        );
-        grid.AddRow(
-            new Text("\u001b[1;34mExpertise\u001b[0m").Centered(),
-            new Text($"\u001b[1;33m{config.Expertise}\u001b[0m").Centered()
-        );
-        grid.AddRow(
-            new Text("\u001b[1;34mHaste\u001b[0m").Centered(),
-            new Text($"\u001b[1;33m{config.Haste}\u001b[0m").Centered()
-        );
-        grid.AddRow(
-            new Text("\u001b[1;34mSpirit\u001b[0m").Centered(),
-            new Text($"\u001b[1;33m{config.Spirit}\u001b[0m").Centered()
-        );
-        grid.AddEmptyRow();
-        grid.AddRow(
-            new Text("\u001b[1;34mDuration\u001b[0m").Centered(),
-            new Text($"\u001b[1;33m{config.Duration}\u001b[0m").Centered()
-        );
-        grid.AddRow(
-            new Text("\u001b[1;34mEnemies\u001b[0m").Centered(),
-            new Text($"\u001b[1;33m{config.Enemies}\u001b[0m").Centered()
+        table.AddEmptyRow();
+
+        var activeTalents = config.Player.Talents.Where(t => t.IsActive).ToList();
+        table.AddRow(
+            new Text($"{(activeTalents.Count > 0 ? "\n" : "")}Talent Tree", "blue").Centered(),
+            new Text(
+                $"{(activeTalents.Count > 0 ? string.Join("\n", activeTalents.Select(t => t.Name)) : "N/A")}",
+                "yellow"
+            ).Centered()
         );
 
-        AnsiConsole.Write(grid);
-        AnsiConsole.WriteLine("\n");
+        table.AddEmptyRow();
+        table.AddRow(
+            new Text("\n\nCharacter", "blue").Centered(),
+            // new Text(
+            //     $"main: {config.Player.MainStat.GetValue()}\n"
+            //     + $"crit: {Math.Round(config.Player.CritcalStrikeStat.GetValue(), 2)}% ({config.Player.CritcalStrikeStat.BaseValue})\n"
+            //     + $"exp: {Math.Round(config.Player.ExpertiseStat.GetValue(), 2)}% ({config.Player.ExpertiseStat.BaseValue})\n"
+            //     + $"haste: {Math.Round(config.Player.HasteStat.GetValue(), 2)}% ({config.Player.HasteStat.BaseValue})\n"
+            //     + $"spirit: {Math.Round(config.Player.SpiritStat.GetValue(), 2)}% ({config.Player.SpiritStat.BaseValue})",
+            //     "yellow"
+            // ).Centered()
+            Align.Center(
+                new Grid().AddColumn().AddColumn().AddColumn()
+                    .AddRow(new Text[]{
+                        new ("main:", "yellow"),
+                        new ($"{config.Player.MainStat.GetValue()}%", "yellow"),
+                        new ($"({config.Player.MainStat.BaseValue})", "yellow"),
+                    })
+                    .AddRow(new Text[]{
+                        new ("crit:", "yellow"),
+                        new ($"{Math.Round(config.Player.CritcalStrikeStat.GetValue(), 2)}%", "yellow"),
+                        new ($"({config.Player.CritcalStrikeStat.BaseValue})", "yellow"),
+                    })
+                    .AddRow(new Text[]{
+                        new ("exp:", "yellow"),
+                        new ($"{Math.Round(config.Player.ExpertiseStat.GetValue(), 2)}%", "yellow"),
+                        new ($"({config.Player.ExpertiseStat.BaseValue})", "yellow"),
+                    })
+                    .AddRow(new Text[]{
+                        new ("haste:", "yellow"),
+                        new ($"{Math.Round(config.Player.HasteStat.GetValue(), 2)}%", "yellow"),
+                        new ($"({config.Player.HasteStat.BaseValue})", "yellow"),
+                    })
+                    .AddRow(new Text[]{
+                        new ("spirit:", "yellow"),
+                        new ($"{Math.Round(config.Player.SpiritStat.GetValue(), 2)}%", "yellow"),
+                        new ($"({config.Player.SpiritStat.BaseValue})", "yellow"),
+                    })
+            )
+        );
+
+        AnsiConsole.WriteLine();
+        AnsiConsole.Write(table);
+        AnsiConsole.WriteLine(); // Empty line
     }
 }

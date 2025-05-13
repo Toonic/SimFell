@@ -31,16 +31,16 @@ public class Unit : SimLoopListener
 
     //Spirit Value
     public double Spirit = 100; //TODO: Proper Spirit Regen?
-    
+
 
     // Other Stat Buffs
     public Stat DamageBuffs = new Stat(0);
     public Stat DamageTakenDebuffs = new Stat(0);
 
     //Events 
-    public Action<Unit, double, Spell, Aura> OnDamageDealt { get; set; } = (unit, damage, spellSource, auraSource) => { }; 
-    public Action<Unit, double, Spell, Aura> OnDamageReceived { get; set; } = (unit, damage, spellSource, auraSource) => { };
-    public Action<Unit, double, Spell, Aura> OnCrit { get; set; } = (unit, damage, spellSource, auraSource) => { };
+    public Action<Unit, double, Spell?, Aura?>? OnDamageDealt { get; set; }
+    public Action<Unit, double, Spell?, Aura?>? OnDamageReceived { get; set; }
+    public Action<Unit, double, Spell?, Aura?>? OnCrit { get; set; }
     public Action<Unit, Spell, List<Unit>> OnCast { get; set; } = (unit, spellSource, targets) => { };
     public Action<Unit, Spell, List<Unit>> OnCastDone { get; set; } = (unit, spellSource, targets) => { };
 
@@ -86,7 +86,7 @@ public class Unit : SimLoopListener
 
         ConsoleLogger.Log(
             SimulationLogLevel.BuffEvents,
-            $"\u001b[1;34m{Name}\u001b[0;30m gains buff: \u001b[1;33m{buff.Name}\u001b[0;30m",
+            $"[bold blue]{Name}[/] gains buff: [bold yellow]{buff.Name}[/]",
             "💪"
         );
     }
@@ -102,6 +102,11 @@ public class Unit : SimLoopListener
         var existing = Buffs.Where(aura => aura.ID == buff.ID).ToList();
         foreach (var aura in existing)
         {
+            ConsoleLogger.Log(
+                SimulationLogLevel.BuffEvents,
+                $"[bold blue]{Name}[/] loses buff: [bold yellow]{buff.Name}[/]",
+                "💪🛑"
+            );
             aura.Remove();
             Buffs.Remove(aura);
         }
@@ -127,7 +132,7 @@ public class Unit : SimLoopListener
 
         ConsoleLogger.Log(
             SimulationLogLevel.DebuffEvents,
-            $"\u001b[1;34m{Name}\u001b[0;30m gains debuff: \u001b[1;33m{debuff.Name}\u001b[0;30m",
+            $"[bold blue]{Name}[/] gains debuff: [bold yellow]{debuff.Name}[/]",
             "💔"
         );
     }
@@ -164,7 +169,7 @@ public class Unit : SimLoopListener
 
         var isCritical = SimRandom.Roll(critPercent);
         isCritical = SimRandom.CanCrit ? isCritical : false;
-        if (isCritical) OnCrit?.Invoke(target, damage, spellSource, auraSource); //On Crit events called.
+        if (isCritical) OnCrit?.Invoke(this, damage, spellSource, auraSource); //On Crit events called.
         damage *= isCritical ? 2 : 1; //Doubles the damage if there is a Critical Hit. TODO: Crit power.
 
         OnDamageDealt?.Invoke(this, damage, spellSource, auraSource); //Called when damage is dealt.
@@ -185,9 +190,9 @@ public class Unit : SimLoopListener
         var sourceName = spellSource != null ? spellSource.Name
                          : auraSource != null ? auraSource.Name
                          : "Unknown";
-        var message = $"\u001b[1;34m{sourceName}\u001b[0;30m"
-            + $" hits \u001b[1;33m{Name}\u001b[0;30m"
-            + $" for \u001b[1;35m{totalDamage}\u001b[0;30m "
+        var message = $"[bold blue]{sourceName}[/]"
+            + $" hits [bold yellow]{Name}[/]"
+            + $" for [bold magenta]{totalDamage}[/] "
             + $"{(isCritical ? " (Critical Strike)" : "")}";
         ConsoleLogger.Log(SimulationLogLevel.DamageEvents, message, isCritical ? "💥" : null);
 
@@ -206,7 +211,7 @@ public class Unit : SimLoopListener
             {
                 ConsoleLogger.Log(
                     SimulationLogLevel.BuffEvents,
-                    $"\u001b[1;34m{Name}\u001b[0;30m loses buff: \u001b[1;33m{Buffs[i].Name}\u001b[0;30m",
+                    $"[bold blue]{Name}[/] loses buff: [bold yellow]{Buffs[i].Name}[/]",
                     "💪🛑"
                 );
                 Buffs[i].Remove();
@@ -222,7 +227,7 @@ public class Unit : SimLoopListener
             {
                 ConsoleLogger.Log(
                     SimulationLogLevel.DebuffEvents,
-                    $"\u001b[1;34m{Name}\u001b[0;30m loses debuff: \u001b[1;33m{Debuffs[i].Name}\u001b[0;30m",
+                    $"[bold blue]{Name}[/] loses debuff: [bold yellow]{Debuffs[i].Name}[/]",
                     "💔🛑"
                 );
                 Debuffs[i].Remove();
@@ -279,7 +284,7 @@ public class Unit : SimLoopListener
     {
         ConsoleLogger.Log(
             SimulationLogLevel.DamageEvents,
-            $"\u001b[1;34m{Name}\u001b[0;30m is dead.",
+            $"[bold blue]{Name}[/] is dead.",
             "💀"
         );
 
@@ -291,17 +296,14 @@ public class Unit : SimLoopListener
     {
         if (gcd != 0) ConsoleLogger.Log(
             SimulationLogLevel.CastEvents,
-            $"\u001b[1;34mGCD\u001b[0;30m: \u001b[1;36m{gcd}\u001b[0;30m"
+            $" -> Setting [bold blue]GCD[/] to [bold aqua]{gcd}[/]"
         );
         GCD = gcd + SimLoop.Instance.GetElapsed();
     }
 
     public void StartCasting(Spell spell, List<Unit> targets)
     {
-        ConsoleLogger.Log(
-            SimulationLogLevel.CastEvents,
-            $"Casting \u001b[1;34m{spell.Name}\u001b[0;30m"
-        );
+        ConsoleLogger.Log(SimulationLogLevel.Debug, $"Preparation for [bold blue]{spell.Name}[/]");
 
         _currentSpell = spell;
         Targets = targets;
@@ -331,8 +333,27 @@ public class Unit : SimLoopListener
 
     public void StopCasting()
     {
-        OnCastDone?.Invoke(this, _currentSpell, Targets);
-        IsCasting = false;
-        _currentSpell = null;
+        if (_currentSpell != null)
+        {
+            OnCastDone?.Invoke(this, _currentSpell, Targets);
+            IsCasting = false;
+            _currentSpell = null;
+        }
+    }
+
+    public void ActivateTalent(string id)
+    {
+        var talent = Talents.FirstOrDefault(talent => talent.Id == id);
+        if (talent != null) talent.Activate(this);
+    }
+
+    public void ActivateTalent(int row, int col)
+    {
+        var talent = Talents.FirstOrDefault(talent => talent.GridPos == $"{row}.{col}");
+        if (talent != null)
+        {
+            talent.Activate(this);
+            ConsoleLogger.Log(SimulationLogLevel.Setup, $"Activated talent '{talent.Name}'");
+        }
     }
 }
