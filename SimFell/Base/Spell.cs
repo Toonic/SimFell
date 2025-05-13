@@ -18,10 +18,10 @@ public class Spell
     public Action<Unit, Spell, List<Unit>>? OnCast { get; set; }
     public Action<Unit, Spell, List<Unit>>? OnTick { get; set; }
     public Func<Unit, bool>? CanCast { get; set; }
-    
+
     //Modifiers, used typically with Talents.
     public Stat DamageModifiers { get; set; } = new Stat(0);
-    public Stat CritModifiers { get; set; }  = new Stat(0);
+    public Stat CritModifiers { get; set; } = new Stat(0);
 
     public Spell(
         string id, string name, double cooldown, double castTime, bool channel = false, double channelTime = 0, double tickRate = 0, bool hasGCD = true, bool canCastWhileCasting = false,
@@ -49,7 +49,7 @@ public class Spell
     public void UpdateCooldown(double deltaTime)
     {
         if (OffCooldown > 0)
-            OffCooldown = Math.Round(OffCooldown - deltaTime,2);
+            OffCooldown = Math.Round(OffCooldown - deltaTime, 2);
     }
 
     public bool CheckCanCast(Unit caster)
@@ -81,9 +81,14 @@ public class Spell
 
     public void Cast(Unit caster, List<Unit> targets)
     {
+        ConsoleLogger.Log(
+            SimulationLogLevel.CastEvents,
+            $"Applying [bold blue]{Name}[/]"
+        );
+
         OnCast?.Invoke(caster, this, targets);
         //Sets the cooldown.
-        OffCooldown = Math.Round(Cooldown.GetValue() + SimLoop.Instance.GetElapsed(),2);  // Reset cooldown after casting
+        OffCooldown = Math.Round(Cooldown.GetValue() + SimLoop.Instance.GetElapsed(), 2);  // Reset cooldown after casting
     }
 
     public void Tick(Unit caster, List<Unit> targets)

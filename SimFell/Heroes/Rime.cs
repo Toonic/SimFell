@@ -24,10 +24,10 @@ public class Rime : Unit
     private Spell _iceComet;
     private Spell _wintersBlessing;
     private Spell _wrathOfWinter;
-    
+
     // Modifiers for Talents.
     private Modifier _iceBlitzBonusDamage;
-    
+
     //Custom Rime Events.
     private Action<int> OnWinterOrbUpdate { get; set; }
     private Action<int> OnAnimaUpdate { get; set; }
@@ -36,22 +36,6 @@ public class Rime : Unit
     {
         ConfigureSpellBook();
         ConfigureTalents();
-    }
-
-    public void ActivateTalent(string id)
-    {
-        var talent = Talents.FirstOrDefault(talent => talent.Id == id);
-        if (talent != null) talent.Activate(this);
-    }
-
-    public void ActivateTalent(int row, int col)
-    {
-        var talent = Talents.FirstOrDefault(talent => talent.GridPos == $"{row}.{col}");
-        if (talent != null)
-        {
-            talent.Activate(this);
-            ConsoleLogger.Log(SimulationLogLevel.Debug, $"Activated talent '{talent.Name}'");
-        }
     }
 
     public void ConfigureTalents()
@@ -174,7 +158,7 @@ public class Rime : Unit
 
         #endregion
         #region Row 2
-        
+
         // Unrelenting Ice
         var unrelentingIce = new Talent(
             id: "unrelenting-ice",
@@ -207,7 +191,7 @@ public class Rime : Unit
                 };
             }
         );
-        
+
         //Tundra Guard
         var tundraGuard = new Talent(
             id: "tundra-guard",
@@ -220,7 +204,7 @@ public class Rime : Unit
         Talents.Add(tundraGuard);
         #endregion
         #region Row 3
-        
+
         // Avalanche
         var avalanche = new Talent(
             id: "avalanche",
@@ -253,7 +237,7 @@ public class Rime : Unit
                 };
             }
         );
-        
+
         //Wisdom of the North
         var wisdomOfTheNorth = new Talent(
             id: "wisdom-of-the-north",
@@ -277,7 +261,7 @@ public class Rime : Unit
                 };
             }
         );
-        
+
         // Soulfrost Torrent.
         var soulfrostTorrent = new Talent(
             id: "soulfrost-torrent",
@@ -293,16 +277,16 @@ public class Rime : Unit
                     id: "soulfrost-torrent",
                     name: "Soulfrost Torrent",
                     duration: 9999,
-                    tickInterval:0
+                    tickInterval: 0
                 );
-                
+
                 var soulFrostRPPM = new RPPM(1.5);
                 var hasUsed = false;
                 unit.OnCrit += (caster, damage, spell, targets) =>
                 {
                     if (soulFrostRPPM.TryProc())
                     {
-                        caster.ApplyBuff(caster,caster, soulFrostAura);
+                        caster.ApplyBuff(caster, caster, soulFrostAura);
                     }
                 };
 
@@ -339,7 +323,7 @@ public class Rime : Unit
         Talents.Add(avalanche);
         Talents.Add(wisdomOfTheNorth);
         Talents.Add(soulfrostTorrent);
-        
+
         #endregion
     }
 
@@ -653,7 +637,7 @@ public class Rime : Unit
         WinterOrbs += winterOrbsDelta;
         if (winterOrbsDelta < 0 && SimRandom.Roll(SpiritStat.GetValue())) WinterOrbs += winterOrbsDelta;
         WinterOrbs = Math.Clamp(WinterOrbs, 0, MaxWinterOrbs);
-        
+
         OnWinterOrbUpdate?.Invoke(winterOrbsDelta);
 
         if (winterOrbsDelta > 0 && PrimaryTarget != null)
