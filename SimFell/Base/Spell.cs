@@ -79,6 +79,11 @@ public class Spell
 
     public void Cast(Unit caster, List<Unit> targets)
     {
+        ConsoleLogger.Log(
+            SimulationLogLevel.CastEvents,
+            $"Applying [bold blue]{Name}[/]"
+        );
+
         OnCast?.Invoke(caster, this, targets);
         //Sets the cooldown.
         OffCooldown = Math.Round(Cooldown.GetValue() + SimLoop.Instance.GetElapsed(), 2);  // Reset cooldown after casting

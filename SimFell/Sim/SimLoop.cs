@@ -56,8 +56,17 @@ public class SimLoop
                 {
                     if (spell.CheckCanCast(player))
                     {
-                        player.StartCasting(spell, targets);
-                        break; // Only cast one spell at a time
+                        if (!spell.HasGCD)
+                        {
+                            spell.Cast(player, targets);
+                            player.OnCast?.Invoke(player, spell, targets);
+                            continue;
+                        }
+                        else
+                        {
+                            player.StartCasting(spell, targets);
+                            break; // Only cast one spell at a time
+                        }
                     }
                 }
             }
@@ -70,7 +79,6 @@ public class SimLoop
                     targets.RemoveAt(i);
                 }
             }
-
 
             _ticks++;
         }

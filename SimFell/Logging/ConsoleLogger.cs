@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.Configuration;
 using Spectre.Console;
 
@@ -44,7 +45,8 @@ public static class ConsoleLogger
         else
             AnsiConsole.MarkupLine($"Time [aqua]{time:F2}[/]: {formatted}");
 
-        FileLogger.SimulationEvent(level, $"{time:F2}s -> {Markup.Escape(formatted)}");
+        var cleanMessage = Regex.Replace(Markup.Escape(formatted), @"\[.*?\]", "").Replace("]", "");
+        FileLogger.SimulationEvent(level, $"{time:F2}s : {cleanMessage}");
     }
 }
 

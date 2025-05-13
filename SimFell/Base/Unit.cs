@@ -296,17 +296,14 @@ public class Unit : SimLoopListener
     {
         if (gcd != 0) ConsoleLogger.Log(
             SimulationLogLevel.CastEvents,
-            $"[bold blue]GCD[/]: [bold aqua]{gcd}[/]"
+            $" -> Setting [bold blue]GCD[/] to [bold aqua]{gcd}[/]"
         );
         GCD = gcd + SimLoop.Instance.GetElapsed();
     }
 
     public void StartCasting(Spell spell, List<Unit> targets)
     {
-        ConsoleLogger.Log(
-            SimulationLogLevel.CastEvents,
-            $"Casting [bold blue]{spell.Name}[/]"
-        );
+        ConsoleLogger.Log(SimulationLogLevel.Debug, $"Preparation for [bold blue]{spell.Name}[/]");
 
         _currentSpell = spell;
         Targets = targets;

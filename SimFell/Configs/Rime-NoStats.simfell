@@ -15,8 +15,8 @@ expertise=0
 haste=0
 spirit=0
 
-# talents=2-12-3 # Stands for Talents 1.2, 2.1, 2.2, 3.3
-talents=0-0-0
+talents=2-12-3 # Stands for Talents 1.2, 2.1, 2.2, 3.3
+# talents=0-0-0
 
 # Gear
 gear_helmet=Test Helm Name,int=14,stam=17,exp=23,crit=4,gem_bonus=33,gem=emerald_t1,ilvl=150,tier=6
