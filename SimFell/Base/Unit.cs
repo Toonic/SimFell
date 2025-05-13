@@ -333,18 +333,9 @@ public class Unit : SimLoopListener
 
     public void StopCasting()
     {
-        if (_currentSpell != null)
-        {
-            OnCastDone?.Invoke(this, _currentSpell, Targets);
-            IsCasting = false;
-            _currentSpell = null;
-        }
-    }
-
-    public void ActivateTalent(string id)
-    {
-        var talent = Talents.FirstOrDefault(talent => talent.Id == id);
-        if (talent != null) talent.Activate(this);
+        if (_currentSpell != null) OnCastDone?.Invoke(this, _currentSpell, Targets);
+        IsCasting = false;
+        _currentSpell = null;
     }
 
     public void ActivateTalent(int row, int col)
