@@ -62,6 +62,16 @@ public class SimLoop
                     }
                 }
             }
+            else if (player.IsCasting)
+            {
+                foreach (var spell in player.Rotation)
+                {
+                    if (spell.CheckCanCast(player) && spell.CanCastWhileCasting)
+                    {
+                        player.StartCasting(spell, targets);
+                    }
+                }
+            }
 
             for (int i = enemies.Count - 1; i >= 0; i--)
             {

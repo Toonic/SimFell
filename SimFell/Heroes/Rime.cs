@@ -505,6 +505,7 @@ public class Rime : Unit
             cooldown: 120,
             castTime: 0,
             hasGCD: false,
+            canCastWhileCasting: true,
             //TODO: Can Cast while Casting.
             onCast: (unit, spell, targets) =>
             {
