@@ -17,7 +17,7 @@ namespace SimFell.SimFileParser.Enums;
 /// </code>
 /// </example>
 /// </remarks>
-public enum Gem
+public enum GemType
 {
     [Description("Ruby"), Identifier("ruby")]
     RUBY,

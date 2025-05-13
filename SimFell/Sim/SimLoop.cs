@@ -42,7 +42,7 @@ public class SimLoop
                 break;
             if (mode == SimulationMode.Time)
             {
-                foreach (var target in targets) target.Health = 999999; //Hacky temp?
+                foreach (var target in targets) target.Health = new AdjustableStat(999999); //Hacky temp?
             }
 
             // Stop condition: Health mode
@@ -76,7 +76,7 @@ public class SimLoop
 
             for (int i = enemies.Count - 1; i >= 0; i--)
             {
-                if (targets[i].Health <= 0)
+                if (targets[i].Health.GetValue() <= 0)
                 {
                     targets[i].Died();
                     targets.RemoveAt(i);

@@ -74,12 +74,10 @@ namespace SimFell.SimFileParser
                     case "gem":
                         var gemParts = val.Split('_');
                         if (gemParts.Length == 2
-                            && Enum.TryParse<Gem>(gemParts[0], true, out var gemEnum)
+                            && Enum.TryParse<GemType>(gemParts[0], true, out var gemEnum)
                             && Enum.TryParse<Tier>(gemParts[1].ToUpperInvariant(), out var tierEnum))
                         {
-                            eq.Gem = new GemTier(
-                                gemEnum, tierEnum, GemBonusMapping.GetBonus($"{gemEnum}_{tierEnum}")
-                            );
+                            eq.Gem = new GemTier { Gem = gemEnum, Tier = tierEnum };
                         }
                         break;
                     case "ilvl":

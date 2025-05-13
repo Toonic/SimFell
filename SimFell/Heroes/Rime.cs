@@ -384,7 +384,7 @@ public class Rime : Unit
             castTime: 0,
             onCast: (unit, spell, targets) =>
             {
-                var target = targets.Where(t => t.Health > 0).FirstOrDefault()
+                var target = targets.Where(t => t.Health.GetValue() > 0).FirstOrDefault()
                              ?? throw new Exception("No valid targets");
                 DealDamage(target, 204, spell);
                 UpdateWinterOrbs(1);
@@ -420,7 +420,7 @@ public class Rime : Unit
             onCast: (unit, spell, targets) =>
             {
                 UpdateWinterOrbs(-2);
-                var target = targets.Where(t => t.Health > 0).FirstOrDefault()
+                var target = targets.Where(t => t.Health.GetValue() > 0).FirstOrDefault()
                              ?? throw new Exception("No valid targets");
 
                 // Builds the OnDamage Event.

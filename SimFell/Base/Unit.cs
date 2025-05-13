@@ -5,7 +5,7 @@ public class Unit : SimLoopListener
 {
     // Base Variables
     public string Name { get; set; }
-    public int Health { get; set; }
+    public AdjustableStat Health { get; set; }
     public List<Aura> Buffs { get; set; } = [];
     public List<Aura> Debuffs { get; set; } = [];
     public List<Spell> SpellBook { get; set; } = [];
@@ -47,7 +47,7 @@ public class Unit : SimLoopListener
     public Unit(string name, int health)
     {
         Name = name;
-        Health = health;
+        Health = new AdjustableStat(health);
         //Add base 5% Crit.
         CritcalStrikeStat.AddModifier(new Modifier(Modifier.StatModType.BasePercentage, 5));
     }
@@ -197,7 +197,7 @@ public class Unit : SimLoopListener
         ConsoleLogger.Log(SimulationLogLevel.DamageEvents, message, isCritical ? "💥" : null);
 
         OnDamageReceived?.Invoke(this, totalDamage, spellSource, auraSource);
-        Health -= totalDamage;
+        Health.BaseValue -= totalDamage;
     }
 
     protected override void Update()
@@ -277,7 +277,7 @@ public class Unit : SimLoopListener
 
     public bool IsDead()
     {
-        return Health <= 0;
+        return Health.BaseValue <= 0;
     }
 
     public void Died()
