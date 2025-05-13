@@ -33,6 +33,8 @@ public class SimLoop
             enemy.OnDamageReceived += OnDamageReceived;
         }
 
+        duration = 20;
+
         while (true)
         {
             // Stop condition: Time mode
@@ -56,17 +58,18 @@ public class SimLoop
                 {
                     if (spell.CheckCanCast(player))
                     {
-                        if (!spell.HasGCD)
-                        {
-                            spell.Cast(player, targets);
-                            player.OnCast?.Invoke(player, spell, targets);
-                            continue;
-                        }
-                        else
-                        {
-                            player.StartCasting(spell, targets);
-                            break; // Only cast one spell at a time
-                        }
+                        player.StartCasting(spell, targets);
+                        if(player.IsCasting) break; // Only cast one spell at a time
+                    }
+                }
+            }
+            else if (player.IsCasting)
+            {
+                foreach (var spell in player.Rotation)
+                {
+                    if (spell.CheckCanCast(player) && spell.CanCastWhileCasting)
+                    {
+                        player.StartCasting(spell, targets);
                     }
                 }
             }
