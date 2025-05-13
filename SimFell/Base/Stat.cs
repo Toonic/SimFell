@@ -21,7 +21,6 @@ public class Stat
     
     public void AddModifier(Modifier modifier) => _modifiers.Add(modifier);
     public void RemoveModifier(Modifier modifier) => _modifiers.Remove(modifier);
-    public void RemoveModifier(object source) => _modifiers.RemoveAll(mod => mod.Source == source);
 
     public double GetValue()
     {
@@ -86,12 +85,10 @@ public class Modifier
 
     public StatModType StatMod { get; }
     public float Value { get; }
-    public object Source { get; }
 
-    public Modifier(StatModType statMod, float value, object source)
+    public Modifier(StatModType statMod, float value)
     {
         StatMod = statMod;
         Value = value;
-        Source = source;
     }
 }

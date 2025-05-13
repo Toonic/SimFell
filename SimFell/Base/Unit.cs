@@ -49,7 +49,7 @@ public class Unit : SimLoopListener
         Name = name;
         Health = health;
         //Add base 5% Crit.
-        CritcalStrikeStat.AddModifier(new Modifier(Modifier.StatModType.BasePercentage, 5, this));
+        CritcalStrikeStat.AddModifier(new Modifier(Modifier.StatModType.BasePercentage, 5));
     }
 
     public Unit(string name, int health, int mainStat, int critcalStrikeStat, int expertiseStat, int hasteStat,

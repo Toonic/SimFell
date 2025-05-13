@@ -13,7 +13,8 @@ public class Spell
     public bool Channel { get; set; } //When the spell is a channeled spell.
     public Stat ChannelTime { get; set; }
     public Stat TickRate { get; set; }
-    public Boolean HasGCD { get; set; }
+    public bool HasGCD { get; set; }
+    public bool CanCastWhileCasting { get; set; }
     public Action<Unit, Spell, List<Unit>>? OnCast { get; set; }
     public Action<Unit, Spell, List<Unit>>? OnTick { get; set; }
     public Func<Unit, bool>? CanCast { get; set; }
@@ -23,7 +24,7 @@ public class Spell
     public Stat CritModifiers { get; set; } = new Stat(0);
 
     public Spell(
-        string id, string name, double cooldown, double castTime, bool channel = false, double channelTime = 0, double tickRate = 0, bool hasGCD = true,
+        string id, string name, double cooldown, double castTime, bool channel = false, double channelTime = 0, double tickRate = 0, bool hasGCD = true, bool canCastWhileCasting = false,
         Func<Unit, bool>? canCast = null, Action<Unit, Spell, List<Unit>>? onCast = null, Action<Unit, Spell, List<Unit>>? onTick = null)
     {
         ID = id;
@@ -34,6 +35,7 @@ public class Spell
         ChannelTime = new Stat(channelTime);
         TickRate = new Stat(tickRate);
         HasGCD = hasGCD;
+        CanCastWhileCasting = canCastWhileCasting;
         OnCast = onCast;
         OnTick = onTick;
         CanCast = canCast;
@@ -52,7 +54,7 @@ public class Spell
 
     public bool CheckCanCast(Unit caster)
     {
-        return (CanCast?.Invoke(caster) ?? true) && OffCooldown <= SimLoop.Instance.GetElapsed() && caster.GCD <= SimLoop.Instance.GetElapsed();
+        return (CanCast?.Invoke(caster) ?? true) && OffCooldown <= SimLoop.Instance.GetElapsed() && (CanCastWhileCasting || caster.GCD <= SimLoop.Instance.GetElapsed());
     }
 
     public double GetCastTime(Unit caster)
