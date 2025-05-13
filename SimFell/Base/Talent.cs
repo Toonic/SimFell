@@ -6,6 +6,8 @@ public class Talent
     public string Name { get; }
     public string GridPos { get; }
 
+    public bool IsActive { get; private set; } = false;
+
     public Action<Unit>? OnActivate { get; set; }
     public Action<Unit>? OnDeactivate { get; set; }
 
@@ -20,11 +22,15 @@ public class Talent
 
     public void Activate(Unit unit)
     {
+        if (IsActive) return;
         OnActivate?.Invoke(unit);
+        IsActive = true;
     }
 
     public void Deactivate(Unit unit)
     {
+        if (!IsActive) return;
         OnDeactivate?.Invoke(unit);
+        IsActive = false;
     }
 }

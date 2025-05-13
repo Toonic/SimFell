@@ -16,16 +16,16 @@ public class Aura
     private bool _expired;
 
     //Owner its on.
-    public Action<Unit,Unit>? OnTick;
-    public Action<Unit,Unit>? OnApply;
-    public Action<Unit,Unit>? OnRemove;
+    public Action<Unit, Unit>? OnTick;
+    public Action<Unit, Unit>? OnApply;
+    public Action<Unit, Unit>? OnRemove;
 
     public bool IsExpired => _expired;
 
     public Aura(string id, string name, double duration, double tickInterval, int maxStacks = 1000,
-        Action<Unit,Unit>? onTick = null,
-        Action<Unit,Unit>? onApply = null,
-        Action<Unit,Unit>? onRemove = null)
+        Action<Unit, Unit>? onTick = null,
+        Action<Unit, Unit>? onApply = null,
+        Action<Unit, Unit>? onRemove = null)
     {
         ID = id;
         Name = name;
@@ -35,7 +35,7 @@ public class Aura
         OnTick = onTick;
         OnApply = onApply;
         OnRemove = onRemove;
-        
+
         _expired = false;
     }
 
@@ -50,8 +50,8 @@ public class Aura
         _caster = caster;
         _target = target;
         _removeAt = Duration + SimLoop.Instance.GetElapsed();
-        _nextTick = Math.Round(_caster.GetHastedValue(TickInterval) + SimLoop.Instance.GetElapsed(),2);
-        OnApply?.Invoke(caster,target);
+        _nextTick = Math.Round(_caster.GetHastedValue(TickInterval) + SimLoop.Instance.GetElapsed(), 2);
+        OnApply?.Invoke(caster, target);
     }
 
     public void Remove()
@@ -66,7 +66,7 @@ public class Aura
         {
             while (simTime >= _nextTick)
             {
-                _nextTick = Math.Round(_nextTick + _caster.GetHastedValue(TickInterval),2);
+                _nextTick = Math.Round(_nextTick + _caster.GetHastedValue(TickInterval), 2);
                 OnTick?.Invoke(_caster, _target);
             }
         }

@@ -196,6 +196,8 @@ public class SimFellConfiguration
     public List<ConfigAction> ConfigActions { get; set; } = [];
     public Gear Gear { get; set; } = new();
 
+    public Unit Player { get; set; }
+
     // Doesnt work :(
     public string ParsedJson => JsonConvert.SerializeObject(this, Formatting.Indented);
 
@@ -226,4 +228,72 @@ public class SimFellConfiguration
         ------------
         Gear: {Gear}
     ";
+
+    public static SimFellConfiguration FromFile(string path)
+    {
+        var config = SimfellParser.ParseFile(path);
+        config.Player = config.Hero switch
+        {
+            "Rime" => new Rime(100),
+            _ => throw new Exception($"Hero {config.Hero} not found")
+        };
+
+        config.Player.SetPrimaryStats(
+            config.Intellect,
+            (int)config.Crit,
+            (int)config.Expertise,
+            (int)config.Haste,
+            (int)config.Spirit
+        );
+
+        if (config.Talents != null)
+        {
+            var talentGroups = config.Talents.Split('-');
+            for (int i = 0; i < talentGroups.Length; i++)
+                for (int j = 0; j < talentGroups[i].Length; j++)
+                    if (talentGroups[i] != "0")
+                        config.Player.ActivateTalent(
+                            i + 1,
+                            int.Parse(talentGroups[i][j].ToString())
+                        );
+        }
+
+        foreach (var action in config.ConfigActions)
+        {
+            // Find the spell in the player's spellbook
+            var spell = config.Player.SpellBook.FirstOrDefault(s => s.ID.Replace("-", "_") == action.Name);
+            if (spell != null)
+            {
+                if (action.Conditions.Count > 0)
+                {
+                    var originalCanCast = spell.CanCast;
+                    spell.CanCast = caster =>
+                    {
+                        // Long way to DEBUG
+                        // bool check = true;
+                        // foreach (var condition in action.Conditions)
+                        // {
+                        //     var condCheck = condition.Check(caster);
+                        //     ConsoleLogger.Log(SimulationLogLevel.Debug, $"[{spell.Name}] Condition: {condition} => {condCheck}");
+
+                        //     // TODO: Switch the order of the checks once debugged.
+                        //     check = condCheck && check;
+                        // }
+                        // ConsoleLogger.Log(SimulationLogLevel.Debug, $"[{spell.Name}] Check: {check} AND {originalCanCast?.Invoke(caster) ?? true}");
+                        // return (originalCanCast?.Invoke(caster) ?? true) && check;
+
+                        return (originalCanCast?.Invoke(caster) ?? true) && action.Conditions.All(c => c.Check(caster));
+                    };
+                }
+
+                config.Player.Rotation.Add(spell);
+            }
+            else
+            {
+                ConsoleLogger.Log(SimulationLogLevel.Error, $"[bold red]Spell {action.Name} not found in spellbook[/]");
+            }
+        }
+
+        return config;
+    }
 }
