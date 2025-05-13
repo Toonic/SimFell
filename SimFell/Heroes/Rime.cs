@@ -69,7 +69,7 @@ public class Rime : Unit
             {
                 // +20% Damage Buff to Torrent.
                 _freezingTorrent.DamageModifiers.AddModifier(new Modifier(Modifier.StatModType.MultiplicativePercent,
-                    20, unit));
+                    20));
                 // 20% AOE Damage to nearby targets.
                 _freezingTorrent.OnTick += (caster, spell, targets) =>
                 {
@@ -95,8 +95,7 @@ public class Rime : Unit
             onActivate: unit =>
             {
                 // +30% Damage buff to Bursting Ice.
-                _burstingIce.DamageModifiers.AddModifier(new Modifier(Modifier.StatModType.MultiplicativePercent, 30,
-                    unit));
+                _burstingIce.DamageModifiers.AddModifier(new Modifier(Modifier.StatModType.MultiplicativePercent, 30));
                 // 3 Anima per Tick Instead of +1 if only fighting one target.
                 unit.OnDamageDealt += (caster, damage, spell, aura) =>
                 {
@@ -116,7 +115,7 @@ public class Rime : Unit
             onActivate: unit =>
             {
                 //Flat 20% Crit Bonus.
-                _glacialBlast.CritModifiers.AddModifier(new Modifier(Modifier.StatModType.AdditivePercent, 20, unit));
+                _glacialBlast.CritModifiers.AddModifier(new Modifier(Modifier.StatModType.AdditivePercent, 20));
 
                 //Stacking Buff for Instant Cast
                 int glacialAssaultStacks = 0;
@@ -124,11 +123,9 @@ public class Rime : Unit
 
                 //Mods for Glacial Blast when procs happen.
                 Modifier instantCastMod =
-                    new Modifier(Modifier.StatModType.Multiplicative, 0, //Multiplies cast time by 0 for instance cast.
-                        _glacialBlast);
+                    new Modifier(Modifier.StatModType.Multiplicative, 0); //Multiplies cast time by 0 for instance cast.
                 Modifier damageMod =
-                    new Modifier(Modifier.StatModType.Multiplicative, 2, //Multiplies damage by 2x.
-                        _glacialBlast);
+                    new Modifier(Modifier.StatModType.Multiplicative, 2); //Multiplies damage by 2x.
 
                 //Glacial Assault Aura buff for tracking.
                 //TODO: This should use Stack count where it gets applied every cast, and stacks are kept track in the
@@ -232,7 +229,7 @@ public class Rime : Unit
             onActivate: unit =>
             {
                 // Passive 5%
-                unit.CritcalStrikeStat.AddModifier(new Modifier(Modifier.StatModType.AdditivePercent, 5, unit));
+                unit.CritcalStrikeStat.AddModifier(new Modifier(Modifier.StatModType.AdditivePercent, 5));
 
                 _iceComet.OnCast += (caster, spell, targets) =>
                 {
@@ -265,7 +262,7 @@ public class Rime : Unit
             onActivate: unit =>
             {
                 //Bonus Ice Blitz damage if this is active by 10%.
-                _iceBlitzBonusDamage = new Modifier(Modifier.StatModType.MultiplicativePercent, 15 + 10,  _iceBlitz);
+                _iceBlitzBonusDamage = new Modifier(Modifier.StatModType.MultiplicativePercent, 15 + 10);
                 
                 double cdr = 1;
                 OnWinterOrbUpdate += (delta) =>
@@ -289,8 +286,8 @@ public class Rime : Unit
             onActivate: unit =>
             {
                 //Mods for Soulfrost Torrent.
-                var freezingTorrentChannelTimeMod = new Modifier(Modifier.StatModType.Multiplicative, 2.0f, _freezingTorrent);
-                var freezingTorrentDamageMod = new Modifier(Modifier.StatModType.Multiplicative, 2.0f, _freezingTorrent);
+                var freezingTorrentChannelTimeMod = new Modifier(Modifier.StatModType.Multiplicative, 2.0f);
+                var freezingTorrentDamageMod = new Modifier(Modifier.StatModType.Multiplicative, 2.0f);
 
                 Aura soulFrostAura = new Aura(
                     id: "soulfrost-torrent",
@@ -497,7 +494,7 @@ public class Rime : Unit
         );
 
         //Ice Blitz
-        _iceBlitzBonusDamage = new Modifier(Modifier.StatModType.MultiplicativePercent, 15,  _iceBlitz);
+        _iceBlitzBonusDamage = new Modifier(Modifier.StatModType.MultiplicativePercent, 15);
         
         _iceBlitz = new Spell(
             id: "ice-blitz",
@@ -519,7 +516,7 @@ public class Rime : Unit
                     {
                         target.DamageBuffs.AddModifier(_iceBlitzBonusDamage);
                     },
-                    onRemove: (caster, target) => { unit.DamageBuffs.RemoveModifier(spell); }
+                    onRemove: (caster, target) => { unit.DamageBuffs.RemoveModifier(_iceBlitzBonusDamage); }
                 ));
             }
         );
@@ -569,7 +566,7 @@ public class Rime : Unit
             onCast: (caster, spell, targets) =>
             {
                 //15% Damage Buff from Wrath of Winter.
-                Modifier spiritMod = new Modifier(Modifier.StatModType.MultiplicativePercent, 20, spell);
+                Modifier spiritMod = new Modifier(Modifier.StatModType.MultiplicativePercent, 20);
 
                 caster.ApplyBuff(caster, caster, new Aura(
                     id: "winters-blessing",
@@ -594,9 +591,9 @@ public class Rime : Unit
                 Spirit = 0; //Sets spirit to 0.
 
                 //15% Damage Buff from Wrath of Winter.
-                Modifier damageMod = new Modifier(Modifier.StatModType.MultiplicativePercent, 15, spell);
+                Modifier damageMod = new Modifier(Modifier.StatModType.MultiplicativePercent, 15);
                 //+30% Haste from Spirit of Heroism.
-                Modifier hasteMod = new Modifier(Modifier.StatModType.AdditivePercent, 30, spell);
+                Modifier hasteMod = new Modifier(Modifier.StatModType.AdditivePercent, 30);
 
                 caster.ApplyBuff(caster, caster, new Aura(
                     id: "wrath-of-winter",
