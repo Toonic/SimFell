@@ -85,8 +85,8 @@ public class Spell
     public void Cast(Unit caster, List<Unit> targets)
     {
         ConsoleLogger.Log(
-            SimulationLogLevel.DebuffEvents,
-            $"Applying [bold blue]{Name}[/]"
+            SimulationLogLevel.CastEvents,
+            $"Casting [bold blue]{Name}[/]"
         );
 
         OnCast?.Invoke(caster, this, targets);

@@ -63,9 +63,7 @@ public class Tariq : Unit
              }
         var furyToGen = (26.0 * (damageDelt / (1 * 100)));
         var furyToGenAsPercent = furyToGen / MaximumFury;
-        Console.WriteLine("Gaining: " + furyToGenAsPercent);
         Fury = Math.Min(Math.Round(Fury + furyToGenAsPercent,3), 1);
-        Console.WriteLine("Fury: " + Fury);
     }
 
     private void SpendFury(double percentageToSpend)
