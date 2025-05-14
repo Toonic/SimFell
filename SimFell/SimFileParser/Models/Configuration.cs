@@ -98,12 +98,10 @@ public class Condition
                 var buffId = parts[1].Replace("_", "-");
                 var buffProp = parts[2].ToLowerInvariant();
                 var auraBuff = caster.Buffs.FirstOrDefault(a => a.ID == buffId);
-                if (auraBuff == null)
-                    return false;
                 switch (buffProp)
                 {
-                    case "duration":
-                        leftValue = auraBuff.Duration;
+                    case "exists":
+                        leftValue = auraBuff != null && !auraBuff.IsExpired ? 1 : 0;
                         break;
                     default:
                         return false;
@@ -115,21 +113,18 @@ public class Condition
                 var debuffId = parts[1].Replace("_", "-");
                 var debuffProp = parts[2].ToLowerInvariant();
                 var auraDebuff = caster.Debuffs.FirstOrDefault(a => a.ID == debuffId);
-                if (auraDebuff == null)
-                    return false;
                 switch (debuffProp)
                 {
-                    case "duration":
-                        leftValue = auraDebuff.Duration;
+                    case "exists":
+                        leftValue = auraDebuff != null && !auraDebuff.IsExpired ? 1 : 0;
                         break;
                     default:
                         return false;
                 }
                 break;
             default:
-                var exists = caster.Rotation.Any(s => s.ID == Left) || caster.SpellBook.Any(s => s.ID == Left);
-                leftValue = exists ? 1 : 0;
-                break;
+                ConsoleLogger.Log(SimulationLogLevel.Error, $"Unknown condition: {Left} {Operator} {Right}");
+                return false;
         }
 
         var finalResult = Operator switch
@@ -235,6 +230,7 @@ public class SimFellConfiguration
         config.Player = config.Hero switch
         {
             "Rime" => new Rime(100),
+            "Tariq" => new Tariq(100),
             _ => throw new Exception($"Hero {config.Hero} not found")
         };
 
@@ -274,12 +270,12 @@ public class SimFellConfiguration
                         // foreach (var condition in action.Conditions)
                         // {
                         //     var condCheck = condition.Check(caster);
-                        //     ConsoleLogger.Log(SimulationLogLevel.Debug, $"[{spell.Name}] Condition: {condition} => {condCheck}");
+                        //     ConsoleLogger.Log(SimulationLogLevel.Debug, $"'{spell.Name}' Condition: {condition} => {condCheck}");
 
                         //     // TODO: Switch the order of the checks once debugged.
                         //     check = condCheck && check;
                         // }
-                        // ConsoleLogger.Log(SimulationLogLevel.Debug, $"[{spell.Name}] Check: {check} AND {originalCanCast?.Invoke(caster) ?? true}");
+                        // ConsoleLogger.Log(SimulationLogLevel.Debug, $"'{spell.Name}' Check: {check} AND {originalCanCast?.Invoke(caster) ?? true}");
                         // return (originalCanCast?.Invoke(caster) ?? true) && check;
 
                         return (originalCanCast?.Invoke(caster) ?? true) && action.Conditions.All(c => c.Check(caster));

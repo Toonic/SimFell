@@ -33,8 +33,6 @@ public class SimLoop
             enemy.OnDamageReceived += OnDamageReceived;
         }
 
-        duration = 20;
-
         while (true)
         {
             // Stop condition: Time mode
@@ -104,7 +102,7 @@ public class SimLoop
 
     public double GetElapsed()
     {
-        return _ticks * step;
+        return Math.Round(_ticks * step,2);
     }
 
     public double GetStep()

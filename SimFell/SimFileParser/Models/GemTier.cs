@@ -19,6 +19,6 @@ public class GemTier
     /// </summary>
     public override string ToString()
     {
-        return $"[{Tier}] {Gem.Name()}";
+        return $"{Gem.Name()} {Tier}";
     }
 }
