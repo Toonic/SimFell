@@ -36,7 +36,7 @@ run_count=2000
 action=/raging_tempest
 action+=/heavy_strike # Heavy Strike should be a prio because its basically on a timer.
 action+=/chain_lightning
-action+=/thunder_call #,if=buffs.thunder_call.duration<=0
+action+=/thunder_call,if=buff.thunder_call.exists==0
 action+=/skull_crusher
 action+=/hammer_storm,if=character.fury >= 0.5
 action+=/face_breaker

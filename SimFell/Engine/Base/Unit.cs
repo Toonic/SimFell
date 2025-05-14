@@ -31,7 +31,7 @@ public class Unit : SimLoopListener
 
     //Spirit Value
     public double Spirit = 100; //TODO: Proper Spirit Regen?
-    
+
     static Modifier spiritOfHeroismMod = new Modifier(Modifier.StatModType.AdditivePercent, 30);
 
     public Aura SpiritOfHeroism = new Aura(
@@ -182,7 +182,7 @@ public class Unit : SimLoopListener
         isCritical = SimRandom.CanCrit ? isCritical : false;
         if (isCritical) OnCrit?.Invoke(this, damage, spellSource, auraSource); //On Crit events called.
         damage *= isCritical ? 2 : 1; //Doubles the damage if there is a Critical Hit. TODO: Crit power.
-        
+
         var damageDealtAfterMods = target.TakeDamage(damage, isCritical, spellSource, auraSource);
         OnDamageDealt?.Invoke(this, damageDealtAfterMods, spellSource, auraSource); //Called when damage is dealt.
     }
@@ -319,8 +319,8 @@ public class Unit : SimLoopListener
             SimulationLogLevel.CastEvents,
             $"Casting [bold blue]{spell.Name}[/]"
         );
-        
-        
+
+
         if (!spell.CanCastWhileCasting)
         {
             _currentSpell = spell;
@@ -328,7 +328,7 @@ public class Unit : SimLoopListener
             _castTime = Math.Round(SimLoop.Instance.GetElapsed() + spell.GetCastTime(this), 2);
             IsCasting = true;
             SetGCD(spell.GetGCD(this));
-            
+
             //Handle Channel Spells.
             if (spell.Channel)
             {
@@ -336,8 +336,8 @@ public class Unit : SimLoopListener
                 spell.Cast(this, targets);
                 //Channeled spells always tick once at the very start.
                 spell.Tick(this, targets);
-                _channelTime = Math.Round(SimLoop.Instance.GetElapsed() + spell.GetChannelTime(this),2);
-                _tickTime = Math.Round(SimLoop.Instance.GetElapsed() + spell.GetTickRate(this),2);
+                _channelTime = Math.Round(SimLoop.Instance.GetElapsed() + spell.GetChannelTime(this), 2);
+                _tickTime = Math.Round(SimLoop.Instance.GetElapsed() + spell.GetTickRate(this), 2);
             }
 
             if (spell.GetCastTime(this) == 0 && spell.GetChannelTime(this) == 0)
