@@ -628,6 +628,7 @@ public class Rime : Unit
     {
         WinterOrbs += winterOrbsDelta;
         if (winterOrbsDelta < 0 && SimRandom.Roll(SpiritStat.GetValue())) WinterOrbs += winterOrbsDelta;
+        if(WinterOrbs > MaxWinterOrbs) ConsoleLogger.Log(SimulationLogLevel.Debug, "[bold red]Over Capped Winter Orbs[/b]");
         WinterOrbs = Math.Clamp(WinterOrbs, 0, MaxWinterOrbs);
 
         OnWinterOrbUpdate?.Invoke(winterOrbsDelta);

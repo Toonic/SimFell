@@ -20,7 +20,7 @@ var config = SimFellConfiguration.FromFile(fullPath);
 var enemies = new List<Unit>();
 for (int i = 0; i < config.Enemies; i++)
 {
-    enemies.Add(new Unit("Goblin #" + (i + 1), 1000));
+    enemies.Add(new Unit("Goblin #" + (i + 1), 35000));
 }
 
 SimRandom.EnableDeterminism();
@@ -28,4 +28,5 @@ SimRandom.EnableDeterminism();
 SimLoop.ShowConfig(config);
 // SimLoop.ShowPrettyConfig(config);
 
-SimLoop.Instance.Start(config.Player, enemies, SimLoop.SimulationMode.Time, config.Duration);
+// SimLoop.Instance.Start(config.Player, enemies, SimLoop.SimulationMode.Time, config.Duration);
+SimLoop.Instance.Start(config.Player, enemies, SimLoop.SimulationMode.Health, config.Duration);

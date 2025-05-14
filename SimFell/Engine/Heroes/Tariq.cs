@@ -398,8 +398,7 @@ public class Tariq : Unit
             canCast: (unit) =>
             {
                 var target = unit.Targets
-                    .Where(u => u.Health < 0.3 * u.MaximumHealth).OrderBy(u => u.Health).FirstOrDefault();
-
+                    .Where(u => u.Health <= 0.3 * u.MaximumHealth).OrderBy(u => u.Health).FirstOrDefault();
                 return target != null && Fury >= 0;
             },
             onCast: (unit, spell, targets) =>
@@ -415,7 +414,7 @@ public class Tariq : Unit
                     currentStacks++;
                 }
                 
-                DealDamage(target, currentStacks * 20 , _cullingStrike);
+                DealDamage(target, (currentStacks * 20) + 200 , _cullingStrike);
                 
             }
         );

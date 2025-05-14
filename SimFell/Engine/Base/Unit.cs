@@ -60,6 +60,7 @@ public class Unit : SimLoopListener
     {
         Name = name;
         Health = health;
+        MaximumHealth = health;
         //Add base 5% Crit.
         CritcalStrikeStat.AddModifier(new Modifier(Modifier.StatModType.BasePercentage, 5));
     }
