@@ -47,6 +47,7 @@ public class Aura
 
     public void Apply(Unit caster, Unit target)
     {
+        _expired = false;
         _caster = caster;
         _target = target;
         _removeAt = Duration + SimLoop.Instance.GetElapsed();

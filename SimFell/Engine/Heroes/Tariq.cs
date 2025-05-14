@@ -164,11 +164,7 @@ public class Tariq : Unit
             channel: true,
             channelTime: 2.1, // We stop it manually in the cast.
             tickRate: 0.7,
-            canCast: unit => Fury >= 0.5, 
-            onCast: (unit, spell, targets) =>
-            {
-                hammerStormRageSpent = 0.26;
-            },
+            canCast: unit => Fury >= 0.26, 
             onTick: (unit, spell, targets) =>
             {
                 //First tick includes the base amount. Otherwise +0.08 per tick.

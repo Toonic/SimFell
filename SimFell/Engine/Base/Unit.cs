@@ -311,7 +311,7 @@ public class Unit : SimLoopListener
 
         _currentSpell = spell;
         Targets = targets;
-        _castTime = SimLoop.Instance.GetElapsed() + spell.GetCastTime(this);
+        _castTime = Math.Round(SimLoop.Instance.GetElapsed() + spell.GetCastTime(this),2);
 
         IsCasting = true;
         if (spell.HasGCD) SetGCD(spell.GetGCD(this));
@@ -323,8 +323,8 @@ public class Unit : SimLoopListener
             spell.Cast(this, targets);
             //Channeled spells always tick once at the very start.
             spell.Tick(this, targets);
-            _channelTime = SimLoop.Instance.GetElapsed() + spell.GetChannelTime(this);
-            _tickTime = SimLoop.Instance.GetElapsed() + spell.GetTickRate(this);
+            _channelTime = Math.Round(SimLoop.Instance.GetElapsed() + spell.GetChannelTime(this),2);
+            _tickTime = Math.Round(SimLoop.Instance.GetElapsed() + spell.GetTickRate(this),2);
         }
 
         if (spell.GetCastTime(this) == 0 && spell.GetChannelTime(this) == 0)
