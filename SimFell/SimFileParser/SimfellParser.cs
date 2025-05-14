@@ -141,7 +141,7 @@ namespace SimFell.SimFileParser
                 line = line.Split('#')[0].Trim();
 
                 // Handle actions (single or +=) with optional conditions
-                if (line.StartsWith("action=") || line.StartsWith("actions+="))
+                if (line.StartsWith("action=") || line.StartsWith("action+="))
                 {
                     var action = ParseAction_(line);
                     config.ConfigActions.Add(action);

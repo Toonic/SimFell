@@ -24,7 +24,7 @@ for (int i = 0; i < config.Enemies; i++)
 
 SimRandom.EnableDeterminism();
 
-// SimLoop.ShowConfig(config);
-SimLoop.ShowPrettyConfig(config);
+SimLoop.ShowConfig(config);
+// SimLoop.ShowPrettyConfig(config);
 
 SimLoop.Instance.Start(config.Player, enemies, SimLoop.SimulationMode.Time, config.Duration);
