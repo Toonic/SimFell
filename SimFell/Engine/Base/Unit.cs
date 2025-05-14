@@ -304,7 +304,10 @@ public class Unit : SimLoopListener
 
     public void StartCasting(Spell spell, List<Unit> targets)
     {
-        ConsoleLogger.Log(SimulationLogLevel.Debug, $"Preparation for [bold blue]{spell.Name}[/]");
+        ConsoleLogger.Log(
+            SimulationLogLevel.CastEvents,
+            $"Casting [bold blue]{spell.Name}[/]"
+        );
 
         _currentSpell = spell;
         Targets = targets;
