@@ -62,6 +62,8 @@ public class Gear
         -> Shoulder: {Shoulder?.ToString()}
         ";
     }
+
+    public List<Equipment> ToList() => [Helmet, Shoulder];
 }
 
 

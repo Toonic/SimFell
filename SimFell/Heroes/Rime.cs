@@ -42,7 +42,7 @@ public class Rime : Unit
     {
         Talents = new List<Talent>();
 
-        #region Row 1
+        #region Talents Row 1
 
         //Chillblain Talent
         var chillBlain = new Talent(
@@ -157,7 +157,7 @@ public class Rime : Unit
         Talents.Add(glacialAssault);
 
         #endregion
-        #region Row 2
+        #region Talents Row 2
 
         // Unrelenting Ice
         var unrelentingIce = new Talent(
@@ -203,7 +203,7 @@ public class Rime : Unit
         Talents.Add(icyFlow);
         Talents.Add(tundraGuard);
         #endregion
-        #region Row 3
+        #region Talents Row 3
 
         // Avalanche
         var avalanche = new Talent(
@@ -247,7 +247,7 @@ public class Rime : Unit
             {
                 //Bonus Ice Blitz damage if this is active by 10%.
                 _iceBlitzBonusDamage = new Modifier(Modifier.StatModType.MultiplicativePercent, 15 + 10);
-                
+
                 double cdr = 1;
                 OnWinterOrbUpdate += (delta) =>
                 {
@@ -479,7 +479,7 @@ public class Rime : Unit
 
         //Ice Blitz
         _iceBlitzBonusDamage = new Modifier(Modifier.StatModType.MultiplicativePercent, 15);
-        
+
         _iceBlitz = new Spell(
             id: "ice-blitz",
             name: "Ice Blitz",

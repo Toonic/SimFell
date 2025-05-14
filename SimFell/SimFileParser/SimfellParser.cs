@@ -70,6 +70,11 @@ namespace SimFell.SimFileParser
                         break;
                     case "gem_bonus":
                         eq.GemBonus = int.Parse(val);
+                        if (eq.Gem != null)
+                        {
+                            double total = eq.Gem.Power * (1 + (eq.GemBonus ?? 0) / 100.0);
+                            eq.Gem.Power = (int)total;
+                        }
                         break;
                     case "gem":
                         var gemParts = val.Split('_');
@@ -77,7 +82,7 @@ namespace SimFell.SimFileParser
                             && Enum.TryParse<GemType>(gemParts[0], true, out var gemEnum)
                             && Enum.TryParse<Tier>(gemParts[1].ToUpperInvariant(), out var tierEnum))
                         {
-                            eq.Gem = new GemTier { Gem = gemEnum, Tier = tierEnum };
+                            eq.Gem = new GemTier { Gem = gemEnum, Tier = tierEnum, Power = (int)tierEnum * 100 };
                         }
                         break;
                     case "ilvl":

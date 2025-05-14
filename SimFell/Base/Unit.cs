@@ -1,3 +1,4 @@
+using SimFell.Items;
 using SimFell.Logging;
 namespace SimFell;
 
@@ -36,6 +37,8 @@ public class Unit : SimLoopListener
     // Other Stat Buffs
     public Stat DamageBuffs = new Stat(0);
     public Stat DamageTakenDebuffs = new Stat(0);
+
+    public GemDictionary GemDictionary { get; set; } = new();
 
     //Events 
     public Action<Unit, double, Spell?, Aura?>? OnDamageDealt { get; set; }

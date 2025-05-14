@@ -19,7 +19,7 @@ talents=2-12-3 # Stands for Talents 1.2, 2.1, 2.2, 3.3
 # talents=0-0-0
 
 # Gear
-gear_helmet=Test Helm Name,int=14,stam=17,exp=23,crit=4,gem_bonus=33,gem=emerald_t1,ilvl=150,tier=6
+gear_helmet=Test Helm Name,int=14,stam=17,exp=23,crit=4,gem=ruby_t1,gem_bonus=33,ilvl=150,tier=6
 gear_shoulder=Test Shoulder Name,int=12,stam=15,crit=13,haste=6,set=Wyrmling Vigor,ilvl=150,tier=6
 
 # Trinkets
@@ -27,7 +27,7 @@ gear_shoulder=Test Shoulder Name,int=12,stam=15,crit=13,haste=6,set=Wyrmling Vig
 # trinket2=drums
 
 # Sim Information
-duration=120
+duration=20
 enemies=1
 run_count=2000
 

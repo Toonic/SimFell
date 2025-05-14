@@ -2,7 +2,8 @@ using Newtonsoft.Json;
 using System.Reflection;
 using System.Globalization;
 using SimFell.Logging;
-using System.IO.Pipelines;
+using SimFell.SimFileParser.Enums;
+
 namespace SimFell.SimFileParser.Models;
 
 /// <summary>
@@ -256,6 +257,21 @@ public class SimFellConfiguration
                             i + 1,
                             int.Parse(talentGroups[i][j].ToString())
                         );
+        }
+
+        foreach (var gear in config.Gear.ToList())
+        {
+            if (gear.Gem != null)
+            {
+                ConsoleLogger.Log(SimulationLogLevel.Setup, $"Adding '{gear.Gem}' from '{gear.Name}'");
+                config.Player.GemDictionary.GemList.First(g => g.Type == gear.Gem.Gem).AddPower(gear.Gem.Power);
+            }
+        }
+
+        foreach (var gem in config.Player.GemDictionary.GemList)
+        {
+            ConsoleLogger.Log(SimulationLogLevel.Setup, $"{gem.Type} Power: {gem.Power}");
+            gem.Apply(config.Player);
         }
 
         foreach (var action in config.ConfigActions)
