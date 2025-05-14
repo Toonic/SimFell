@@ -64,7 +64,7 @@ public class Tariq : Unit
         var furyToGen = (26.0 * (damageDelt / (1 * 100)));
         var furyToGenAsPercent = furyToGen / MaximumFury;
         Console.WriteLine("Gaining: " + furyToGenAsPercent);
-        Fury = Math.Min(Fury + furyToGenAsPercent, 1);
+        Fury = Math.Min(Math.Round(Fury + furyToGenAsPercent,3), 1);
         Console.WriteLine("Fury: " + Fury);
     }
 
@@ -174,8 +174,8 @@ public class Tariq : Unit
             onTick: (unit, spell, targets) =>
             {
                 //First tick includes the base amount. Otherwise +0.08 per tick.
-                if (hammerStormRageSpent == 0) hammerStormRageSpent = 0.26;
-                else hammerStormRageSpent += 0.08;
+                if (hammerStormRageSpent == 0) { hammerStormRageSpent = 0.26; SpendFury(0.26); }
+                else { hammerStormRageSpent += 0.08; SpendFury(0.08);}
                 
                 //Reset the swing timer every tick.
                 ResetSwingTimer();
