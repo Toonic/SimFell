@@ -12,7 +12,7 @@ ConsoleLogger.Configure(configuration);
 FileLogger.Configure(configuration);
 
 string configFolder = Path.Combine(AppContext.BaseDirectory, "Configs");
-string fullPath = Path.Combine(configFolder, "Rime-NoStats.simfell");
+string fullPath = Path.Combine(configFolder, "Tariq-NoStats.simfell");
 
 var config = SimFellConfiguration.FromFile(fullPath);
 

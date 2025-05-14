@@ -58,7 +58,7 @@ public class Unit : SimLoopListener
         SetPrimaryStats(mainStat, critcalStrikeStat, expertiseStat, hasteStat, spiritStat);
     }
 
-    public void SetPrimaryStats(int mainStat, int criticalStrikeStat, int expertiseStat, int hasteStat, int spiritStat)
+    public virtual void SetPrimaryStats(int mainStat, int criticalStrikeStat, int expertiseStat, int hasteStat, int spiritStat)
     {
         MainStat.BaseValue = mainStat;
         CritcalStrikeStat.BaseValue = criticalStrikeStat;
@@ -171,19 +171,19 @@ public class Unit : SimLoopListener
         isCritical = SimRandom.CanCrit ? isCritical : false;
         if (isCritical) OnCrit?.Invoke(this, damage, spellSource, auraSource); //On Crit events called.
         damage *= isCritical ? 2 : 1; //Doubles the damage if there is a Critical Hit. TODO: Crit power.
-
-        OnDamageDealt?.Invoke(this, damage, spellSource, auraSource); //Called when damage is dealt.
-        target.TakeDamage(damage, isCritical, spellSource, auraSource);
+        
+        var damageDealtAfterMods = target.TakeDamage(damage, isCritical, spellSource, auraSource);
+        OnDamageDealt?.Invoke(this, damageDealtAfterMods, spellSource, auraSource); //Called when damage is dealt.
     }
 
     /// <summary>
     /// Called when a target takes damage. Takes into consideration any debuffs on the target, along with any extra
     /// modifiers.
     /// </summary>
+    /// <returns>Damage taken after modifiers.</returns>
     /// <param name="amount">Incoming Damage amount.</param>
     /// <param name="isCritical">If the damage was a critical hit.</param>
-    /// <param name="damageSource">Source of the Damage. Usually a spell.</param>
-    public void TakeDamage(double amount, bool isCritical, Spell? spellSource = null, Aura? auraSource = null)
+    public double TakeDamage(double amount, bool isCritical, Spell? spellSource = null, Aura? auraSource = null)
     {
         var totalDamage = (int)DamageTakenDebuffs.GetValue(amount);
         // Log damage event with coloring for critical hits
@@ -198,6 +198,7 @@ public class Unit : SimLoopListener
 
         OnDamageReceived?.Invoke(this, totalDamage, spellSource, auraSource);
         Health -= totalDamage;
+        return totalDamage;
     }
 
     protected override void Update()

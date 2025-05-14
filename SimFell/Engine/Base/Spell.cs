@@ -74,7 +74,10 @@ public class Spell
 
     public double GetGCD(Unit caster)
     {
-        if (!HasGCD) return 0;
+        if (!HasGCD)
+            if (CanCastWhileCasting && GetCastTime(caster) == 0) return 0.6; //Forced 0.6~ oGCD on all spells to stop people from spamming spells.
+            else return 0;
+        
         //TODO: Load in Config for Global GCD.
         return caster.GetHastedValue(1.5);
     }
@@ -82,7 +85,7 @@ public class Spell
     public void Cast(Unit caster, List<Unit> targets)
     {
         ConsoleLogger.Log(
-            SimulationLogLevel.CastEvents,
+            SimulationLogLevel.DebuffEvents,
             $"Applying [bold blue]{Name}[/]"
         );
 

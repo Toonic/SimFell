@@ -33,8 +33,6 @@ public class SimLoop
             enemy.OnDamageReceived += OnDamageReceived;
         }
 
-        duration = 20;
-
         while (true)
         {
             // Stop condition: Time mode

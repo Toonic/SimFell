@@ -235,6 +235,7 @@ public class SimFellConfiguration
         config.Player = config.Hero switch
         {
             "Rime" => new Rime(100),
+            "Tariq" => new Tariq(100),
             _ => throw new Exception($"Hero {config.Hero} not found")
         };
 
