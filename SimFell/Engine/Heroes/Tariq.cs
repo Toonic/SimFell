@@ -19,10 +19,16 @@ public class Tariq : Unit
     private Spell _chainLightning;
     private Spell _ragingTempest;
     private Spell _leapSmash;
+    private Spell _focusedWrath;
+    private Spell _cullingStrike;
 
     private Aura _thunderCallAura; // A lot of spells reference this so just easier to track it global for Tariq.
+    private Aura _focusedWrathAura;
     private Stat _swingTimer;
     public double NextSwingTime;
+
+    private Stat focusedWrathDamageBuff = new Stat(0);
+    private Stat focusedWrathCostBuff = new Stat(0);
 
     public Tariq(int health) : base("Tariq", health)
     {
@@ -105,6 +111,29 @@ public class Tariq : Unit
             canCastWhileCasting: true,
             onCast: (unit, spell, targets) => { unit.ApplyBuff(unit, unit, _thunderCallAura); }
         );
+        
+        //TODO: Use stacks on this instead and subtract stacks.
+        int focusedWrathUsage = 0;
+        Modifier focusedWrathDamageMod = new Modifier(Modifier.StatModType.Multiplicative, 0.5f);
+        Modifier focusedWrathCostMod = new Modifier(Modifier.StatModType.Multiplicative, 0.5f);
+        _focusedWrathAura = new Aura(
+            id: "focused-wrath",
+            name: "Focused Wrath",
+            duration: 9999,
+            tickInterval:0,
+            onApply: (caster, owner) =>
+            {
+                focusedWrathUsage = 0;
+                focusedWrathCostBuff.AddModifier(focusedWrathCostMod);
+                focusedWrathDamageBuff.AddModifier(focusedWrathDamageMod);
+            },
+            onRemove: (caster, owner) =>
+            {
+                focusedWrathUsage = 0;
+                focusedWrathCostBuff.RemoveModifier(focusedWrathCostMod);
+                focusedWrathDamageBuff.RemoveModifier(focusedWrathDamageMod);
+            }
+        );
 
         // To be honest, Tariq doesn't need this coded, and it probably won't be used.
         // Instead, we will probably just call Heavy Strike when Auto Attacks should happen.
@@ -159,18 +188,24 @@ public class Tariq : Unit
             castTime: 0,
             hasGCD: false,
             hasAntiSpam: true, //Used when the spell can be spammed. (Multi Stacks etc.)
-            canCast: unit => Fury >= 0.5,
+            canCast: unit => Fury >= focusedWrathCostBuff.GetValue(0.5),
             onCast: (unit, spell, targets) =>
             {
                 var target = targets.FirstOrDefault()
                              ?? throw new Exception("No valid targets");
-                DealDamage(target, 340, spell);
+                DealDamage(target, focusedWrathDamageBuff.GetValue(340), spell);
                 ResetSwingTimer();
                 SpendFury(0.5);
 
                 if (unit.HasBuff(_thunderCallAura))
                 {
                     DealDamage(target, 273, _thunderCall);
+                }
+
+                if (unit.HasBuff(_focusedWrathAura))
+                {
+                    focusedWrathUsage++;
+                    if (focusedWrathUsage == 2) unit.RemoveBuff(_focusedWrathAura);
                 }
             }
         );
@@ -186,19 +221,19 @@ public class Tariq : Unit
             channel: true,
             channelTime: 9999, //Channel time is long because it stops when 0.5 Fury is spent.
             tickRate: 0.7,
-            canCast: unit => Fury >= 0.26,
+            canCast: unit => Fury >= focusedWrathCostBuff.GetValue(0.26),
             onTick: (unit, spell, targets) =>
             {
                 //First tick includes the base cast amount. Otherwise +0.08 per tick.
                 if (hammerStormRageSpent == 0)
                 {
-                    hammerStormRageSpent = 0.26;
-                    SpendFury(0.26);
+                    hammerStormRageSpent = focusedWrathCostBuff.GetValue(0.26);
+                    SpendFury(focusedWrathCostBuff.GetValue(0.26));
                 }
                 else
                 {
-                    hammerStormRageSpent += 0.08;
-                    SpendFury(0.08);
+                    hammerStormRageSpent += focusedWrathCostBuff.GetValue(0.08);
+                    SpendFury(focusedWrathCostBuff.GetValue(0.08));
                 }
 
                 //Reset the swing timer every tick.
@@ -207,11 +242,17 @@ public class Tariq : Unit
                 //Deal damage to everything around you.
                 foreach (var target in targets)
                 {
-                    DealDamage(target, 56, spell);
+                    DealDamage(target, focusedWrathDamageBuff.GetValue(56), spell);
                     if (unit.HasBuff(_thunderCallAura))
                     {
                         DealDamage(target, 44.8, _thunderCall);
                     }
+                }
+                
+                if (unit.HasBuff(_focusedWrathAura))
+                {
+                    focusedWrathUsage++;
+                    if (focusedWrathUsage == 2) unit.RemoveBuff(_focusedWrathAura);
                 }
 
                 //Stop it if the hammerStormRageSpent is 0.5
@@ -331,6 +372,65 @@ public class Tariq : Unit
                 ));
             }
         );
+        
+        _leapSmash = new Spell(
+            id: "leap-smash",
+            name: "Leap Smash",
+            cooldown: 20,
+            castTime: 0,
+            hasGCD: false,
+            onCast: (unit, spell, targets) =>
+            {
+                foreach (var target in targets)
+                {
+                    DealDamage(target, 347, spell);
+                }
+                
+                GainFury(0.25);
+            }
+        );
+        
+        _cullingStrike = new Spell(
+            id: "culling-strike",
+            name: "Culling Strike",
+            cooldown: 5,
+            castTime: 0,
+            canCast: (unit) =>
+            {
+                var target = unit.Targets
+                    .Where(u => u.Health < 0.3 * u.MaximumHealth).OrderBy(u => u.Health).FirstOrDefault();
+
+                return target != null && Fury >= 0;
+            },
+            onCast: (unit, spell, targets) =>
+            {
+                var target = unit.Targets
+                    .Where(u => u.Health < 0.3 * u.MaximumHealth).OrderBy(u => u.Health).FirstOrDefault();
+                int maxStacks = 20;
+                int currentStacks = 0;
+                
+                while (currentStacks < maxStacks && Fury >= 0.01)
+                {
+                    SpendFury(0.01);
+                    currentStacks++;
+                }
+                
+                DealDamage(target, currentStacks * 20 , _cullingStrike);
+                
+            }
+        );
+        
+        _focusedWrath = new Spell(
+            id: "focused-wrath",
+            name: "Focused Wrath",
+            cooldown: 90,
+            castTime: 0,
+            hasGCD: false,
+            onCast: (unit, spell, targets) =>
+            {
+                unit.ApplyBuff(unit, unit, _focusedWrathAura);
+            }
+        );
 
         SpellBook.Add(_autoAttack);
         SpellBook.Add(_skullCrusher);
@@ -343,9 +443,9 @@ public class Tariq : Unit
         SpellBook.Add(_ragingTempest);
         SpellBook.Add(_leapSmash);
         //SpellBook.ADd(_unbreakableWill); //Not Coded due to it being a defensive.
-        //SpellBook.Add(_focusedWrath);
+        SpellBook.Add(_focusedWrath);
         //SpellBook.Add(_intimidate); //Not coded due to being a taunt.
-        //SpellBook.Add(_cullingStrike);
+        SpellBook.Add(_cullingStrike);
     }
 
     private void ConfigureTalents()

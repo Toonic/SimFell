@@ -6,6 +6,7 @@ public class Unit : SimLoopListener
     // Base Variables
     public string Name { get; set; }
     public int Health { get; set; }
+    public int MaximumHealth { get; set; }
     public List<Aura> Buffs { get; set; } = [];
     public List<Aura> Debuffs { get; set; } = [];
     public List<Spell> SpellBook { get; set; } = [];
