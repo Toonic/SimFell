@@ -71,7 +71,7 @@ public class Tariq : Unit
              spellSource != _faceBreaker &&
              spellSource != _wildSwing &&
              spellSource != _chainLightning
-                // spellSource != _leapSmash))
+            // spellSource != _leapSmash))
             ))
         {
             return;
@@ -316,7 +316,7 @@ public class Tariq : Unit
             }
         );
         _wildSwing.CritModifiers.AddModifier(noCritMod);
-        
+
         _chainLightning = new Spell(
             id: "chain-lightning",
             name: "Chain Lightning",
