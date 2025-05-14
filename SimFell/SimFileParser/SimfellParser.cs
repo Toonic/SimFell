@@ -19,6 +19,23 @@ namespace SimFell.SimFileParser
             foreach (var part in parts)
             {
                 var p = part.Trim();
+
+                // Handle 'exists' without a comparison operator
+                var pLower = p.ToLowerInvariant();
+                if (pLower.StartsWith("not ") && pLower.EndsWith(".exists"))
+                {
+                    // 'not buff.xxx.exists' -> buff.xxx.exists == 0
+                    var inner = p.Substring(4).Trim();
+                    conds.Add(new Condition { Left = inner, Operator = "==", Right = "0" });
+                    continue;
+                }
+                else if (pLower.EndsWith(".exists"))
+                {
+                    // 'buff.xxx.exists' -> buff.xxx.exists == 1
+                    conds.Add(new Condition { Left = p, Operator = "==", Right = "1" });
+                    continue;
+                }
+
                 foreach (var candidate in new[] { ">=", "<=", "==", "!=", ">", "<" })
                 {
                     var idx = p.IndexOf(candidate, StringComparison.Ordinal);
