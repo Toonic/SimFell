@@ -34,6 +34,6 @@ run_count=2000
 # Actions
 #action=/auto_attack # As a shortcut to dealing with proper logic. Heavy Strike, just replaces Auto Attack and shares a cooldown with Tariqs auto attack duration.
 action=/heavy_strike # Heavy Strike should be a prio because its basically on a timer.
-action+=/thunder_call
-action+=/skull_crusher
-action+=/hammer_storm
+actions+=/thunder_call
+actions+=/skull_crusher
+actions+=/hammer_storm,if=character.fury >= 0.5

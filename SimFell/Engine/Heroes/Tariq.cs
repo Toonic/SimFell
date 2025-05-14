@@ -18,8 +18,6 @@ public class Tariq : Unit
     
     public Tariq(int health) : base("Tariq", health)
     {
-        // TODO: Override the set primary and call base on it.
-        // Calculate his maximum fury based on 
         _swingTimer = new Stat(4.8);
         OnDamageDealt += GainFury;
         //ConfigureHeavyStrikeReset();
@@ -166,11 +164,12 @@ public class Tariq : Unit
             cooldown: 1.5,
             castTime: 0,
             channel: true,
-            channelTime: 9999, // We stop it manually in the cast.
+            channelTime: 2.1, // We stop it manually in the cast.
             tickRate: 0.7,
+            canCast: unit => Fury >= 0.5, 
             onCast: (unit, spell, targets) =>
             {
-                hammerStormRageSpent = 0;
+                hammerStormRageSpent = 0.26;
             },
             onTick: (unit, spell, targets) =>
             {
@@ -190,7 +189,7 @@ public class Tariq : Unit
                 //TODO: Thunder Call Bonus
                 
                 //Stop it if the hammerStormRageSpent is 0.5
-                if (hammerStormRageSpent >= 0.5) StopCasting(); //Stop channeling at 0.5 fury spent.
+                // if (hammerStormRageSpent >= 0.5) StopCasting(); //Stop channeling at 0.5 fury spent.
             }
             
         );
