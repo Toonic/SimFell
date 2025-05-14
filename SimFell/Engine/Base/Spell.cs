@@ -15,6 +15,7 @@ public class Spell
     public Stat TickRate { get; set; }
     public bool HasGCD { get; set; }
     public bool CanCastWhileCasting { get; set; }
+    public bool HasAntiSpam { get; set; }
     public Action<Unit, Spell, List<Unit>>? OnCast { get; set; }
     public Action<Unit, Spell, List<Unit>>? OnTick { get; set; }
     public Func<Unit, bool>? CanCast { get; set; }
@@ -25,7 +26,7 @@ public class Spell
 
     public Spell(
         string id, string name, double cooldown, double castTime, bool channel = false, double channelTime = 0, double tickRate = 0, bool hasGCD = true, bool canCastWhileCasting = false,
-        Func<Unit, bool>? canCast = null, Action<Unit, Spell, List<Unit>>? onCast = null, Action<Unit, Spell, List<Unit>>? onTick = null)
+        bool hasAntiSpam = false, Func<Unit, bool>? canCast = null, Action<Unit, Spell, List<Unit>>? onCast = null, Action<Unit, Spell, List<Unit>>? onTick = null)
     {
         ID = id;
         Name = name;
@@ -35,6 +36,7 @@ public class Spell
         ChannelTime = new Stat(channelTime);
         TickRate = new Stat(tickRate);
         HasGCD = hasGCD;
+        HasAntiSpam = hasAntiSpam;
         CanCastWhileCasting = canCastWhileCasting;
         OnCast = onCast;
         OnTick = onTick;
@@ -75,7 +77,7 @@ public class Spell
     public double GetGCD(Unit caster)
     {
         if (!HasGCD)
-            if (CanCastWhileCasting && GetCastTime(caster) == 0) return 0.6; //Forced 0.6~ oGCD on all spells to stop people from spamming spells.
+            if (HasAntiSpam) return 0.6; //Forced 0.6~ oGCD on all spells to stop people from spamming spells.
             else return 0;
         
         //TODO: Load in Config for Global GCD.

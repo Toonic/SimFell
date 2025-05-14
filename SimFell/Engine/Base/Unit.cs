@@ -31,6 +31,17 @@ public class Unit : SimLoopListener
 
     //Spirit Value
     public double Spirit = 100; //TODO: Proper Spirit Regen?
+    
+    static Modifier spiritOfHeroismMod = new Modifier(Modifier.StatModType.AdditivePercent, 30);
+
+    public Aura SpiritOfHeroism = new Aura(
+        id: "spirit-of-heroism",
+        name: "Spirit of Heroism",
+        duration: 20,
+        tickInterval: 0,
+        onApply: (unit, target) => { unit.DamageBuffs.AddModifier(spiritOfHeroismMod); },
+        onRemove: (unit, target) => { unit.DamageBuffs.RemoveModifier(spiritOfHeroismMod); }
+    );
 
 
     // Other Stat Buffs
@@ -254,8 +265,8 @@ public class Unit : SimLoopListener
             {
                 if (SimLoop.Instance.GetElapsed() >= _tickTime)
                 {
-                    _currentSpell.Tick(this, Targets);
                     _tickTime = Math.Round(_tickTime + _currentSpell.GetTickRate(this), 2);
+                    _currentSpell.Tick(this, Targets);
                 }
                 if (SimLoop.Instance.GetElapsed() >= _channelTime)
                 {
@@ -316,7 +327,7 @@ public class Unit : SimLoopListener
             Targets = targets;
             _castTime = Math.Round(SimLoop.Instance.GetElapsed() + spell.GetCastTime(this), 2);
             IsCasting = true;
-            if (spell.HasGCD) SetGCD(spell.GetGCD(this));
+            SetGCD(spell.GetGCD(this));
             
             //Handle Channel Spells.
             if (spell.Channel)
