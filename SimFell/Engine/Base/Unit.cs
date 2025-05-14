@@ -308,30 +308,38 @@ public class Unit : SimLoopListener
             SimulationLogLevel.CastEvents,
             $"Casting [bold blue]{spell.Name}[/]"
         );
-
-        _currentSpell = spell;
-        Targets = targets;
-        _castTime = Math.Round(SimLoop.Instance.GetElapsed() + spell.GetCastTime(this),2);
-
-        IsCasting = true;
-        if (spell.HasGCD) SetGCD(spell.GetGCD(this));
-
-        //Handle Channel Spells.
-        if (spell.Channel)
+        
+        
+        if (!spell.CanCastWhileCasting)
         {
-            //Channeled spells are technically instant cast.
-            spell.Cast(this, targets);
-            //Channeled spells always tick once at the very start.
-            spell.Tick(this, targets);
-            _channelTime = Math.Round(SimLoop.Instance.GetElapsed() + spell.GetChannelTime(this),2);
-            _tickTime = Math.Round(SimLoop.Instance.GetElapsed() + spell.GetTickRate(this),2);
+            _currentSpell = spell;
+            Targets = targets;
+            _castTime = Math.Round(SimLoop.Instance.GetElapsed() + spell.GetCastTime(this), 2);
+            IsCasting = true;
+            if (spell.HasGCD) SetGCD(spell.GetGCD(this));
+            
+            //Handle Channel Spells.
+            if (spell.Channel)
+            {
+                //Channeled spells are technically instant cast.
+                spell.Cast(this, targets);
+                //Channeled spells always tick once at the very start.
+                spell.Tick(this, targets);
+                _channelTime = Math.Round(SimLoop.Instance.GetElapsed() + spell.GetChannelTime(this),2);
+                _tickTime = Math.Round(SimLoop.Instance.GetElapsed() + spell.GetTickRate(this),2);
+            }
+
+            if (spell.GetCastTime(this) == 0 && spell.GetChannelTime(this) == 0)
+            {
+                spell.Cast(this, targets);
+                OnCast?.Invoke(this, _currentSpell, Targets);
+                StopCasting();
+            }
         }
-
-        if (spell.GetCastTime(this) == 0 && spell.GetChannelTime(this) == 0)
+        else if (spell.CanCastWhileCasting)
         {
             spell.Cast(this, targets);
-            OnCast?.Invoke(this, _currentSpell, Targets);
-            StopCasting();
+            OnCast?.Invoke(this, spell, Targets);
         }
     }
 
