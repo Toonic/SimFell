@@ -123,9 +123,8 @@ public class Condition
                 }
                 break;
             default:
-                var exists = caster.Rotation.Any(s => s.ID == Left) || caster.SpellBook.Any(s => s.ID == Left);
-                leftValue = exists ? 1 : 0;
-                break;
+                ConsoleLogger.Log(SimulationLogLevel.Error, $"Unknown condition: {Left} {Operator} {Right}");
+                return false;
         }
 
         var finalResult = Operator switch
