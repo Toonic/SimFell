@@ -45,3 +45,4 @@ action+=/culling_strike,if=character.fury >= 0.2
 action+=/face_breaker
 action+=/culling_strike
 action+=/wild_swing
+action+=/face_breaker # Optimal Face Breaker. Casts it the same time as missing.
