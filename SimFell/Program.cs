@@ -28,5 +28,5 @@ SimRandom.EnableDeterminism();
 SimLoop.ShowConfig(config);
 // SimLoop.ShowPrettyConfig(config);
 
-// SimLoop.Instance.Start(config.Player, enemies, SimLoop.SimulationMode.Time, config.Duration);
-SimLoop.Instance.Start(config.Player, enemies, SimLoop.SimulationMode.Health, config.Duration);
+SimLoop.Instance.Start(config.Player, enemies, SimLoop.SimulationMode.Time, config.Duration);
+// SimLoop.Instance.Start(config.Player, enemies, SimLoop.SimulationMode.Health, config.Duration);

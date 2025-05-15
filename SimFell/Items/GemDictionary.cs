@@ -10,7 +10,7 @@ public class GemDictionary
     {
         new Gem(GemType.RUBY, (unit, gem) => {
             if (gem.Power >= POWER_BASE)
-                if (unit.Health.GetValue() / unit.Health.GetInitialValue() >= 0.8)
+                if (unit.Health / unit.MaximumHealth >= 0.8)
                     unit.MainStat.AddModifier(new Modifier(Modifier.StatModType.MultiplicativePercent, 4));
             // More ifs
         }),

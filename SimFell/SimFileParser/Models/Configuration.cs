@@ -2,7 +2,7 @@ using Newtonsoft.Json;
 using System.Reflection;
 using System.Globalization;
 using SimFell.Logging;
-using SimFell.SimFileParser.Enums;
+using Spectre.Console;
 
 namespace SimFell.SimFileParser.Models;
 
@@ -20,6 +20,11 @@ public class Condition
         return $"{Left} {Operator} {Right}";
     }
 
+    /// <summary>
+    /// Check if the condition is met.
+    /// </summary>
+    /// <param name="caster">The unit to check the condition on.</param>
+    /// <returns>True if the condition is met, false otherwise.</returns>
     public bool Check(Unit caster)
     {
         if (string.IsNullOrEmpty(Left) || string.IsNullOrEmpty(Operator) || Right == null)
@@ -67,31 +72,8 @@ public class Condition
                 }
                 break;
             case "character":
-                if (parts.Length != 2)
+                if (parts.Length < 2 || !TryGetNestedMemberDouble(caster, parts, out leftValue))
                     return false;
-                var charProp = parts[1].Replace("_", "");
-                var charType = caster.GetType();
-                var propertyInfo = charType.GetProperty(charProp, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-                if (propertyInfo != null)
-                {
-                    var val = propertyInfo.GetValue(caster) ?? throw new Exception($"Property {charProp} not found on {caster.Name}");
-                    if (!TryConvertToDouble(val, out leftValue))
-                        return false;
-                }
-                else
-                {
-                    var fieldInfo = charType.GetField(charProp, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-                    if (fieldInfo != null)
-                    {
-                        var val = fieldInfo.GetValue(caster) ?? throw new Exception($"Field {charProp} not found on {caster.Name}");
-                        if (!TryConvertToDouble(val, out leftValue))
-                            return false;
-                    }
-                    else
-                    {
-                        return false;
-                    }
-                }
                 break;
             case "buff":
                 if (parts.Length != 3)
@@ -139,9 +121,17 @@ public class Condition
             _ => false,
         };
 
+        // ConsoleLogger.Log(SimulationLogLevel.Debug, $"Condition: {Left} {Operator} {Right} => {finalResult}");
+
         return finalResult;
     }
 
+    /// <summary>
+    /// Try to convert a value to a double.
+    /// </summary>
+    /// <param name="val">The value to convert.</param>
+    /// <param name="result">The converted value.</param>
+    /// <returns>True if the value was converted, false otherwise.</returns>
     private bool TryConvertToDouble(object val, out double result)
     {
         if (val is double d) { result = d; return true; }
@@ -150,6 +140,45 @@ public class Condition
         if (val is long l) { result = l; return true; }
         if (val is string s && double.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out var d2)) { result = d2; return true; }
         result = 0; return false;
+    }
+
+    /// <summary>
+    /// Try to get a nested member of an object as a double.
+    /// </summary>
+    /// <param name="target">The object to get the nested member from.</param>
+    /// <param name="parts">The parts of the path to the nested member.</param>
+    /// <param name="result">The converted value.</param>
+    /// <returns>True if the value was converted, false otherwise.</returns>
+    private bool TryGetNestedMemberDouble(object target, string[] parts, out double result)
+    {
+        object current = target;
+        for (int i = 1; i < parts.Length; i++)
+        {
+            var name = parts[i].Replace("_", "");
+            // ConsoleLogger.Log(SimulationLogLevel.Debug, Markup.Escape($"Name: {name}"));
+            var type = current.GetType();
+            // ConsoleLogger.Log(SimulationLogLevel.Debug, Markup.Escape($"Current type: {type}"));
+            var propInfo = type.GetProperty(name, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            if (propInfo != null)
+            {
+                current = propInfo.GetValue(current) ?? throw new Exception($"Property {name} not found on {type.Name}");
+            }
+            else
+            {
+                var fieldInfo = type.GetField(name, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                if (fieldInfo != null)
+                {
+                    current = fieldInfo.GetValue(current) ?? throw new Exception($"Field {name} not found on {type.Name}");
+                }
+                else
+                {
+                    result = 0;
+                    return false;
+                }
+            }
+            // ConsoleLogger.Log(SimulationLogLevel.Debug, Markup.Escape($"Current: {current}"));
+        }
+        return TryConvertToDouble(current, out result);
     }
 }
 
@@ -225,16 +254,33 @@ public class SimFellConfiguration
         Gear: {Gear}
     ";
 
+    /// <summary>
+    /// Parse a SimFell configuration from a file.
+    /// </summary>
+    /// <param name="path">The path to the file to parse.</param>
+    /// <returns>A new SimFellConfiguration object.</returns>
     public static SimFellConfiguration FromFile(string path)
     {
         var config = SimfellParser.ParseFile(path);
+        AssignPlayer(config);
+        ApplyTalents(config);
+        ApplyGems(config);
+        WireActions(config);
+        return config;
+    }
+
+    /// <summary>
+    /// Assign a player to the configuration.
+    /// </summary>
+    /// <param name="config">The configuration to assign the player to.</param>
+    private static void AssignPlayer(SimFellConfiguration config)
+    {
         config.Player = config.Hero switch
         {
             "Rime" => new Rime(100),
             "Tariq" => new Tariq(100),
             _ => throw new Exception($"Hero {config.Hero} not found")
         };
-
         config.Player.SetPrimaryStats(
             config.Intellect,
             (int)config.Crit,
@@ -242,70 +288,69 @@ public class SimFellConfiguration
             (int)config.Haste,
             (int)config.Spirit
         );
+    }
 
-        if (config.Talents != null)
-        {
-            var talentGroups = config.Talents.Split('-');
-            for (int i = 0; i < talentGroups.Length; i++)
-                for (int j = 0; j < talentGroups[i].Length; j++)
-                    if (talentGroups[i] != "0")
-                        config.Player.ActivateTalent(
-                            i + 1,
-                            int.Parse(talentGroups[i][j].ToString())
-                        );
-        }
+    /// <summary>
+    /// Apply talents to the player.
+    /// </summary>
+    /// <param name="config">The configuration to apply the talents to.</param>
+    private static void ApplyTalents(SimFellConfiguration config)
+    {
+        if (config.Talents == null) return;
+        var talentGroups = config.Talents.Split('-');
+        for (int i = 0; i < talentGroups.Length; i++)
+            for (int j = 0; j < talentGroups[i].Length; j++)
+                if (talentGroups[i] != "0")
+                    config.Player.ActivateTalent(
+                        i + 1, int.Parse(talentGroups[i][j].ToString())
+                    );
+    }
 
+    /// <summary>
+    /// Apply gems to the player.
+    /// </summary>
+    /// <param name="config">The configuration to apply the gems to.</param>
+    private static void ApplyGems(SimFellConfiguration config)
+    {
         foreach (var gear in config.Gear.ToList())
         {
             if (gear.Gem != null)
             {
                 ConsoleLogger.Log(SimulationLogLevel.Setup, $"Adding '{gear.Gem}' from '{gear.Name}'");
-                config.Player.GemDictionary.GemList.First(g => g.Type == gear.Gem.Gem).AddPower(gear.Gem.Power);
+                config.Player.GemDictionary.GemList.First(g => g.Type == gear.Gem.Gem)
+                    .AddPower(gear.Gem.Power);
             }
         }
-
         foreach (var gem in config.Player.GemDictionary.GemList)
         {
             ConsoleLogger.Log(SimulationLogLevel.Setup, $"{gem.Type} Power: {gem.Power}");
             gem.Apply(config.Player);
         }
+    }
 
+    /// <summary>
+    /// Wire actions to the player.
+    /// </summary>
+    /// <param name="config">The configuration to wire the actions to.</param>
+    private static void WireActions(SimFellConfiguration config)
+    {
         foreach (var action in config.ConfigActions)
         {
-            // Find the spell in the player's spellbook
-            var spell = config.Player.SpellBook.FirstOrDefault(s => s.ID.Replace("-", "_") == action.Name);
-            if (spell != null)
+            var spell = config.Player.SpellBook
+                .FirstOrDefault(s => s.ID.Replace("-", "_") == action.Name);
+            if (spell == null)
             {
-                if (action.Conditions.Count > 0)
-                {
-                    var originalCanCast = spell.CanCast;
-                    spell.CanCast = caster =>
-                    {
-                        // Long way to DEBUG
-                        // bool check = true;
-                        // foreach (var condition in action.Conditions)
-                        // {
-                        //     var condCheck = condition.Check(caster);
-                        //     ConsoleLogger.Log(SimulationLogLevel.Debug, $"'{spell.Name}' Condition: {condition} => {condCheck}");
-
-                        //     // TODO: Switch the order of the checks once debugged.
-                        //     check = condCheck && check;
-                        // }
-                        // ConsoleLogger.Log(SimulationLogLevel.Debug, $"'{spell.Name}' Check: {check} AND {originalCanCast?.Invoke(caster) ?? true}");
-                        // return (originalCanCast?.Invoke(caster) ?? true) && check;
-
-                        return (originalCanCast?.Invoke(caster) ?? true) && action.Conditions.All(c => c.Check(caster));
-                    };
-                }
-
-                config.Player.Rotation.Add(spell);
+                ConsoleLogger.Log(SimulationLogLevel.Error,
+                    $"[bold red]Spell {action.Name} not found in spellbook[/]");
+                continue;
             }
-            else
+            if (action.Conditions.Count > 0)
             {
-                ConsoleLogger.Log(SimulationLogLevel.Error, $"[bold red]Spell {action.Name} not found in spellbook[/]");
+                var original = spell.CanCast;
+                spell.CanCast = caster => (original?.Invoke(caster) ?? true)
+                    && action.Conditions.All(c => c.Check(caster));
             }
+            config.Player.Rotation.Add(spell);
         }
-
-        return config;
     }
 }

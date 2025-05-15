@@ -10,8 +10,10 @@ namespace SimFell.SimFileParser
     public static class SimfellParser
     {
         /// <summary>
-        /// Parses multiple conditions joined by ' and '.
+        /// Parse conditions from a string.
         /// </summary>
+        /// <param name="condStr">The string to parse the conditions from.</param>
+        /// <returns>A list of conditions.</returns>
         private static List<Condition> ParseConditions(string condStr)
         {
             var conds = new List<Condition>();
@@ -51,7 +53,12 @@ namespace SimFell.SimFileParser
             return conds;
         }
 
-        private static Equipment ParseEquipment_(string equipmentStr)
+        /// <summary>
+        /// Parse an equipment string into an Equipment object.
+        /// </summary>
+        /// <param name="equipmentStr">The string to parse the equipment from.</param>
+        /// <returns>An Equipment object.</returns>
+        private static Equipment ParseEquipment(string equipmentStr)
         {
             var parts = equipmentStr.Split(',');
             var eq = new Equipment();
@@ -120,7 +127,12 @@ namespace SimFell.SimFileParser
             return eq;
         }
 
-        private static SimAction ParseAction_(string line)
+        /// <summary>
+        /// Parse an action specification from a line.
+        /// </summary>
+        /// <param name="line">The line to parse the action from.</param>
+        /// <returns>An action specification.</returns>
+        private static SimAction ParseAction(string line)
         {
             var eqIndex = line.IndexOf('=');
             var actionPart = line.Substring(eqIndex + 1).Trim();
@@ -141,6 +153,8 @@ namespace SimFell.SimFileParser
         /// <summary>
         /// Reads a .simfell file from disk and parses it.
         /// </summary>
+        /// <param name="path">The path to the file to parse.</param>
+        /// <returns>A new SimFellConfiguration object.</returns>
         public static SimFellConfiguration ParseFile(string path)
         {
             var lines = File.ReadAllLines(path);
@@ -148,91 +162,75 @@ namespace SimFell.SimFileParser
         }
 
         /// <summary>
-        /// Parses lines of a .simfell file into a configuration.
+        /// Parse lines of a .simfell file into a configuration.
         /// </summary>
+        /// <param name="lines">The lines to parse.</param>
+        /// <returns>A new SimFellConfiguration object.</returns>
         public static SimFellConfiguration ParseLines(IEnumerable<string> lines)
         {
             var config = new SimFellConfiguration();
             foreach (var rawLine in lines)
             {
-                var line = rawLine.Trim();
-                if (string.IsNullOrEmpty(line) || line.StartsWith("#"))
+                var line = CleanLine(rawLine);
+                if (string.IsNullOrEmpty(line))
                     continue;
 
-                // Remove comments
-                line = line.Split('#')[0].Trim();
-
-                // Handle actions (single or +=) with optional conditions
                 if (line.StartsWith("action=") || line.StartsWith("action+="))
                 {
-                    var action = ParseAction_(line);
-                    config.ConfigActions.Add(action);
-                    continue;
+                    config.ConfigActions.Add(ParseAction(line));
                 }
-
-                // Split into key and value
-                var parts = line.Split(new[] { '=' }, 2);
-                if (parts.Length != 2)
-                    continue;
-                var key = parts[0].Trim().ToLowerInvariant();
-                var val = parts[1].Trim();
-                if (val.StartsWith('"') && val.EndsWith('"'))
-                    val = val.Substring(1, val.Length - 2);
-
-                // Map values to configuration properties
-                switch (key)
+                else
                 {
-                    case "name":
-                        config.Name = val;
-                        break;
-                    case "hero":
-                        config.Hero = val;
-                        break;
-                    case "intellect":
-                        config.Intellect = int.Parse(val);
-                        break;
-                    case "crit":
-                        config.Crit = double.Parse(val);
-                        break;
-                    case "expertise":
-                        config.Expertise = double.Parse(val);
-                        break;
-                    case "haste":
-                        config.Haste = double.Parse(val);
-                        break;
-                    case "spirit":
-                        config.Spirit = double.Parse(val);
-                        break;
-                    case "talents":
-                        config.Talents = val;
-                        break;
-                    case "trinket1":
-                        config.Trinket1 = val;
-                        break;
-                    case "trinket2":
-                        config.Trinket2 = val;
-                        break;
-                    case "duration":
-                        config.Duration = int.Parse(val);
-                        break;
-                    case "enemies":
-                        config.Enemies = int.Parse(val);
-                        break;
-                    case "run_count":
-                        config.RunCount = int.Parse(val);
-                        break;
-                    case "gear_helmet":
-                        config.Gear.Helmet = ParseEquipment_(val);
-                        break;
-                    case "gear_shoulder":
-                        config.Gear.Shoulder = ParseEquipment_(val);
-                        break;
-                    // TODO: parse gear slots into Equipment objects
-                    default:
-                        break;
+                    var idx = line.IndexOf('=');
+                    if (idx <= 0) continue;
+                    var key = line.Substring(0, idx).Trim().ToLowerInvariant();
+                    var val = line.Substring(idx + 1).Trim().Trim('"');
+                    ProcessSetting(config, key, val);
                 }
             }
             return config;
+        }
+
+        /// <summary>
+        /// Removes comments and trims whitespace from a raw configuration line.
+        /// </summary>
+        /// <param name="rawLine">The raw line to clean.</param>
+        /// <returns>A cleaned line.</returns>
+        private static string CleanLine(string rawLine)
+        {
+            var trimmed = rawLine.Trim();
+            if (trimmed.StartsWith("#")) return string.Empty;
+            return trimmed.Split('#')[0].Trim();
+        }
+
+        /// <summary>
+        /// Applies a key/value pair to the configuration.
+        /// </summary>
+        /// <param name="config">The configuration to apply the key/value pair to.</param>
+        /// <param name="key">The key to apply.</param>
+        /// <param name="val">The value to apply.</param>
+        private static void ProcessSetting(SimFellConfiguration config, string key, string val)
+        {
+            switch (key)
+            {
+                case "name": config.Name = val; break;
+                case "hero": config.Hero = val; break;
+                case "intellect": config.Intellect = int.Parse(val); break;
+                case "crit": config.Crit = double.Parse(val); break;
+                case "expertise": config.Expertise = double.Parse(val); break;
+                case "haste": config.Haste = double.Parse(val); break;
+                case "spirit": config.Spirit = double.Parse(val); break;
+                case "talents": config.Talents = val; break;
+                case "trinket1": config.Trinket1 = val; break;
+                case "trinket2": config.Trinket2 = val; break;
+                case "duration": config.Duration = int.Parse(val); break;
+                case "enemies": config.Enemies = int.Parse(val); break;
+                case "run_count": config.RunCount = int.Parse(val); break;
+                case "gear_helmet": config.Gear.Helmet = ParseEquipment(val); break;
+                case "gear_shoulder": config.Gear.Shoulder = ParseEquipment(val); break;
+                // TODO: parse other gear slots into Equipment objects
+                default: break;
+            }
         }
     }
 }
