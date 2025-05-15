@@ -111,7 +111,7 @@ public class Tariq : Unit
             canCastWhileCasting: true,
             onCast: (unit, spell, targets) => { unit.ApplyBuff(unit, unit, _thunderCallAura); }
         );
-        
+
         //TODO: Use stacks on this instead and subtract stacks.
         int focusedWrathUsage = 0;
         Modifier focusedWrathDamageMod = new Modifier(Modifier.StatModType.Multiplicative, 0.5f);
@@ -120,7 +120,7 @@ public class Tariq : Unit
             id: "focused-wrath",
             name: "Focused Wrath",
             duration: 9999,
-            tickInterval:0,
+            tickInterval: 0,
             onApply: (caster, owner) =>
             {
                 focusedWrathUsage = 0;
@@ -248,7 +248,7 @@ public class Tariq : Unit
                         DealDamage(target, 44.8, _thunderCall);
                     }
                 }
-                
+
                 if (unit.HasBuff(_focusedWrathAura))
                 {
                     focusedWrathUsage++;
@@ -372,7 +372,7 @@ public class Tariq : Unit
                 ));
             }
         );
-        
+
         _leapSmash = new Spell(
             id: "leap-smash",
             name: "Leap Smash",
@@ -385,11 +385,11 @@ public class Tariq : Unit
                 {
                     DealDamage(target, 347, spell);
                 }
-                
+
                 GainFury(0.25);
             }
         );
-        
+
         _cullingStrike = new Spell(
             id: "culling-strike",
             name: "Culling Strike",
@@ -407,18 +407,18 @@ public class Tariq : Unit
                     .Where(u => u.Health < 0.3 * u.MaximumHealth).OrderBy(u => u.Health).FirstOrDefault();
                 int maxStacks = 20;
                 int currentStacks = 0;
-                
+
                 while (currentStacks < maxStacks && Fury >= 0.01)
                 {
                     SpendFury(0.01);
                     currentStacks++;
                 }
-                
-                DealDamage(target, (currentStacks * 20) + 200 , _cullingStrike);
-                
+
+                DealDamage(target, (currentStacks * 20) + 200, _cullingStrike);
+
             }
         );
-        
+
         _focusedWrath = new Spell(
             id: "focused-wrath",
             name: "Focused Wrath",

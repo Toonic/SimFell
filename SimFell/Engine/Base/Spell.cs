@@ -81,7 +81,7 @@ public class Spell
         if (!HasGCD)
             if (HasAntiSpam) return 0.6; //Forced 0.6~ oGCD on all spells to stop people from spamming spells.
             else return 0;
-        
+
         //TODO: Load in Config for Global GCD.
         return caster.GetHastedValue(1.5);
     }

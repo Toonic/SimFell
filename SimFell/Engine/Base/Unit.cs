@@ -294,7 +294,7 @@ public class Unit : SimLoopListener
 
     public bool IsDead()
     {
-        return Health.BaseValue <= 0;
+        return Health <= 0;
     }
 
     public void Died()

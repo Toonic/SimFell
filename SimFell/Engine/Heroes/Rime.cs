@@ -384,7 +384,7 @@ public class Rime : Unit
             castTime: 0,
             onCast: (unit, spell, targets) =>
             {
-                var target = targets.Where(t => t.Health.GetValue() > 0).FirstOrDefault()
+                var target = targets.Where(t => t.Health > 0).FirstOrDefault()
                              ?? throw new Exception("No valid targets");
                 DealDamage(target, 204, spell);
                 UpdateWinterOrbs(1);
@@ -420,7 +420,7 @@ public class Rime : Unit
             onCast: (unit, spell, targets) =>
             {
                 UpdateWinterOrbs(-2);
-                var target = targets.Where(t => t.Health.GetValue() > 0).FirstOrDefault()
+                var target = targets.Where(t => t.Health > 0).FirstOrDefault()
                              ?? throw new Exception("No valid targets");
 
                 // Builds the OnDamage Event.
@@ -576,7 +576,7 @@ public class Rime : Unit
 
                 //15% Damage Buff from Wrath of Winter.
                 Modifier damageMod = new Modifier(Modifier.StatModType.MultiplicativePercent, 15);
-                
+
                 //Wrath of Winter buff.
                 caster.ApplyBuff(caster, caster, new Aura(
                     id: "wrath-of-winter",
@@ -587,7 +587,7 @@ public class Rime : Unit
                     onApply: (unit, target) => { unit.DamageBuffs.AddModifier(damageMod); },
                     onRemove: (unit, target) => { unit.DamageBuffs.RemoveModifier(damageMod); }
                 ));
-                
+
                 //Spirit of Heroism Buff.
                 caster.ApplyBuff(caster, caster, SpiritOfHeroism);
             }
@@ -628,7 +628,7 @@ public class Rime : Unit
     {
         WinterOrbs += winterOrbsDelta;
         if (winterOrbsDelta < 0 && SimRandom.Roll(SpiritStat.GetValue())) WinterOrbs += winterOrbsDelta;
-        if(WinterOrbs > MaxWinterOrbs) ConsoleLogger.Log(SimulationLogLevel.Debug, "[bold red]Over Capped Winter Orbs[/b]");
+        if (WinterOrbs > MaxWinterOrbs) ConsoleLogger.Log(SimulationLogLevel.Debug, "[bold red]Over Capped Winter Orbs[/b]");
         WinterOrbs = Math.Clamp(WinterOrbs, 0, MaxWinterOrbs);
 
         OnWinterOrbUpdate?.Invoke(winterOrbsDelta);
