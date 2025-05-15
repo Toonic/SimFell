@@ -6,7 +6,8 @@ public class Unit : SimLoopListener
 {
     // Base Variables
     public string Name { get; set; }
-    public AdjustableStat Health { get; set; }
+    public int Health { get; set; }
+    public int MaximumHealth { get; set; }
     public List<Aura> Buffs { get; set; } = [];
     public List<Aura> Debuffs { get; set; } = [];
     public List<Spell> SpellBook { get; set; } = [];
@@ -33,6 +34,17 @@ public class Unit : SimLoopListener
     //Spirit Value
     public double Spirit = 100; //TODO: Proper Spirit Regen?
 
+    static Modifier spiritOfHeroismMod = new Modifier(Modifier.StatModType.AdditivePercent, 30);
+
+    public Aura SpiritOfHeroism = new Aura(
+        id: "spirit-of-heroism",
+        name: "Spirit of Heroism",
+        duration: 20,
+        tickInterval: 0,
+        onApply: (unit, target) => { unit.DamageBuffs.AddModifier(spiritOfHeroismMod); },
+        onRemove: (unit, target) => { unit.DamageBuffs.RemoveModifier(spiritOfHeroismMod); }
+    );
+
 
     // Other Stat Buffs
     public Stat DamageBuffs = new Stat(0);
@@ -50,7 +62,8 @@ public class Unit : SimLoopListener
     public Unit(string name, int health)
     {
         Name = name;
-        Health = new AdjustableStat(health);
+        Health = health;
+        MaximumHealth = health;
         //Add base 5% Crit.
         CritcalStrikeStat.AddModifier(new Modifier(Modifier.StatModType.BasePercentage, 5));
     }
@@ -61,7 +74,7 @@ public class Unit : SimLoopListener
         SetPrimaryStats(mainStat, critcalStrikeStat, expertiseStat, hasteStat, spiritStat);
     }
 
-    public void SetPrimaryStats(int mainStat, int criticalStrikeStat, int expertiseStat, int hasteStat, int spiritStat)
+    public virtual void SetPrimaryStats(int mainStat, int criticalStrikeStat, int expertiseStat, int hasteStat, int spiritStat)
     {
         MainStat.BaseValue = mainStat;
         CritcalStrikeStat.BaseValue = criticalStrikeStat;
@@ -175,18 +188,18 @@ public class Unit : SimLoopListener
         if (isCritical) OnCrit?.Invoke(this, damage, spellSource, auraSource); //On Crit events called.
         damage *= isCritical ? 2 : 1; //Doubles the damage if there is a Critical Hit. TODO: Crit power.
 
-        OnDamageDealt?.Invoke(this, damage, spellSource, auraSource); //Called when damage is dealt.
-        target.TakeDamage(damage, isCritical, spellSource, auraSource);
+        var damageDealtAfterMods = target.TakeDamage(damage, isCritical, spellSource, auraSource);
+        OnDamageDealt?.Invoke(this, damageDealtAfterMods, spellSource, auraSource); //Called when damage is dealt.
     }
 
     /// <summary>
     /// Called when a target takes damage. Takes into consideration any debuffs on the target, along with any extra
     /// modifiers.
     /// </summary>
+    /// <returns>Damage taken after modifiers.</returns>
     /// <param name="amount">Incoming Damage amount.</param>
     /// <param name="isCritical">If the damage was a critical hit.</param>
-    /// <param name="damageSource">Source of the Damage. Usually a spell.</param>
-    public void TakeDamage(double amount, bool isCritical, Spell? spellSource = null, Aura? auraSource = null)
+    public double TakeDamage(double amount, bool isCritical, Spell? spellSource = null, Aura? auraSource = null)
     {
         var totalDamage = (int)DamageTakenDebuffs.GetValue(amount);
         // Log damage event with coloring for critical hits
@@ -200,7 +213,8 @@ public class Unit : SimLoopListener
         ConsoleLogger.Log(SimulationLogLevel.DamageEvents, message, isCritical ? "💥" : null);
 
         OnDamageReceived?.Invoke(this, totalDamage, spellSource, auraSource);
-        Health.BaseValue -= totalDamage;
+        Health -= totalDamage;
+        return totalDamage;
     }
 
     protected override void Update()
@@ -256,8 +270,8 @@ public class Unit : SimLoopListener
             {
                 if (SimLoop.Instance.GetElapsed() >= _tickTime)
                 {
-                    _currentSpell.Tick(this, Targets);
                     _tickTime = Math.Round(_tickTime + _currentSpell.GetTickRate(this), 2);
+                    _currentSpell.Tick(this, Targets);
                 }
                 if (SimLoop.Instance.GetElapsed() >= _channelTime)
                 {
@@ -306,31 +320,42 @@ public class Unit : SimLoopListener
 
     public void StartCasting(Spell spell, List<Unit> targets)
     {
-        ConsoleLogger.Log(SimulationLogLevel.Debug, $"Preparation for [bold blue]{spell.Name}[/]");
+        ConsoleLogger.Log(
+            SimulationLogLevel.CastEvents,
+            $"Casting [bold blue]{spell.Name}[/]"
+        );
 
-        _currentSpell = spell;
-        Targets = targets;
-        _castTime = SimLoop.Instance.GetElapsed() + spell.GetCastTime(this);
 
-        IsCasting = true;
-        if (spell.HasGCD) SetGCD(spell.GetGCD(this));
-
-        //Handle Channel Spells.
-        if (spell.Channel)
+        if (!spell.CanCastWhileCasting)
         {
-            //Channeled spells are technically instant cast.
-            spell.Cast(this, targets);
-            //Channeled spells always tick once at the very start.
-            spell.Tick(this, targets);
-            _channelTime = SimLoop.Instance.GetElapsed() + spell.GetChannelTime(this);
-            _tickTime = SimLoop.Instance.GetElapsed() + spell.GetTickRate(this);
+            _currentSpell = spell;
+            Targets = targets;
+            _castTime = Math.Round(SimLoop.Instance.GetElapsed() + spell.GetCastTime(this), 2);
+            IsCasting = true;
+            SetGCD(spell.GetGCD(this));
+
+            //Handle Channel Spells.
+            if (spell.Channel)
+            {
+                //Channeled spells are technically instant cast.
+                spell.Cast(this, targets);
+                //Channeled spells always tick once at the very start.
+                spell.Tick(this, targets);
+                _channelTime = Math.Round(SimLoop.Instance.GetElapsed() + spell.GetChannelTime(this), 2);
+                _tickTime = Math.Round(SimLoop.Instance.GetElapsed() + spell.GetTickRate(this), 2);
+            }
+
+            if (spell.GetCastTime(this) == 0 && spell.GetChannelTime(this) == 0)
+            {
+                spell.Cast(this, targets);
+                OnCast?.Invoke(this, _currentSpell, Targets);
+                StopCasting();
+            }
         }
-
-        if (spell.GetCastTime(this) == 0 && spell.GetChannelTime(this) == 0)
+        else if (spell.CanCastWhileCasting)
         {
             spell.Cast(this, targets);
-            OnCast?.Invoke(this, _currentSpell, Targets);
-            StopCasting();
+            OnCast?.Invoke(this, spell, Targets);
         }
     }
 

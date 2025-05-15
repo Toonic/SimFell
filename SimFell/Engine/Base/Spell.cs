@@ -15,6 +15,7 @@ public class Spell
     public Stat TickRate { get; set; }
     public bool HasGCD { get; set; }
     public bool CanCastWhileCasting { get; set; }
+    public bool HasAntiSpam { get; set; }
     public Action<Unit, Spell, List<Unit>>? OnCast { get; set; }
     public Action<Unit, Spell, List<Unit>>? OnTick { get; set; }
     public Func<Unit, bool>? CanCast { get; set; }
@@ -25,7 +26,7 @@ public class Spell
 
     public Spell(
         string id, string name, double cooldown, double castTime, bool channel = false, double channelTime = 0, double tickRate = 0, bool hasGCD = true, bool canCastWhileCasting = false,
-        Func<Unit, bool>? canCast = null, Action<Unit, Spell, List<Unit>>? onCast = null, Action<Unit, Spell, List<Unit>>? onTick = null)
+        bool hasAntiSpam = false, Func<Unit, bool>? canCast = null, Action<Unit, Spell, List<Unit>>? onCast = null, Action<Unit, Spell, List<Unit>>? onTick = null)
     {
         ID = id;
         Name = name;
@@ -35,6 +36,7 @@ public class Spell
         ChannelTime = new Stat(channelTime);
         TickRate = new Stat(tickRate);
         HasGCD = hasGCD;
+        HasAntiSpam = hasAntiSpam;
         CanCastWhileCasting = canCastWhileCasting;
         OnCast = onCast;
         OnTick = onTick;
@@ -76,18 +78,16 @@ public class Spell
 
     public double GetGCD(Unit caster)
     {
-        if (!HasGCD) return 0;
+        if (!HasGCD)
+            if (HasAntiSpam) return 0.6; //Forced 0.6~ oGCD on all spells to stop people from spamming spells.
+            else return 0;
+        
         //TODO: Load in Config for Global GCD.
         return caster.GetHastedValue(1.5);
     }
 
     public void Cast(Unit caster, List<Unit> targets)
     {
-        ConsoleLogger.Log(
-            SimulationLogLevel.CastEvents,
-            $"Applying [bold blue]{Name}[/]"
-        );
-
         OnCast?.Invoke(caster, this, targets);
         //Sets the cooldown.
         OffCooldown = Math.Round(Cooldown.GetValue() + SimLoop.Instance.GetElapsed(), 2);  // Reset cooldown after casting

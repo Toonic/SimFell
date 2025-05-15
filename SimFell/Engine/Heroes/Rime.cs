@@ -576,9 +576,8 @@ public class Rime : Unit
 
                 //15% Damage Buff from Wrath of Winter.
                 Modifier damageMod = new Modifier(Modifier.StatModType.MultiplicativePercent, 15);
-                //+30% Haste from Spirit of Heroism.
-                Modifier hasteMod = new Modifier(Modifier.StatModType.AdditivePercent, 30);
-
+                
+                //Wrath of Winter buff.
                 caster.ApplyBuff(caster, caster, new Aura(
                     id: "wrath-of-winter",
                     name: "Wrath of Winter",
@@ -588,16 +587,9 @@ public class Rime : Unit
                     onApply: (unit, target) => { unit.DamageBuffs.AddModifier(damageMod); },
                     onRemove: (unit, target) => { unit.DamageBuffs.RemoveModifier(damageMod); }
                 ));
-
-                caster.ApplyBuff(caster, caster, new Aura(
-                    id: "spirit-of-heroism",
-                    name: "Spirit of Heroism",
-                    duration: 20,
-                    tickInterval: 0,
-                    onTick: (unit, target) => { UpdateWinterOrbs(1); },
-                    onApply: (unit, target) => { unit.DamageBuffs.AddModifier(hasteMod); },
-                    onRemove: (unit, target) => { unit.DamageBuffs.RemoveModifier(hasteMod); }
-                ));
+                
+                //Spirit of Heroism Buff.
+                caster.ApplyBuff(caster, caster, SpiritOfHeroism);
             }
         );
 
@@ -636,6 +628,7 @@ public class Rime : Unit
     {
         WinterOrbs += winterOrbsDelta;
         if (winterOrbsDelta < 0 && SimRandom.Roll(SpiritStat.GetValue())) WinterOrbs += winterOrbsDelta;
+        if(WinterOrbs > MaxWinterOrbs) ConsoleLogger.Log(SimulationLogLevel.Debug, "[bold red]Over Capped Winter Orbs[/b]");
         WinterOrbs = Math.Clamp(WinterOrbs, 0, MaxWinterOrbs);
 
         OnWinterOrbUpdate?.Invoke(winterOrbsDelta);

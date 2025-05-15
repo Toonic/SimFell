@@ -27,7 +27,7 @@ public static class ConsoleLogger
             }
             _enabledLevels = flags;
         }
-        else _enabledLevels = SimulationLogLevel.All;
+        else _enabledLevels = SimulationLogLevel.Default;
     }
 
     public static void Log(SimulationLogLevel level, string message, string? emoji = null)
