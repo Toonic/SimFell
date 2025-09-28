@@ -1,6 +1,6 @@
 # Sim Configuration
 name=Rime - Quickplay - Average
-duration=57
+duration=120
 enemies=1
 run_count=5000
 simulation_type=average
