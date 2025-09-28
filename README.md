@@ -1,5 +1,7 @@
 # SimFell
 
+**IMPORTANT**: We currently do not offer a standalone version. There will be one in the future that you can use.
+
 A DPS (Damage Per Second) simulator for the game Fellowship.
 
 SimFell is a work-in-progress .NET 9.0 console application that simulates combat rotations, area-of-effect abilities, and more. It provides a flexible foundation for building and comparing DPS strategies.
@@ -26,7 +28,7 @@ SimFell is a work-in-progress .NET 9.0 console application that simulates combat
 | APL and Configuration Files    | ✅ Implemented |
 | Talents, Stats, and Spells     | ✅ Implemented |
 | Rime                           | ✅ Implemented|
-| Tariq                          | ⚙️ Rough Draft|
+| Tariq - (Next Fest Example)    | ⚙️ Rough Draft|
 | Gems, Legendaries, and Items   | ⚙️ Rough Draft|
 | Rotation Opener, Multi-dotting | 🚧 Not Started |
 

@@ -1,0 +1,40 @@
+# Sim Configuration
+name=Rime - Quickplay - Debug
+duration=120
+enemies=1
+run_count=10000
+simulation_type=debug
+simulation_mode=time
+
+# Character Configuration
+hero=Rime
+
+stat_mode=percent
+
+primary=1000
+crit=20
+expertise=20
+haste=20
+spirit=20
+
+#talents=2-12-3 # Stands for Talents 1.2, 2.1, 2.2, 3.3
+talents=1-1-0
+
+# Gear
+# gear_helmet=Test Helm Name,int=14,stam=17,exp=23,crit=4,gem_bonus=33,gem=ruby_t1,ilvl=150,tier=6
+# gear_shoulder=Test Shoulder Name,int=12,stam=15,crit=13,haste=6,set=Wyrmling Vigor,ilvl=150,tier=6
+
+# Actions
+action=/wrath_of_winter
+action+=/ice_blitz
+action+=/flight_of_the_navir
+action+=/bursting_ice
+action+=/ice_comet,if=targets>3 and character.winter_orbs==5
+action+=/glacial_blast,if=targets<=3 and character.winter_orbs==5
+action+=/glacial_blast,if=buff.wrath_of_winter.exists
+action+=/glacial_blast,if=buff.glacial_assault.exists
+action+=/cold_snap,if=character.anima<5 and character.winter_orbs<4
+action+=/freezing_torrent
+action+=/glacial_blast,if=targets<=3
+action+=/ice_comet,if=targets>3
+action+=/frost_bolt

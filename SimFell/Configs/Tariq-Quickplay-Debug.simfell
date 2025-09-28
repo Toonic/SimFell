@@ -1,0 +1,37 @@
+# Sim Configuration
+name=Tariq - Quickplay - Debug
+duration=120
+enemies=1
+run_count=5000
+simulation_type=debug
+simulation_mode=time
+
+# Character Configuration
+hero=Rime
+
+stat_mode=percent
+
+primary=1000
+crit=20
+expertise=20
+haste=20
+spirit=20
+
+#talents=2-12-3 # Stands for Talents 1.2, 2.1, 2.2, 3.3
+talents=0-0-0
+
+# Actions
+#action=/auto_attack # As a shortcut to dealing with proper logic. Heavy Strike, just replaces Auto Attack and shares a cooldown with Tariqs auto attack duration.
+action=/raging_tempest
+action+=/thunder_call,if=not buff.thunder_call.exists
+action+=/heavy_strike # Heavy Strike should be a prio because its basically on a timer.
+action+=/focused_wrath,if=character.fury >= 0.5
+action+=/skull_crusher
+action+=/leap_smash,if=character.fury <= 0.75
+action+=/hammer_storm,if=character.fury >= 0.5
+action+=/chain_lightning
+action+=/culling_strike,if=character.fury >= 0.2
+action+=/face_breaker
+action+=/culling_strike
+action+=/wild_swing
+action+=/face_breaker # Optimal Face Breaker. Casts it the same time as missing.
