@@ -21,12 +21,14 @@ SimFell is a work-in-progress .NET 9.0 console application that simulates combat
 
 ## Features
 
-| Feature                                           | Status        |
-| ------------------------------------------------- | ------------- |
-| General Rotation                                  | ✅ Implemented |
-| SimC-like Integration                             | ⚙️ Rough Draft |
-| Rotation Opener                                   | 💡 To Discuss  |
-| Gems, Armor, Relics, Multi-dotting, Tariq Support | 🚧 Not Started |
+| Feature                        | Status        |
+|--------------------------------| ------------- |
+| APL and Configuration Files    | ✅ Implemented |
+| Talents, Stats, and Spells     | ✅ Implemented |
+| Rime                           | ✅ Implemented|
+| Tariq                          | ⚙️ Rough Draft|
+| Gems, Legendaries, and Items   | ⚙️ Rough Draft|
+| Rotation Opener, Multi-dotting | 🚧 Not Started |
 
 ## Project Structure
 
@@ -34,15 +36,15 @@ SimFell is a work-in-progress .NET 9.0 console application that simulates combat
 SimFell/
 ├── SimFell.sln               # Solution file
 ├── SimFell/                  # Main project directory
-│   ├── Base/                 # Core simulation abstractions
-│   ├── Heroes/               # Hero classes and abilities
-│   ├── Logging/              # Logging utilities
-│   ├── Sim/                  # Simulation engine
-│   ├── SimFileParser/        # Parser for input files (Enums, Models)
-│   ├── Configs/              # Project-specific configuration files
+│   ├── Configs/              # SimFell APL Configs
+│   ├── Engine/               # Holds all the core Engine files. 
+│   │   ├── Heroes/           # All of the Hero Class Files
+│   ├── Logging/              # Logging configuration. 
+│   ├── Reporting/            # Helpers for displaying the output.
+│   ├── Sim/                  # All the core files to run the Sim.
+│   ├── SimConifg/            # Parser for APL's and SimFell Config.
 │   ├── Program.cs            # Entry point
 │   └── SimFell.csproj        # Project file
-├── Configs/                  # Global/shared configuration files
 ├── simulation.log            # Sample run output log
 ├── README.md                 # This documentation
 └── LICENSE                   # License information
@@ -134,7 +136,7 @@ Contributions are welcome! Please follow these steps:
 
 ## Contact
 
-You can catch us on the [Fellowship Discord](https://discord.gg/fellowship)!
+You can catch us on the [FellowsGuide Discord](https://discord.gg/SfqzdHrht2)!
 
 ## Credits
 
