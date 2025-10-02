@@ -8,11 +8,11 @@ namespace SimFell;
 
 public class SimLoop
 {
-    public event Action? OnUpdate;
+    public event Action<double, double>? OnUpdate;
 
     // Simulate 0.1 th of a second. Or 100 Ticks a Second.
-    // For reference, WoW servers run at around a 20 Tickrate.
-    private const double step = 0.01;
+    // For reference, WoW servers run at around a 10 Tickrate.
+    private const double step = 0.033;
 
     private double _ticks;
     private double totalDamage;
@@ -42,11 +42,13 @@ public class SimLoop
 
         while (true)
         {
-            if (GetElapsed() >= duration)
+            double elapsedTime = GetElapsed();
+            if (elapsedTime >= duration)
                 break;
 
             player.SetPrimaryTarget(targets[0]); //Used mostly for auto-casting abilities. Like Anima Spikes on Rime.
-            OnUpdate?.Invoke(); //Update all Spells/Buffs to be removed first.
+            OnUpdate?.Invoke(elapsedTime, _ticks); //Update all Spells/Buffs to be removed first.
+
             // Then cast the spell that should cast last.
             if (!player.IsCasting)
             {
@@ -86,9 +88,11 @@ public class SimLoop
         foreach (var enemy in enemies)
         {
             enemy.OnDamageReceived -= OnDamageReceived;
+            enemy.Stop();
         }
 
         player.OnCast -= OnCast;
+        player.Stop();
 
         totalDamage = _spellStats.Values.Sum(s => s.TotalDamage);
         totalTime = GetElapsed();
@@ -160,7 +164,7 @@ public class SimLoop
 
     public double GetElapsed()
     {
-        return Math.Round(_ticks * step, 2);
+        return _ticks * step;
     }
 
     public double GetStep()

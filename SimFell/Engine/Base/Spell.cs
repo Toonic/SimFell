@@ -138,7 +138,7 @@ public class Spell
     public void UpdateCooldown(Unit caster, double deltaTime)
     {
         if (OffCooldown > 0)
-            OffCooldown = Math.Round(OffCooldown - deltaTime, 2);
+            OffCooldown = OffCooldown - deltaTime;
         UpdateCooldownAndCharges(caster);
     }
 
@@ -197,11 +197,11 @@ public class Spell
     {
         if (HasteEffectsCoolodwn)
             OffCooldown =
-                Math.Round(caster.GetHastedValue(Cooldown.GetValue()) + caster.SimLoop.GetElapsed(),
-                    2); // Reset cooldown after casting
+                caster.GetHastedValue(Cooldown.GetValue()) +
+                caster.SimLoop.GetElapsed(); // Reset cooldown after casting
         else
             OffCooldown =
-                Math.Round(Cooldown.GetValue() + caster.SimLoop.GetElapsed(), 2); // Reset cooldown after casting
+                Cooldown.GetValue() + caster.SimLoop.GetElapsed(); // Reset cooldown after casting
     }
 
     private void UpdateCooldownAndCharges(Unit caster)
@@ -215,7 +215,7 @@ public class Spell
                 double cooldownDuration = HasteEffectsCoolodwn
                     ? caster.GetHastedValue(Cooldown.GetValue())
                     : Cooldown.GetValue();
-                OffCooldown = Math.Round(OffCooldown + cooldownDuration, 2);
+                OffCooldown = OffCooldown + cooldownDuration;
             }
         }
     }

@@ -11,7 +11,7 @@ public abstract class SimLoopListener : IDisposable
         SimLoop.OnUpdate += Update;
     }
 
-    protected abstract void Update();
+    protected abstract void Update(double elapsedTime, double ticks);
 
     public void Stop()
     {

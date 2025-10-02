@@ -407,13 +407,12 @@ public class Unit : SimLoopListener
         return totalDamage;
     }
 
-    protected override void Update()
+    protected override void Update(double elapsedTime, double ticks)
     {
-        double step = SimLoop.GetStep();
-        double elapsed = SimLoop.GetElapsed();
+        double elapsed = elapsedTime;
 
         Spirit = Math.Min(100,
-            Spirit + (step * 0.2 * (1 + (SpiritStat.GetValue() / 100.0)))); //Base Spirit Regen is 0.2.
+            Spirit + (SimLoop.GetStep() * 0.2 * (1 + (SpiritStat.GetValue() / 100.0)))); //Base Spirit Regen is 0.2.
         // Update buffs
         for (int i = Buffs.Count - 1; i >= 0; i--)
         {
@@ -444,7 +443,7 @@ public class Unit : SimLoopListener
             }
         }
 
-        // Updates Casting.
+        //Updates Casting.
         if (IsCasting && _currentSpell != null)
         {
             //If the casting is done.
@@ -458,7 +457,7 @@ public class Unit : SimLoopListener
             {
                 if (elapsed >= _tickTime)
                 {
-                    _tickTime = Math.Round(_tickTime + _currentSpell.GetTickRate(this), 2);
+                    _tickTime = _tickTime + _currentSpell.GetTickRate(this);
                     _currentSpell.Tick(this, Targets);
                 }
 
@@ -531,7 +530,7 @@ public class Unit : SimLoopListener
         {
             _currentSpell = spell;
             Targets = targets;
-            _castTime = Math.Round(SimLoop.GetElapsed() + spell.GetCastTime(this), 2);
+            _castTime = SimLoop.GetElapsed() + spell.GetCastTime(this);
             IsCasting = true;
             SetGCD(spell.GetGCD(this));
 
@@ -543,8 +542,8 @@ public class Unit : SimLoopListener
                 OnCast?.Invoke(this, _currentSpell, Targets);
                 //Channeled spells always tick once at the very start.
                 spell.Tick(this, targets);
-                _channelTime = Math.Round(SimLoop.GetElapsed() + spell.GetChannelTime(this), 2);
-                _tickTime = Math.Round(SimLoop.GetElapsed() + spell.GetTickRate(this), 2);
+                _channelTime = SimLoop.GetElapsed() + spell.GetChannelTime(this);
+                _tickTime = SimLoop.GetElapsed() + spell.GetTickRate(this);
             }
 
             if (spell.GetCastTime(this) == 0 && spell.GetChannelTime(this) == 0)

@@ -61,7 +61,7 @@ public class Aura
 
     public double GetTickInterval()
     {
-        return Math.Round(_caster.GetHastedValue(TickInterval.GetValue()), 2);
+        return _caster.GetHastedValue(TickInterval.GetValue());
     }
 
     public void Apply(Unit caster, Unit target)
