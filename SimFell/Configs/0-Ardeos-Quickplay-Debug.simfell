@@ -1,0 +1,38 @@
+# Sim Configuration
+name=Ardeos - Quickplay - Debug
+duration=68
+enemies=1
+run_count=100000
+simulation_type=average
+simulation_mode=time
+
+# Character Configuration
+hero=Ardeos
+
+stat_mode=percent
+
+primary=1000
+crit=20
+expertise=20
+haste=20
+spirit=20
+
+#primary=1000
+#crit=0
+#expertise=0
+#haste=0
+#spirit=0
+
+
+#talents=2-12-3 # Stands for Talents 1.2, 2.1, 2.2, 3.3
+talents=0-0-0
+
+# Actions
+action=/apocalypse
+action+=/fire_ball
+action+=/fire_frogs
+#action+=/pyromania
+action+=/engulfing_flames
+#action+=/searing_blaze
+action+=/detonate
+action+=/infernal_wave

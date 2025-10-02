@@ -63,7 +63,7 @@ public class Tariq : Unit
         NextSwingTime = Math.Round(SimLoop.GetElapsed() + _swingTimer.GetValue(), 2);
     }
 
-    private void GainFury(Unit caster, double damageDelt, Spell? spellSource)
+    private void GainFury(Unit caster, Unit target, double damageDelt, Spell? spellSource)
     {
         //If spell is NOT Heavy Strike, Face Breaker, Wild Swing, Chain Lightning, Leap Smash then return.
         if (spellSource == null ||
@@ -358,7 +358,7 @@ public class Tariq : Unit
                     name: "Raging Tempest",
                     duration: 20,
                     tickInterval: 0.5,
-                    onTick: (caster, owner) =>
+                    onTick: (caster, owner, aura) =>
                     {
                         var target = Targets[SimRandom.Next(0, Targets.Count)];
                         DealDamage(target, 99, spell);
@@ -583,8 +583,8 @@ public class Tariq : Unit
             {
                 _thunderCall.CritModifiers.AddModifier(new Modifier(Modifier.StatModType.MultiplicativePercent, 25));
                 _chainLightning.CritModifiers.AddModifier(new Modifier(Modifier.StatModType.MultiplicativePercent, 25));
-                _thunderCallAura.TickInterval = 0.2;
-                _thunderCallAura.OnTick += (caster, target) => { GainFury(0.006); };
+                _thunderCallAura.TickInterval = new Stat(0.2);
+                _thunderCallAura.OnTick += (caster, target, aura) => { GainFury(0.006); };
             }
         );
 

@@ -11,7 +11,9 @@ public class Unit : SimLoopListener
     private bool HasInfiniteHp { get; set; }
     public Stat Stamina = new Stat(0);
     public List<Aura> Buffs { get; set; } = [];
+    List<Aura> _expiredBuffs = new List<Aura>();
     public List<Aura> Debuffs { get; set; } = [];
+    List<Aura> _expiredDebuffs = new List<Aura>();
     public List<Spell> SpellBook { get; set; } = [];
     public List<Talent> Talents { get; set; } = [];
     public List<Spell> Rotation { get; set; } = [];
@@ -58,7 +60,7 @@ public class Unit : SimLoopListener
     public Stat DamageTakenDebuffs = new Stat(0);
 
     //Events 
-    public Action<Unit, double, Spell?>? OnDamageDealt { get; set; }
+    public Action<Unit, Unit, double, Spell?>? OnDamageDealt { get; set; }
     public Action<Unit, double, Spell?, bool>? OnDamageReceived { get; set; }
     public Action<Unit, double, Spell?>? OnCrit { get; set; }
     public Action<Unit, Spell, List<Unit>> OnCast { get; set; } = (unit, spellSource, targets) => { };
@@ -148,7 +150,9 @@ public class Unit : SimLoopListener
     {
         var existing = Buffs.Where(aura => aura.ID == buff.ID).ToList();
         if (existing.Count >= buff.MaxStacks)
-            Console.WriteLine("TODO: Refresh?");
+        {
+            // Console.WriteLine("TODO: Refresh?");
+        }
         else
         {
             buff.Apply(caster, target);
@@ -214,6 +218,71 @@ public class Unit : SimLoopListener
         return existing.Count > 0;
     }
 
+    public List<Aura> GetDebuffs(Aura buff)
+    {
+        var existing = Debuffs.Where(aura => aura.ID == buff.ID).ToList();
+        return existing;
+    }
+
+    public Aura GetDebuff(Aura buff)
+    {
+        var existing = Debuffs.Where(aura => aura.ID == buff.ID).ToList();
+        return existing.FirstOrDefault();
+    }
+
+    /// <summary>
+    /// Calculates how much damage something will do, excluding the 
+    /// </summary>
+    /// <param name="target"></param>
+    /// <param name="damagePercent"></param>
+    /// <param name="spellSource"></param>
+    /// <param name="includeCriticalStrike"></param>
+    /// <param name="includeExpertise"></param>
+    /// <param name="isFlatDamage"></param>
+    /// <returns>Damage value as Float. Bool if Critical Strike happened.</returns>
+    public (double damage, bool isCritical) GetDamage(Unit target, double damagePercent, Spell? spellSource = null,
+        bool includeCriticalStrike = true, bool includeExpertise = true, bool isFlatDamage = false)
+    {
+        // TODO: Remove this when I start to use values from the game (EG: Proper percentages)
+        if (!isFlatDamage) damagePercent = damagePercent / 1000.0;
+
+        var critPercent = CritcalStrikeStat.GetValue();
+        critPercent = includeCriticalStrike ? critPercent : 0;
+
+        if (spellSource != null)
+        {
+            damagePercent = spellSource.DamageModifiers.GetValue(damagePercent);
+            critPercent = spellSource.CritModifiers.GetValue(critPercent);
+        }
+
+        Modifier grievousCritsModifier = new Modifier(Modifier.StatModType.AdditivePercent, 0);
+        if (critPercent > 100.0)
+        {
+            grievousCritsModifier.Value = critPercent - 100.0;
+            CriticalStrikePowerStat.AddModifier(grievousCritsModifier);
+        }
+
+        //Converts the DamagePercent into a Damage Value.
+        var damage = damagePercent * MainStat.GetValue(); // Adds the Damage as Main Stat.
+        if (isFlatDamage) damage = damagePercent;
+        if (includeExpertise)
+            damage *= 1 + (ExpertiseStat.GetValue() / 100f); // Modifies the damage based on expertise.
+        damage = DamageBuffs.GetValue(damage);
+
+        var isCritical = SimRandom.Roll(critPercent);
+        isCritical = SimRandom.CanCrit ? isCritical : false;
+        //Handle general On Crit.
+        damage *= isCritical ? 2 : 1; //Doubles the damage if there is a Critical Hit.
+        //Handle Crit Power.
+        if (isCritical) damage = CriticalStrikePowerStat.GetValue(damage);
+        CriticalStrikePowerStat.RemoveModifier(grievousCritsModifier);
+
+        //Any additional mods on the target.
+        damage = GetDamageTakenWithDebuffs(damage);
+
+        return (damage, isCritical);
+    }
+
     /// <summary>
     /// Deals damage to the primary/first target based on the passed in Damage Percent. Takes into consideration current MainStat,
     /// Expertise, Critical Hit Chance, and Critical Hit Power.
@@ -234,42 +303,22 @@ public class Unit : SimLoopListener
     /// <param name="target">Target for the damage.</param>
     /// <param name="damagePercent">Damage percentage as full XX.X%</param>
     /// <param name="damageSource">Source of the damage. Usually a spell but can also be an Aura.</param>
-    public void DealDamage(Unit target, double damagePercent, Spell? spellSource = null)
+    /// <param name="includeCriticalStrike">If the damage can crit.</param>
+    /// <param name="includeExpertise">If the damage will include Expertise in its calculations.</param>
+    /// <param name="isFlatDamage">If the damage is flat, does not include damagePercent + MainStat </param>
+    public double DealDamage(Unit target, double damagePercent, Spell? spellSource = null,
+        bool includeCriticalStrike = true, bool includeExpertise = true, bool isFlatDamage = false)
     {
-        // TODO: Remove this when I start to use values from the game (EG: Proper percentages)
-        damagePercent = damagePercent / 1000.0;
+        var (damage, isCritical) =
+            GetDamage(target, damagePercent, spellSource, includeCriticalStrike, includeExpertise, isFlatDamage);
 
-        var critPercent = CritcalStrikeStat.GetValue();
+        var totalDamageTaken = target.TakeDamage(damage, isCritical, spellSource);
+        if (isCritical) OnCrit?.Invoke(this, totalDamageTaken, spellSource); //On Crit events called.
+        OnDamageDealt?.Invoke(this, target, totalDamageTaken, spellSource); //Called when damage is dealt.
 
-        if (spellSource != null)
-        {
-            damagePercent = spellSource.DamageModifiers.GetValue(damagePercent);
-            critPercent = spellSource.CritModifiers.GetValue(critPercent);
-        }
-
-        Modifier grievousCritsModifier = new Modifier(Modifier.StatModType.AdditivePercent, 0);
-        if (critPercent > 100.0)
-        {
-            CriticalStrikePowerStat.AddModifier(grievousCritsModifier);
-        }
-
-        //Converts the DamagePercent into a Damage Value.
-        var damage = damagePercent * MainStat.GetValue(); // Adds the Damage as Main Stat.
-        damage *= 1 + (ExpertiseStat.GetValue() / 100f); // Modifies the damage based on expertise.
-        damage = DamageBuffs.GetValue(damage);
-
-        var isCritical = SimRandom.Roll(critPercent);
-        isCritical = SimRandom.CanCrit ? isCritical : false;
-        //Handle Crit Power.
-        if (isCritical) damage = CriticalStrikePowerStat.GetValue(damage);
-        CriticalStrikePowerStat.RemoveModifier(grievousCritsModifier);
-        //Handle general On Crit.
-        if (isCritical) OnCrit?.Invoke(this, damage, spellSource); //On Crit events called.
-        damage *= isCritical ? 2 : 1; //Doubles the damage if there is a Critical Hit. TODO: Crit power.
-
-        var damageDealtAfterMods = target.TakeDamage(damage, isCritical, spellSource);
-        OnDamageDealt?.Invoke(this, damageDealtAfterMods, spellSource); //Called when damage is dealt.
+        return damage;
     }
+
 
     /// <summary>
     /// Deals damage to all targets. Takes into consideration current MainStat,
@@ -287,7 +336,8 @@ public class Unit : SimLoopListener
         int targetCount = affectedTargets.Count;
 
         // Calculate damage per target
-        double damagePerTarget = damagePercent * (targetCount > targetCap ? Math.Sqrt(targetCap / targetCount) : 1.0);
+        double damagePerTarget =
+            damagePercent * (targetCount > targetCap ? Math.Sqrt(targetCap / targetCount) : 1.0);
 
         // Deal damage to each affected target
         foreach (var target in affectedTargets)
@@ -322,6 +372,11 @@ public class Unit : SimLoopListener
         }
     }
 
+    public double GetDamageTakenWithDebuffs(double amount)
+    {
+        return DamageTakenDebuffs.GetValue(amount);
+    }
+
     /// <summary>
     /// Called when a target takes damage. Takes into consideration any debuffs on the target, along with any extra
     /// modifiers.
@@ -331,7 +386,7 @@ public class Unit : SimLoopListener
     /// <param name="isCritical">If the damage was a critical hit.</param>
     public double TakeDamage(double amount, bool isCritical, Spell? spellSource = null)
     {
-        var totalDamage = (int)DamageTakenDebuffs.GetValue(amount);
+        var totalDamage = (int)amount;
 
         // Log damage event with coloring for critical hits
         var sourceName = spellSource != null
@@ -354,12 +409,15 @@ public class Unit : SimLoopListener
 
     protected override void Update()
     {
+        double step = SimLoop.GetStep();
+        double elapsed = SimLoop.GetElapsed();
+
         Spirit = Math.Min(100,
-            Spirit + (SimLoop.GetStep() * 0.2 * (1 + (SpiritStat.GetValue() / 100.0)))); //Base Spirit Regen is 0.2.
+            Spirit + (step * 0.2 * (1 + (SpiritStat.GetValue() / 100.0)))); //Base Spirit Regen is 0.2.
         // Update buffs
         for (int i = Buffs.Count - 1; i >= 0; i--)
         {
-            Buffs[i].Update(SimLoop.GetElapsed());
+            Buffs[i].Update(elapsed);
             if (Buffs[i].IsExpired)
             {
                 ConsoleLogger.Log(
@@ -367,15 +425,14 @@ public class Unit : SimLoopListener
                     $"[bold blue]{Name}[/] loses buff: [bold yellow]{Buffs[i].Name}[/]",
                     "💪🛑"
                 );
-                Buffs[i].Remove();
-                Buffs.RemoveAt(i);
+                _expiredBuffs.Add(Buffs[i]);
             }
         }
 
         // Update debuffs
         for (int i = Debuffs.Count - 1; i >= 0; i--)
         {
-            Debuffs[i].Update(SimLoop.GetElapsed());
+            Debuffs[i].Update(elapsed);
             if (Debuffs[i].IsExpired)
             {
                 ConsoleLogger.Log(
@@ -383,20 +440,15 @@ public class Unit : SimLoopListener
                     $"[bold blue]{Name}[/] loses debuff: [bold yellow]{Debuffs[i].Name}[/]",
                     "💔🛑"
                 );
-                Debuffs[i].Remove();
-                Debuffs.RemoveAt(i);
+                _expiredDebuffs.Add(Debuffs[i]);
             }
         }
-
-        //Update the GCD for the Unit.
-        // GCD = Math.Max(0, GCD - deltaTime);
-        // if (GCD > 0) ConsoleLogger.Log(SimulationLogLevel.Debug, $"GCD in Update: {GCD}");
 
         // Updates Casting.
         if (IsCasting && _currentSpell != null)
         {
             //If the casting is done.
-            if (!_currentSpell.Channel && SimLoop.GetElapsed() >= _castTime)
+            if (!_currentSpell.Channel && elapsed >= _castTime)
             {
                 _currentSpell.Cast(this, Targets);
                 OnCast?.Invoke(this, _currentSpell, Targets);
@@ -404,18 +456,33 @@ public class Unit : SimLoopListener
             }
             else if (_currentSpell.Channel)
             {
-                if (SimLoop.GetElapsed() >= _tickTime)
+                if (elapsed >= _tickTime)
                 {
                     _tickTime = Math.Round(_tickTime + _currentSpell.GetTickRate(this), 2);
                     _currentSpell.Tick(this, Targets);
                 }
 
-                if (SimLoop.GetElapsed() >= _channelTime)
+                if (elapsed >= _channelTime)
                 {
                     StopCasting();
                 }
             }
         }
+
+        foreach (var buff in _expiredBuffs)
+        {
+            buff.Remove();
+            Buffs.Remove(buff);
+        }
+
+        foreach (var debuff in _expiredDebuffs)
+        {
+            debuff.Remove();
+            Debuffs.Remove(debuff);
+        }
+
+        _expiredBuffs.Clear();
+        _expiredDebuffs.Clear();
     }
 
     public double GetHastedValue(double baseRate)
@@ -509,5 +576,15 @@ public class Unit : SimLoopListener
             talent.Activate(this);
             ConsoleLogger.Log(SimulationLogLevel.Setup, $"Activated talent '{talent.Name}'");
         }
+    }
+
+    public void CleanUp()
+    {
+        OnDamageDealt = null;
+        OnDamageReceived = null;
+        OnCrit = null;
+        OnCast = null;
+        OnCastDone = null;
+        Dispose();
     }
 }

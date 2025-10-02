@@ -346,7 +346,7 @@ public class Modifier
     }
 
     public StatModType StatMod { get; }
-    public virtual double Value { get; }
+    public virtual double Value { get; set; }
 
     public Modifier(StatModType statMod, double value)
     {

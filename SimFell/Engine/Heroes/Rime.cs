@@ -153,33 +153,21 @@ public class Rime : Unit
             });
 
         // Bursting Ice.
-        _burstingIceAura = new Aura(
-            id: "bursting-ice",
-            name: "Bursting Ice",
-            duration: 3,
-            tickInterval: 0.5,
-            onTick: (caster, target) =>
-            {
-                int damage = SimRandom.Next(495, 605);
-
-                //Roll back the Winters Embrace buff if we have it.
-                if (caster.HasBuff(_wintersEmbraceBuff))
-                {
-                    damage = (int)(damage / 1.2);
-                }
-
-                //TODO: Figure out what the Target Cap is.
-                DealAOEDamage(damage, 5, _burstingIce);
-                UpdateAnima(1);
-            }
-        );
-
         _burstingIce = new Spell("bursting-ice", "Bursting Ice", 10, 2.0)
             .WithOnCast((unit, spell, targets) =>
             {
                 var primaryTarget = targets.FirstOrDefault();
                 primaryTarget?.ApplyDebuff(unit, primaryTarget, _burstingIceAura);
             });
+
+        _burstingIceAura = new Aura(
+                id: "bursting-ice",
+                name: "Bursting Ice",
+                duration: 3,
+                tickInterval: 0.5
+            )
+            .WithOnTick((_, _, _) => UpdateAnima(1))
+            .WithDamageOnTick(_burstingIce, 495, 605);
 
         // Flight of the Navir
         // OnDamageReceived event for Flight of the Navir.
@@ -288,7 +276,7 @@ public class Rime : Unit
                     name: "Wrath of Winter",
                     duration: 20,
                     tickInterval: 4,
-                    onTick: (caster, target) => { UpdateWinterOrbs(1); },
+                    onTick: (caster, target, aura) => { UpdateWinterOrbs(1); },
                     onApply: (caster, target) =>
                     {
                         caster.DamageBuffs.AddModifier(wrathOfWinterDamageMod);
@@ -340,13 +328,22 @@ public class Rime : Unit
 
         // Winters Embrace
         Modifier wintersEmbraceDamageBuff = new Modifier(Modifier.StatModType.MultiplicativePercent, 20);
+        Modifier wintersEmbraceNegateBursting = new Modifier(Modifier.StatModType.InverseMultiplicativePercent, 20);
         _wintersEmbraceBuff = new Aura(
             id: "winters-embrace",
             name: "Winters Embrace",
             duration: 99999,
             tickInterval: 0,
-            onApply: (unit, unit1) => { unit.DamageBuffs.AddModifier(wintersEmbraceDamageBuff); },
-            onRemove: (unit, spell) => { unit.DamageBuffs.RemoveModifier(wintersEmbraceDamageBuff); }
+            onApply: (unit, unit1) =>
+            {
+                _burstingIce.DamageModifiers.AddModifier(wintersEmbraceNegateBursting);
+                unit.DamageBuffs.AddModifier(wintersEmbraceDamageBuff);
+            },
+            onRemove: (unit, spell) =>
+            {
+                _burstingIce.DamageModifiers.RemoveModifier(wintersEmbraceNegateBursting);
+                unit.DamageBuffs.RemoveModifier(wintersEmbraceDamageBuff);
+            }
         );
 
         _wintersEmbrace = new Talent(
@@ -397,7 +394,7 @@ public class Rime : Unit
                         }
                     );
 
-                    unit.OnDamageDealt += (caster, damage, spell) =>
+                    unit.OnDamageDealt += (caster, target, damage, spell) =>
                     {
                         if (spell == _coldSnap)
                         {
@@ -432,7 +429,7 @@ public class Rime : Unit
             )
             .WithOnActivate(unit =>
             {
-                unit.OnDamageDealt += (caster, damage, spell) =>
+                unit.OnDamageDealt += (caster, target, damage, spell) =>
                 {
                     if (spell == _frostBolt)
                     {
@@ -462,7 +459,7 @@ public class Rime : Unit
                     }
                 };
 
-                unit.OnDamageDealt += (caster, damage, spell) =>
+                unit.OnDamageDealt += (caster, target, damage, spell) =>
                 {
                     if ((spell == _coldSnap || spell == _freezingTorrent) && SimRandom.Roll(15))
                     {
@@ -514,7 +511,7 @@ public class Rime : Unit
             {
                 int icyFlowStacks = 0;
                 int maxIcyFlowStacks = 2;
-                unit.OnDamageDealt += (caster, damage, spell) =>
+                unit.OnDamageDealt += (caster, target, damage, spell) =>
                 {
                     if (spell == _coldSnap)
                     {
@@ -621,6 +618,7 @@ public class Rime : Unit
         # region Row 5
 
         // Cascading Blitz
+        // TODO: 
         _cascadingBlitz = new Talent(
                 id: "cascading-blitz",
                 name: "Cascading Blitz",
@@ -630,7 +628,7 @@ public class Rime : Unit
                 if (HasBuff(icyFlowBuff))
                 {
                     OnAnimaUpdate += (delta) => { DoSwallowDamage(); };
-                    OnDamageDealt += (unit1, d, spell) =>
+                    OnDamageDealt += (unit1, target, d, spell) =>
                     {
                         if (spell == _flightOfTheNavir)
                         {
@@ -669,7 +667,7 @@ public class Rime : Unit
                     }
                 };
 
-                OnDamageDealt += (unit1, d, spell) =>
+                OnDamageDealt += (unit1, target, d, spell) =>
                 {
                     if (spell == _iceComet || spell == _glacialBlast)
                     {
@@ -679,6 +677,7 @@ public class Rime : Unit
             });
 
         // Soulfrost Torrent
+        // TODO: Soulfrost shouldn't be applying the soulFrostTickSpeed and soulFrostCrit buff unless the spell is casted.
         Modifier soulFrostTickSpeed = new Modifier(Modifier.StatModType.InverseMultiplicativePercent, 40);
         Modifier soulFrostCrit = new Modifier(Modifier.StatModType.AdditivePercent, 100);
         Aura soulFrostTorrent = new Aura(id: "soulfrost-torrent", name: "Soul Frost", duration: 18, tickInterval: 0,
