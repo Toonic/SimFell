@@ -21,6 +21,7 @@ public class Spell
     public bool CanCastWhileCasting { get; set; }
     public bool HasAntiSpam { get; set; }
     public bool HasteEffectsCoolodwn { get; set; }
+    public bool HasteEffectsChannel { get; set; }
     public int Charges { get; private set; }
     public int MaxCharges { get; set; }
     public Action<Unit, Spell, List<Unit>>? OnCast { get; set; }
@@ -93,8 +94,15 @@ public class Spell
     public Spell IsChanneled(double channelTime, double tickRate)
     {
         Channel = true;
+        HasteEffectsChannel = false;
         ChannelTime = new Stat(channelTime);
         TickRate = new Stat(tickRate);
+        return this;
+    }
+
+    public Spell WithHastedChannel()
+    {
+        HasteEffectsChannel = true;
         return this;
     }
 

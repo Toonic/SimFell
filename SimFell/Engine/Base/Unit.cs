@@ -483,9 +483,9 @@ public class Unit : SimLoopListener
 
             // Channeled Spells always have a single hit at the start of the channel.
             TriggerSpellEvent(spell);
-            // Queue the channel ending. Channel times are not hasted.
+            // Queue the channel ending.
             Simulator.Schedule(new SimEvent(Simulator, this, spell.ChannelTime.GetValue(),
-                () => FinishChanneling(spell), false));
+                () => FinishChanneling(spell), spell.HasteEffectsChannel));
 
             // Schedule the next tick event.
             spell.OnTick += OnTickFromChanneledSpell;
