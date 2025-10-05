@@ -23,7 +23,8 @@ public class Unit : SimLoopListener
     public List<SimAction> SimActions { get; set; } = new List<SimAction>();
 
     // Casting
-    public bool IsCasting = false;
+    public double GCD { get; set; }
+    public bool HastedGCD { get; set; }
     private Spell? _currentSpell;
     public List<Unit> Targets = new List<Unit>();
 
@@ -75,6 +76,8 @@ public class Unit : SimLoopListener
         Stamina = new Stat(999999);
         Health = new HealthStat(Stamina.GetValue());
         HasInfiniteHp = hasInfiniteHp;
+        GCD = 1.5;
+        HastedGCD = true;
 
         //Add base 5% Crit.
         CritcalStrikeStat.AddModifier(new Modifier(Modifier.StatModType.AdditivePercent, 5));
@@ -579,7 +582,7 @@ public class Unit : SimLoopListener
                 $" -> Waiting on [bold blue]GCD[/]."
             );
         Simulator.Schedule(new SimEvent(Simulator, this, nextActionDelay,
-            () => Simulator.QueuePlayerAction(this)));
+            () => Simulator.QueuePlayerAction(this), _currentSpell.GetIsGCDHasted(this)));
     }
 
     private void TriggerSpellEvent(Spell spell)
