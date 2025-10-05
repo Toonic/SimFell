@@ -201,6 +201,27 @@ public class Aura
         return this;
     }
 
+    public Aura WithAOEDamageOnTick(Spell spellSource, double minDamage, double maxDamage, int targetCap,
+        bool scaleDamageOnTicks = false,
+        bool includeCriticalStrike = true, bool includeExpertise = true, bool isFlatDamage = false)
+    {
+        _hasPartialTicks = true;
+        _spellSource = spellSource;
+        _damageMin = scaleDamageOnTicks ? minDamage / (Duration / TickInterval.GetValue()) : minDamage;
+        _damageMax = scaleDamageOnTicks ? maxDamage / (Duration / TickInterval.GetValue()) : maxDamage;
+        _includeCriticalStrike = includeCriticalStrike;
+        _includeExpertise = includeExpertise;
+        _isFlatDamage = isFlatDamage;
+
+        OnTick += (caster, target, aura) =>
+        {
+            int dmg = SimRandom.Next((int)_damageMin, (int)_damageMax);
+            caster.DealAOEDamage(dmg, targetCap, spellSource);
+        };
+
+        return this;
+    }
+
     public Aura WithIncreaseStacks(Action<Unit, Unit>? onIncreaseStack)
     {
         OnIncreaseStack += onIncreaseStack;
