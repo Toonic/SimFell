@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using SimFell.Sim;
 
 namespace SimFell;
 
@@ -14,8 +15,6 @@ public class Aura
     // Runtime Data
     private Unit _caster;
     private Unit _target;
-    private double _removeAt;
-    private double _lastTick;
     private bool _expired;
     private bool _hasPartialTicks;
 
@@ -35,7 +34,11 @@ public class Aura
 
     public bool IsExpired => _expired;
 
-    public Aura(string id, string name, double duration, double tickInterval, int maxStacks = 1,
+    private SimEvent _removeEvent;
+    private SimEvent _tickEvent;
+
+    public Aura(string id, string name, double duration, double tickInterval,
+        int maxStacks = 1,
         Action<Unit, Unit, Aura>? onTick = null,
         Action<Unit, Unit>? onApply = null,
         Action<Unit, Unit>? onRemove = null)
@@ -69,15 +72,41 @@ public class Aura
         _expired = false;
         _caster = caster;
         _target = target;
-        _removeAt = Duration + _caster.SimLoop.GetElapsed();
-        _lastTick = _caster.SimLoop.GetElapsed();
+        //_lastTick = _caster.Simulator.Now;
         OnApply?.Invoke(caster, target);
+
+        _removeEvent = new SimEvent(caster.Simulator, caster, Duration, () =>
+        {
+            target.RemoveBuff(this);
+            target.RemoveDebuff(this);
+        }, false);
+        caster.Simulator.Schedule(_removeEvent);
+
+        if (TickInterval.GetValue() > 0)
+        {
+            _tickEvent = new SimEvent(caster.Simulator, caster, TickInterval.GetValue(), () => DoTick());
+            caster.Simulator.Schedule(_tickEvent);
+        }
     }
 
     public void Remove()
     {
         _expired = true;
-        if (_hasPartialTicks) DoTick();
+        if (TickInterval.GetValue() > 0)
+        {
+            if (_hasPartialTicks)
+            {
+                double partialTickPercentage =
+                    (_caster.Simulator.Now - _tickEvent.StartTime) / (_tickEvent.Time - _tickEvent.StartTime);
+                Modifier partialTickMod = new Modifier(Modifier.StatModType.Multiplicative, partialTickPercentage);
+                _spellSource.DamageModifiers.AddModifier(partialTickMod);
+                OnTick?.Invoke(_caster, _target, this);
+                _spellSource.DamageModifiers.RemoveModifier(partialTickMod);
+            }
+
+            _caster.Simulator.UnSchedule(_tickEvent);
+        }
+
         OnRemove?.Invoke(_caster, _target);
     }
 
@@ -95,9 +124,9 @@ public class Aura
         if (CurrentStacks == 0) Remove();
     }
 
-    public double GetDuration()
+    public double GetRemainingDuration()
     {
-        return Math.Min(_removeAt - _caster.SimLoop.GetElapsed(), 0);
+        return Math.Min(_removeEvent.Time - _caster.Simulator.Now, 0);
     }
 
     public Aura WithoutPartialTicks()
@@ -142,18 +171,6 @@ public class Aura
         OnTick += (caster, target, aura) =>
         {
             int dmg = SimRandom.Next((int)_damageMin, (int)_damageMax);
-
-            if (_expired && _hasPartialTicks)
-            {
-                double hastedInterval = GetTickInterval();
-                // Calculate how much time is left relative to the next tick
-                double timeUntilNextTick = (GetTickInterval() + _lastTick) - caster.SimLoop.GetElapsed();
-                // Fraction of tick completed before expiration
-                double partialFraction = Math.Max(0, 1.0 - (timeUntilNextTick / hastedInterval));
-                dmg = (int)(dmg * partialFraction);
-                if (dmg == 0) return;
-            }
-
             caster.DealDamage(target, dmg, _spellSource, _includeCriticalStrike, _includeExpertise, _isFlatDamage);
         };
 
@@ -168,19 +185,21 @@ public class Aura
 
     public void ResetDuration(bool resetLastTick = false)
     {
-        _removeAt = Duration + _caster.SimLoop.GetElapsed();
-        if (resetLastTick)
-            _lastTick = _caster.SimLoop.GetElapsed();
+        _removeEvent.ResetTime();
+        if (resetLastTick) _tickEvent.ResetTime();
     }
 
     public void UpdateDuration(double delta)
     {
-        _removeAt += delta;
+        _removeEvent.UpdateTime(delta);
     }
 
     private void DoTick()
     {
         OnTick?.Invoke(_caster, _target, this);
+
+        _tickEvent = new SimEvent(_caster.Simulator, _caster, TickInterval.GetValue(), () => DoTick());
+        _caster.Simulator.Schedule(_tickEvent);
     }
 
     public void DoBonusInstantTicks(double durationInSeconds)
@@ -233,23 +252,5 @@ public class Aura
         }
 
         return totalDamage;
-    }
-
-    public void Update(double simTime)
-    {
-        if (_expired) return;
-        if (GetTickInterval() > 0)
-        {
-            while (simTime >= _lastTick + GetTickInterval())
-            {
-                _lastTick = _caster.SimLoop.GetElapsed();
-                DoTick();
-            }
-        }
-
-        if (simTime >= _removeAt)
-        {
-            _expired = true;
-        }
     }
 }

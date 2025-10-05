@@ -16,7 +16,7 @@ public class RPPM
     /// </summary>
     public bool TryProc(Unit unit)
     {
-        double currentTime = unit.SimLoop.GetElapsed();
+        double currentTime = unit.Simulator.Now;
         double deltaTime = currentTime - _lastProcAttemptTime;
         _lastProcAttemptTime = currentTime;
 
@@ -37,6 +37,6 @@ public class RPPM
     /// </summary>
     public void Reset(Unit unit, bool resetBasedOnElapsedTime = false)
     {
-        _lastProcAttemptTime = resetBasedOnElapsedTime ? unit.SimLoop.GetElapsed() : 0;
+        _lastProcAttemptTime = resetBasedOnElapsedTime ? unit.Simulator.Now : 0;
     }
 }

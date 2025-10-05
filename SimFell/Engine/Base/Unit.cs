@@ -1,4 +1,5 @@
 using SimFell.Logging;
+using SimFell.Sim;
 using SimFell.SimmyRewrite;
 
 namespace SimFell;
@@ -24,11 +25,7 @@ public class Unit : SimLoopListener
     // Casting
     public bool IsCasting = false;
     private Spell? _currentSpell;
-    private double _castTime;
-    private double _channelTime;
-    private double _tickTime;
     public List<Unit> Targets = new List<Unit>();
-    public double GCD { get; private set; }
 
     // Baseline Stats.
     public Stat MainStat = new Stat(1000);
@@ -63,16 +60,14 @@ public class Unit : SimLoopListener
     public Action<Unit, Unit, double, Spell?>? OnDamageDealt { get; set; }
     public Action<Unit, double, Spell?, bool>? OnDamageReceived { get; set; }
     public Action<Unit, double, Spell?>? OnCrit { get; set; }
-    public Action<Unit, Spell, List<Unit>> OnCast { get; set; } = (unit, spellSource, targets) => { };
+    public Action<Unit, Spell, List<Unit>> OnCastStarted { get; set; } = (unit, spellSource, targets) => { };
     public Action<Unit, Spell, List<Unit>> OnCastDone { get; set; } = (unit, spellSource, targets) => { };
+
+    public Action<Unit, Spell, List<Unit>> OnChannelStarted { get; set; } = (unit, spellSource, targets) => { };
+    public Action<Unit, Spell, List<Unit>> OnChannelEnd { get; set; } = (unit, spellSource, targets) => { };
 
     // On Health Updated event
     public event Action? OnHealthUpdated;
-
-    public Unit ShallowCopy()
-    {
-        return (Unit)this.MemberwiseClone();
-    }
 
     public Unit(string name, bool hasInfiniteHp = false)
     {
@@ -184,6 +179,21 @@ public class Unit : SimLoopListener
             );
             aura.Remove();
             Buffs.Remove(aura);
+        }
+    }
+
+    public void RemoveDebuff(Aura debuff)
+    {
+        var existing = Debuffs.Where(aura => aura.ID == debuff.ID).ToList();
+        foreach (var aura in existing)
+        {
+            ConsoleLogger.Log(
+                SimulationLogLevel.BuffEvents,
+                $"[bold blue]{Name}[/] loses Debuff: [bold yellow]{debuff.Name}[/]",
+                "💪🛑"
+            );
+            aura.Remove();
+            Debuffs.Remove(aura);
         }
     }
 
@@ -407,83 +417,6 @@ public class Unit : SimLoopListener
         return totalDamage;
     }
 
-    protected override void Update(double elapsedTime, double ticks)
-    {
-        double elapsed = elapsedTime;
-
-        Spirit = Math.Min(100,
-            Spirit + (SimLoop.GetStep() * 0.2 * (1 + (SpiritStat.GetValue() / 100.0)))); //Base Spirit Regen is 0.2.
-        // Update buffs
-        for (int i = Buffs.Count - 1; i >= 0; i--)
-        {
-            Buffs[i].Update(elapsed);
-            if (Buffs[i].IsExpired)
-            {
-                ConsoleLogger.Log(
-                    SimulationLogLevel.BuffEvents,
-                    $"[bold blue]{Name}[/] loses buff: [bold yellow]{Buffs[i].Name}[/]",
-                    "💪🛑"
-                );
-                _expiredBuffs.Add(Buffs[i]);
-            }
-        }
-
-        // Update debuffs
-        for (int i = Debuffs.Count - 1; i >= 0; i--)
-        {
-            Debuffs[i].Update(elapsed);
-            if (Debuffs[i].IsExpired)
-            {
-                ConsoleLogger.Log(
-                    SimulationLogLevel.DebuffEvents,
-                    $"[bold blue]{Name}[/] loses debuff: [bold yellow]{Debuffs[i].Name}[/]",
-                    "💔🛑"
-                );
-                _expiredDebuffs.Add(Debuffs[i]);
-            }
-        }
-
-        //Updates Casting.
-        if (IsCasting && _currentSpell != null)
-        {
-            //If the casting is done.
-            if (!_currentSpell.Channel && elapsed >= _castTime)
-            {
-                _currentSpell.Cast(this, Targets);
-                OnCast?.Invoke(this, _currentSpell, Targets);
-                StopCasting();
-            }
-            else if (_currentSpell.Channel)
-            {
-                if (elapsed >= _tickTime)
-                {
-                    _tickTime = _tickTime + _currentSpell.GetTickRate(this);
-                    _currentSpell.Tick(this, Targets);
-                }
-
-                if (elapsed >= _channelTime)
-                {
-                    StopCasting();
-                }
-            }
-        }
-
-        foreach (var buff in _expiredBuffs)
-        {
-            buff.Remove();
-            Buffs.Remove(buff);
-        }
-
-        foreach (var debuff in _expiredDebuffs)
-        {
-            debuff.Remove();
-            Debuffs.Remove(debuff);
-        }
-
-        _expiredBuffs.Clear();
-        _expiredDebuffs.Clear();
-    }
-
     public double GetHastedValue(double baseRate)
     {
         if (baseRate == 0) return 0;
@@ -504,67 +437,155 @@ public class Unit : SimLoopListener
             $"[bold blue]{Name}[/] is dead.",
             "💀"
         );
-
-        //TODO: Future cleanup.
-        Stop();
     }
 
-    public void SetGCD(double gcd)
-    {
-        if (gcd != 0)
-            ConsoleLogger.Log(
-                SimulationLogLevel.CastEvents,
-                $" -> Setting [bold blue]GCD[/] to [bold aqua]{gcd}[/]"
-            );
-        GCD = gcd + SimLoop.GetElapsed();
-    }
+    private List<SimEvent> _castEvents = new List<SimEvent>();
+    private double _castStartTime;
 
     public void StartCasting(Spell spell, List<Unit> targets)
     {
-        ConsoleLogger.Log(
-            SimulationLogLevel.CastEvents,
-            $"Casting [bold blue]{spell.Name}[/]"
-        );
+        _currentSpell = spell;
 
-        if (!spell.CanCastWhileCasting)
+        // Handle Non-Channeled Spells.
+        if (!spell.Channel)
         {
-            _currentSpell = spell;
-            Targets = targets;
-            _castTime = SimLoop.GetElapsed() + spell.GetCastTime(this);
-            IsCasting = true;
-            SetGCD(spell.GetGCD(this));
+            ConsoleLogger.Log(
+                SimulationLogLevel.CastEvents,
+                $"Casting [bold blue]{spell.Name}[/]"
+            );
 
-            //Handle Channel Spells.
-            if (spell.Channel)
-            {
-                //Channeled spells are technically instant cast.
-                spell.Cast(this, targets);
-                OnCast?.Invoke(this, _currentSpell, Targets);
-                //Channeled spells always tick once at the very start.
-                spell.Tick(this, targets);
-                _channelTime = SimLoop.GetElapsed() + spell.GetChannelTime(this);
-                _tickTime = SimLoop.GetElapsed() + spell.GetTickRate(this);
-            }
+            // Fire off the Cast Started Event.
+            OnCastStarted?.Invoke(this, spell, Targets);
 
-            if (spell.GetCastTime(this) == 0 && spell.GetChannelTime(this) == 0)
-            {
-                spell.Cast(this, targets);
-                OnCast?.Invoke(this, _currentSpell, Targets);
-                StopCasting();
-            }
+            // Schedule the actual cast finish event.
+            double castTime = spell.CastTime.GetValue();
+            SimEvent castFinishEvent = new SimEvent(Simulator, this, castTime, () => FinishCasting(spell));
+            _castStartTime = Simulator.Now;
+            _castEvents.Add(castFinishEvent);
+            Simulator.Schedule(castFinishEvent);
         }
-        else if (spell.CanCastWhileCasting)
+
+        if (spell.Channel)
         {
-            spell.Cast(this, targets);
-            OnCast?.Invoke(this, spell, Targets);
+            ConsoleLogger.Log(
+                SimulationLogLevel.CastEvents,
+                $"Channeling [bold blue]{spell.Name}[/]"
+            );
+
+            // Trigger Cast Started Event.
+            OnChannelStarted?.Invoke(this, spell, Targets);
+
+            // Channel Spells set their cooldown and casting cost at the start of the channel.
+            spell.CastingCost(this);
+            spell.CastFinished(this);
+
+            _castStartTime = Simulator.Now;
+
+            // Channeled Spells always have a single hit at the start of the channel.
+            TriggerSpellEvent(spell);
+            // Queue the channel ending. Channel times are not hasted.
+            Simulator.Schedule(new SimEvent(Simulator, this, spell.ChannelTime.GetValue(),
+                () => FinishChanneling(spell), false));
+
+            // Schedule the next tick event.
+            spell.OnTick += OnTickFromChanneledSpell;
+            SimEvent tickEvent = new SimEvent(Simulator, this, spell.GetTickRate(this),
+                () => TriggerSpellEvent(spell));
+            _castEvents.Add(tickEvent);
+            Simulator.Schedule(tickEvent);
         }
     }
 
-    public void StopCasting()
+    // Used to handle on tick events for channeled spells.
+    private void OnTickFromChanneledSpell(Unit caster, Spell spell, List<Unit> targets)
     {
-        if (_currentSpell != null) OnCastDone?.Invoke(this, _currentSpell, Targets);
-        IsCasting = false;
-        _currentSpell = null;
+        _castEvents.Clear();
+        SimEvent tickEvent = new SimEvent(Simulator, this, spell.GetTickRate(this),
+            () => TriggerSpellEvent(spell));
+        _castEvents.Add(tickEvent);
+        Simulator.Schedule(tickEvent);
+    }
+
+    public void InteruptCasting()
+    {
+        Console.WriteLine("!! Not fully implemented yet. !! ");
+        foreach (var evt in _castEvents)
+        {
+            Simulator.UnSchedule(evt);
+        }
+
+        ConsoleLogger.Log(
+            SimulationLogLevel.CastEvents,
+            $"Cancel Casting [bold blue]{_currentSpell.Name}[/]"
+        );
+    }
+
+    private void FinishCasting(Spell spell)
+    {
+        _castEvents.Clear();
+        ConsoleLogger.Log(
+            SimulationLogLevel.CastEvents,
+            $"Finished Casting [bold blue]{spell.Name}[/]"
+        );
+
+        // Handle the Casting Cost + Cast Finished.
+        spell.CastingCost(this);
+        spell.CastFinished(this);
+        if (spell != null) OnCastDone?.Invoke(this, spell, Targets);
+
+        // Schedule the Spells actual effect taking into consideration travel time.
+        double travelTime = spell.TravelTime.GetValue();
+        Simulator.Schedule(new SimEvent(Simulator, this, travelTime,
+            () => TriggerSpellEvent(spell), false));
+
+        ScheduleNextCast();
+    }
+
+    private void FinishChanneling(Spell spell)
+    {
+        spell.OnTick -= OnTickFromChanneledSpell;
+
+        foreach (var evt in _castEvents)
+        {
+            if (evt.Time > Simulator.Now)
+            {
+                //Handles Partial Ticks for channeled spells.
+                double partialTickPercentage = (Simulator.Now - evt.StartTime) / (evt.Time - evt.StartTime);
+                Modifier partialTickMod = new Modifier(Modifier.StatModType.Multiplicative, partialTickPercentage);
+                spell.DamageModifiers.AddModifier(partialTickMod);
+                TriggerSpellEvent(spell);
+                spell.DamageModifiers.RemoveModifier(partialTickMod);
+                Simulator.UnSchedule(evt);
+            }
+        }
+
+        _castEvents.Clear();
+        ConsoleLogger.Log(
+            SimulationLogLevel.CastEvents,
+            $"Finished Channeling [bold blue]{spell.Name}[/]"
+        );
+
+        ScheduleNextCast();
+    }
+
+    private void ScheduleNextCast()
+    {
+        double gcd = _currentSpell.GetGCD(this);
+        double nextActionDelay = Math.Max(0,
+            gcd - (_currentSpell.Channel ? _currentSpell.ChannelTime.GetValue() : _currentSpell.CastTime.GetValue()));
+        if (nextActionDelay > 0)
+            ConsoleLogger.Log(
+                SimulationLogLevel.CastEvents,
+                $" -> Waiting on [bold blue]GCD[/]."
+            );
+        Simulator.Schedule(new SimEvent(Simulator, this, nextActionDelay,
+            () => Simulator.QueuePlayerAction(this)));
+    }
+
+    private void TriggerSpellEvent(Spell spell)
+    {
+        if (spell.Channel) spell.Tick(this, Targets);
+        else spell.Cast(this, Targets);
     }
 
     public void ActivateTalent(int row, int col)
@@ -582,8 +603,7 @@ public class Unit : SimLoopListener
         OnDamageDealt = null;
         OnDamageReceived = null;
         OnCrit = null;
-        OnCast = null;
+        OnCastStarted = null;
         OnCastDone = null;
-        Dispose();
     }
 }

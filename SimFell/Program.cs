@@ -45,44 +45,22 @@ public class Program
 
         Parallel.For(0, config.RunCount, parallelOptions, i =>
         {
-            try
-            {
-                SimLoop loop = new SimLoop();
+            var player = config.GetHero();
+            var enemies = new List<Unit>();
+            for (int e = 0; e < config.Enemies; e++)
+                enemies.Add(new Unit("Goblin: #" + e, true));
 
-                if (config.SimType == SimFellConfig.SimulationType.Debug)
-                    ConsoleLogger.simLoop = loop;
-                else
-                    ConsoleLogger.simLoop = null;
-
-                Unit player = config.GetHero();
-
-                List<Unit> freshEnemies = new List<Unit>();
-                for (int e = 0; e < config.Enemies; e++)
-                {
-                    freshEnemies.Add(new Unit("Goblin: #" + e, true));
-                }
-
-                loop.Start(player, freshEnemies, config.Duration);
-
-                results.StoreResults(loop, config);
-                loop = null;
-                player = null;
-                freshEnemies = null;
-            }
-            catch (Exception ex)
-            {
-                // Optionally log exceptions per iteration
-                lock (results)
-                {
-                    // ConsoleLogger.Log($"Sim {i} failed: {ex.Message}", SimulationLogLevel.Error);
-                }
-            }
+            var simulator = new Simulator(player, enemies, config.Duration);
+            if (config.SimType == SimFellConfig.SimulationType.Debug) ConsoleLogger.Simulator = simulator;
+            simulator.Run();
+            results.StoreResults(simulator, config);
         });
+
 
         stopwatch.Stop();
 
-        Console.WriteLine("Duration: " + stopwatch.Elapsed.ToString(@"hh\:mm\:ss\.fff"));
-        Console.WriteLine("Iterations: " + config.RunCount.ToString("N0"));
+        Console.WriteLine($"Duration: {stopwatch.Elapsed:hh\\:mm\\:ss\\.fff}");
+        Console.WriteLine($"Iterations: {config.RunCount:N0}");
         results.Display();
         results = null;
 

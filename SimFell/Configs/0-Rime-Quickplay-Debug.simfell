@@ -2,7 +2,7 @@
 name=Rime - Quickplay - Debug
 duration=120
 enemies=1
-run_count=10000
+run_count=1
 simulation_type=debug
 simulation_mode=time
 

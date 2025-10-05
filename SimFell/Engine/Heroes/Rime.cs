@@ -210,18 +210,15 @@ public class Rime : Unit
         // Glacial Blast
         _glacialBlast = new Spell("glacial-blast", "Glacial Blast", 0, 2)
             .WithCanCast(((unit, spell) => WinterOrbs >= spell.ResourceCostModifiers.GetValue(2)))
-            .WithOnCast((unit, spell, targets) =>
-            {
-                UpdateWinterOrbs(-(int)(spell.ResourceCostModifiers.GetValue(2)));
-                DealDamage(SimRandom.Next(8910, 10890), spell);
-            });
+            .WithOnCastingCost((caster, spell) => UpdateWinterOrbs(-(int)(spell.ResourceCostModifiers.GetValue(2))))
+            .WithOnCast((unit, spell, targets) => DealDamage(SimRandom.Next(8910, 10890), spell));
 
         // Ice Comet
         _iceComet = new Spell("ice-comet", "Ice Comet", 0, 0)
             .WithCanCast(((unit, spell) => WinterOrbs >= 2))
+            .WithOnCastingCost((caster, spell) => UpdateWinterOrbs(-(int)(spell.ResourceCostModifiers.GetValue(2))))
             .WithOnCast((unit, spell, targets) =>
             {
-                UpdateWinterOrbs(-2);
                 //TODO: Figure out what the Target Cap is.
                 DealAOEDamage(SimRandom.Next(4059, 4961), 5, spell);
             });
@@ -266,28 +263,28 @@ public class Rime : Unit
         //TODO: Wrath of Winter has a Cast Time now, and I don't know what it is. Tooltip says Instant which is wrong.
         _wrathOfWinter = new Spell("wrath-of-winter", "Wrath of Winter", 0, 1.5)
             .WithCanCast(((unit, spell) => Spirit >= 100))
+            .WithOnCastingCost((caster, spell) => Spirit = 0)
             .WithOnCast((unit, spell, targets) =>
             {
-                Spirit = 0;
-
                 //Wrath of Winter buff.
                 unit.ApplyBuff(unit, unit, new Aura(
-                    id: "wrath-of-winter",
-                    name: "Wrath of Winter",
-                    duration: 20,
-                    tickInterval: 4,
-                    onTick: (caster, target, aura) => { UpdateWinterOrbs(1); },
-                    onApply: (caster, target) =>
-                    {
-                        caster.DamageBuffs.AddModifier(wrathOfWinterDamageMod);
-                        _glacialBlast.CastTime.AddModifier(wrathOfWinterCastTimeMod);
-                    },
-                    onRemove: (caster, target) =>
-                    {
-                        caster.DamageBuffs.RemoveModifier(wrathOfWinterDamageMod);
-                        _glacialBlast.CastTime.RemoveModifier(wrathOfWinterCastTimeMod);
-                    }
-                ));
+                        id: "wrath-of-winter",
+                        name: "Wrath of Winter",
+                        duration: 20,
+                        tickInterval: 4,
+                        onTick: (caster, target, aura) => { UpdateWinterOrbs(1); },
+                        onApply: (caster, target) =>
+                        {
+                            caster.DamageBuffs.AddModifier(wrathOfWinterDamageMod);
+                            _glacialBlast.CastTime.AddModifier(wrathOfWinterCastTimeMod);
+                        },
+                        onRemove: (caster, target) =>
+                        {
+                            caster.DamageBuffs.RemoveModifier(wrathOfWinterDamageMod);
+                            _glacialBlast.CastTime.RemoveModifier(wrathOfWinterCastTimeMod);
+                        }
+                    )
+                    .WithoutPartialTicks());
 
                 //Spirit of Heroism Buff.
                 unit.ApplyBuff(unit, unit, SpiritOfHeroism);
@@ -701,7 +698,7 @@ public class Rime : Unit
             .WithOnActivate(unit =>
             {
                 RPPM proc = new RPPM(1.5);
-                OnCast += (unit1, unit2, spell) =>
+                OnCastDone += (unit1, unit2, spell) =>
                 {
                     if (proc.TryProc(this))
                     {

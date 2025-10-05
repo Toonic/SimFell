@@ -2,7 +2,7 @@
 name=Rime - Quickplay - Average
 duration=120
 enemies=1
-run_count=10000
+run_count=100000
 simulation_type=average
 simulation_mode=time
 

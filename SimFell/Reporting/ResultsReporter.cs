@@ -18,20 +18,20 @@ public class ResultsReporter
     private double totalDuration;
     private SimFellConfig config;
 
-    public void StoreResults(SimLoop simLoop, SimFellConfig config)
+    public void StoreResults(Simulator simulator, SimFellConfig config)
     {
         this.config = config;
         totalIterations = config.RunCount;
         totalDuration = config.Duration;
 
-        iterationDpsValues.Add(simLoop.GetDPS());
+        iterationDpsValues.Add(simulator.GetDPS());
 
-        BuildSpellResults(simLoop);
+        BuildSpellResults(simulator);
     }
 
-    private void BuildSpellResults(SimLoop simLoop)
+    private void BuildSpellResults(Simulator simulator)
     {
-        foreach (var spellStat in simLoop.GetSpellStats())
+        foreach (var spellStat in simulator.GetSpellStats())
         {
             spellResults.AddOrUpdate(
                 spellStat.Key,

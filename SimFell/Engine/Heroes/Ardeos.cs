@@ -321,8 +321,8 @@ public class Ardeos : Unit
                         }
 
                         // If they have the buff then it is sorted by the duration left.
-                        var aDuration = a.GetDebuff(engulfingFlamesDebuff)?.GetDuration() ?? 0;
-                        var bDuration = b.GetDebuff(engulfingFlamesDebuff)?.GetDuration() ?? 0;
+                        var aDuration = a.GetDebuff(engulfingFlamesDebuff)?.GetRemainingDuration() ?? 0;
+                        var bDuration = b.GetDebuff(engulfingFlamesDebuff)?.GetRemainingDuration() ?? 0;
 
                         return bDuration.CompareTo(aDuration);
                     });

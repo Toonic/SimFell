@@ -15,13 +15,16 @@ public class Spell
     public bool Channel { get; set; } //When the spell is a channeled spell.
     public Stat ChannelTime { get; set; } = new Stat(0);
     public Stat TickRate { get; set; }
+    public Stat TravelTime { get; set; } = new Stat(0.000001);
     public bool HasGCD { get; set; }
+    public double GCD { get; set; }
     public bool CanCastWhileCasting { get; set; }
     public bool HasAntiSpam { get; set; }
     public bool HasteEffectsCoolodwn { get; set; }
     public int Charges { get; private set; }
     public int MaxCharges { get; set; }
     public Action<Unit, Spell, List<Unit>>? OnCast { get; set; }
+    public Action<Unit, Spell>? OnCastingCost { get; set; }
     public Action<Unit, Spell, List<Unit>>? OnTick { get; set; }
     public Func<Unit, Spell, bool>? CanCast { get; set; }
 
@@ -41,6 +44,7 @@ public class Spell
         // Default valeus for all spells unless defined otherwise.
         Channel = false;
         HasGCD = true;
+        GCD = 1.5;
         CanCastWhileCasting = false;
         HasAntiSpam = false;
         HasteEffectsCoolodwn = false;
@@ -52,6 +56,12 @@ public class Spell
     public Spell WithOnCast(Action<Unit, Spell, List<Unit>> onCast)
     {
         OnCast = onCast;
+        return this;
+    }
+
+    public Spell WithOnCastingCost(Action<Unit, Spell> onCastingCost)
+    {
+        OnCastingCost = onCastingCost;
         return this;
     }
 
@@ -122,6 +132,7 @@ public class Spell
         ChannelTime = new Stat(channelTime);
         TickRate = new Stat(tickRate);
         HasGCD = hasGCD;
+        GCD = 1.5;
         HasAntiSpam = hasAntiSpam;
         HasteEffectsCoolodwn = hasteEffectsCooldown;
         CanCastWhileCasting = canCastWhileCasting;
@@ -151,27 +162,12 @@ public class Spell
     public bool CheckCanCast(Unit caster)
     {
         UpdateCooldownAndCharges(caster);
-
-        return Charges > 0
-               && OffCooldown <= caster.SimLoop.GetElapsed()
-               && (CanCastWhileCasting || caster.GCD <= caster.SimLoop.GetElapsed())
-               && (CanCast?.Invoke(caster, this) ?? true);
-    }
-
-    public double GetCastTime(Unit caster)
-    {
-        return caster.GetHastedValue(CastTime.GetValue());
-    }
-
-    public double GetChannelTime(Unit caster)
-    {
-        return ChannelTime.GetValue();
-        ;
+        return Charges > 0 && (CanCast?.Invoke(caster, this) ?? true);
     }
 
     public double GetTickRate(Unit caster)
     {
-        return caster.GetHastedValue(TickRate.GetValue());
+        return TickRate.GetValue();
     }
 
     public double GetGCD(Unit caster)
@@ -180,17 +176,27 @@ public class Spell
             if (HasAntiSpam) return 0.6; //Forced 0.6~ oGCD on all spells to stop people from spamming spells.
             else return 0;
 
-        //TODO: Load in Config for Global GCD.
-        return caster.GetHastedValue(1.5);
+        return GCD;
+    }
+
+    public void CastingCost(Unit caster)
+    {
+        // Calls On Cast Finished.
+        OnCastingCost?.Invoke(caster, this);
+    }
+
+    public void CastFinished(Unit caster)
+    {
+        // Sets the Charges
+        Charges--;
+        // Sets the cooldown.
+        if (Charges < MaxCharges && caster.Simulator.Now >= OffCooldown)
+            SetOffCooldown(caster);
     }
 
     public void Cast(Unit caster, List<Unit> targets)
     {
         OnCast?.Invoke(caster, this, targets);
-        // Sets the Charges
-        Charges--;
-        // Sets the cooldown.
-        SetOffCooldown(caster);
     }
 
     private void SetOffCooldown(Unit caster)
@@ -198,16 +204,16 @@ public class Spell
         if (HasteEffectsCoolodwn)
             OffCooldown =
                 caster.GetHastedValue(Cooldown.GetValue()) +
-                caster.SimLoop.GetElapsed(); // Reset cooldown after casting
+                caster.Simulator.Now; // Reset cooldown after casting
         else
             OffCooldown =
-                Cooldown.GetValue() + caster.SimLoop.GetElapsed(); // Reset cooldown after casting
+                Cooldown.GetValue() + caster.Simulator.Now; // Reset cooldown after casting
     }
 
     private void UpdateCooldownAndCharges(Unit caster)
     {
         if (Charges >= MaxCharges) return;
-        if (caster.SimLoop.GetElapsed() >= OffCooldown)
+        if (caster.Simulator.Now >= OffCooldown)
         {
             Charges++;
             if (Charges < MaxCharges)
@@ -233,6 +239,5 @@ public class Spell
     public void Tick(Unit caster, List<Unit> targets)
     {
         OnTick?.Invoke(caster, this, targets);
-        //TODO: Tick Rate handling.
     }
 }

@@ -328,7 +328,7 @@ public static class APLParser
             return propertyPart switch
             {
                 var prop when prop.StartsWith("cooldown") =>
-                    CompareValues((spell?.OffCooldown ?? 0) - unit.SimLoop.GetElapsed(), propertyPart),
+                    CompareValues((spell?.OffCooldown ?? 0) - unit.Simulator.Now, propertyPart),
                 // Add more spell properties as needed
                 _ => LogUnknownProperty(propertyPart, conditionText, originalLine)
             };

@@ -49,7 +49,7 @@ public class Tariq : Unit
     // Used to configure when Heavy Strike resets.
     private void ConfigureHeavyStrikeReset()
     {
-        OnCast += (unit, spell, targets) =>
+        OnCastDone += (unit, spell, targets) =>
         {
             if (spell != _autoAttack)
             {
@@ -60,7 +60,7 @@ public class Tariq : Unit
 
     private void ResetSwingTimer()
     {
-        NextSwingTime = Math.Round(SimLoop.GetElapsed() + _swingTimer.GetValue(), 2);
+        NextSwingTime = Math.Round(Simulator.Now + _swingTimer.GetValue(), 2);
     }
 
     private void GainFury(Unit caster, Unit target, double damageDelt, Spell? spellSource)
@@ -162,7 +162,7 @@ public class Tariq : Unit
             castTime: 0,
             hasGCD: false,
             canCastWhileCasting: true,
-            canCast: (unit, spell) => NextSwingTime <= SimLoop.GetElapsed(),
+            canCast: (unit, spell) => NextSwingTime <= Simulator.Now,
             onCast: (unit, spell, targets) =>
             {
                 var target = targets.FirstOrDefault()
@@ -257,7 +257,7 @@ public class Tariq : Unit
                 }
 
                 //Stop it if the hammerStormRageSpent is 0.5
-                if (hammerStormRageSpent >= 0.5) StopCasting(); //Stop channeling at 0.5 fury spent.
+                // if (hammerStormRageSpent >= 0.5) FinishCasting(_thunderCall); //Stop channeling at 0.5 fury spent.
             }
         );
 
