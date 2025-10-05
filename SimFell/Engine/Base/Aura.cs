@@ -31,6 +31,7 @@ public class Aura
     private bool _includeCriticalStrike;
     private bool _includeExpertise;
     private bool _isFlatDamage;
+    private bool _hastedTickRate;
 
     public bool IsExpired => _expired;
 
@@ -50,6 +51,7 @@ public class Aura
         CurrentStacks = 1;
         MaxStacks = maxStacks;
         _hasPartialTicks = false;
+        _hastedTickRate = true;
         OnTick = onTick;
         OnApply = onApply;
         OnRemove = onRemove;
@@ -64,7 +66,8 @@ public class Aura
 
     public double GetTickInterval()
     {
-        return _caster.GetHastedValue(TickInterval.GetValue());
+        if (_hastedTickRate) return _caster.GetHastedValue(TickInterval.GetValue());
+        else return TickInterval.GetValue();
     }
 
     public void Apply(Unit caster, Unit target)
@@ -84,7 +87,8 @@ public class Aura
 
         if (TickInterval.GetValue() > 0)
         {
-            _tickEvent = new SimEvent(caster.Simulator, caster, TickInterval.GetValue(), () => DoTick());
+            _tickEvent = new SimEvent(caster.Simulator, caster, TickInterval.GetValue(), () => DoTick(),
+                _hastedTickRate);
             caster.Simulator.Schedule(_tickEvent);
         }
     }
@@ -145,6 +149,12 @@ public class Aura
     public Aura WithPartialTicks()
     {
         _hasPartialTicks = true;
+        return this;
+    }
+
+    public Aura WithoutHastedTicks()
+    {
+        _hastedTickRate = false;
         return this;
     }
 
@@ -214,7 +224,8 @@ public class Aura
 
         if (scheduleNextTick)
         {
-            _tickEvent = new SimEvent(_caster.Simulator, _caster, TickInterval.GetValue(), () => DoTick());
+            _tickEvent = new SimEvent(_caster.Simulator, _caster, TickInterval.GetValue(), () => DoTick(),
+                _hastedTickRate);
             _caster.Simulator.Schedule(_tickEvent);
         }
     }
