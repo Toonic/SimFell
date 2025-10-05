@@ -268,23 +268,22 @@ public class Rime : Unit
             {
                 //Wrath of Winter buff.
                 unit.ApplyBuff(unit, unit, new Aura(
-                        id: "wrath-of-winter",
-                        name: "Wrath of Winter",
-                        duration: 20,
-                        tickInterval: 4,
-                        onTick: (caster, target, aura) => { UpdateWinterOrbs(1); },
-                        onApply: (caster, target) =>
-                        {
-                            caster.DamageBuffs.AddModifier(wrathOfWinterDamageMod);
-                            _glacialBlast.CastTime.AddModifier(wrathOfWinterCastTimeMod);
-                        },
-                        onRemove: (caster, target) =>
-                        {
-                            caster.DamageBuffs.RemoveModifier(wrathOfWinterDamageMod);
-                            _glacialBlast.CastTime.RemoveModifier(wrathOfWinterCastTimeMod);
-                        }
-                    )
-                    .WithoutPartialTicks());
+                    id: "wrath-of-winter",
+                    name: "Wrath of Winter",
+                    duration: 20,
+                    tickInterval: 4,
+                    onTick: (caster, target, aura) => { UpdateWinterOrbs(1); },
+                    onApply: (caster, target) =>
+                    {
+                        caster.DamageBuffs.AddModifier(wrathOfWinterDamageMod);
+                        _glacialBlast.CastTime.AddModifier(wrathOfWinterCastTimeMod);
+                    },
+                    onRemove: (caster, target) =>
+                    {
+                        caster.DamageBuffs.RemoveModifier(wrathOfWinterDamageMod);
+                        _glacialBlast.CastTime.RemoveModifier(wrathOfWinterCastTimeMod);
+                    }
+                ));
 
                 //Spirit of Heroism Buff.
                 unit.ApplyBuff(unit, unit, SpiritOfHeroism);

@@ -98,10 +98,19 @@ public class Aura
             {
                 double partialTickPercentage =
                     (_caster.Simulator.Now - _tickEvent.StartTime) / (_tickEvent.Time - _tickEvent.StartTime);
-                Modifier partialTickMod = new Modifier(Modifier.StatModType.Multiplicative, partialTickPercentage);
-                _spellSource.DamageModifiers.AddModifier(partialTickMod);
-                OnTick?.Invoke(_caster, _target, this);
-                _spellSource.DamageModifiers.RemoveModifier(partialTickMod);
+
+                if (partialTickPercentage < 1 && partialTickPercentage > 0)
+                {
+                    double oldMinDamage = _damageMin;
+                    double oldMaxDamage = _damageMax;
+                    _damageMin *= partialTickPercentage;
+                    _damageMax *= partialTickPercentage;
+                    DoTick(false);
+                    _damageMin = oldMinDamage;
+                    _damageMax = oldMaxDamage;
+                }
+
+                Console.WriteLine(partialTickPercentage);
             }
 
             _caster.Simulator.UnSchedule(_tickEvent);
@@ -201,12 +210,15 @@ public class Aura
         _removeEvent.UpdateTime(delta);
     }
 
-    private void DoTick()
+    private void DoTick(bool scheduleNextTick = true)
     {
         OnTick?.Invoke(_caster, _target, this);
 
-        _tickEvent = new SimEvent(_caster.Simulator, _caster, TickInterval.GetValue(), () => DoTick());
-        _caster.Simulator.Schedule(_tickEvent);
+        if (scheduleNextTick)
+        {
+            _tickEvent = new SimEvent(_caster.Simulator, _caster, TickInterval.GetValue(), () => DoTick());
+            _caster.Simulator.Schedule(_tickEvent);
+        }
     }
 
     public void DoBonusInstantTicks(double durationInSeconds)
@@ -220,7 +232,7 @@ public class Aura
         // Apply the effect for that many ticks
         for (int i = 0; i < bonusTicks; i++)
         {
-            DoTick();
+            DoTick(false);
         }
     }
 
