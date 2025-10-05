@@ -49,7 +49,7 @@ public class Aura
         TickInterval = new Stat(tickInterval);
         CurrentStacks = 1;
         MaxStacks = maxStacks;
-        _hasPartialTicks = true;
+        _hasPartialTicks = false;
         OnTick = onTick;
         OnApply = onApply;
         OnRemove = onRemove;
@@ -135,6 +135,12 @@ public class Aura
         return this;
     }
 
+    public Aura WithPartialTicks()
+    {
+        _hasPartialTicks = true;
+        return this;
+    }
+
     public Aura WithOnApply(Action<Unit, Unit>? onApply)
     {
         OnApply += onApply;
@@ -161,6 +167,7 @@ public class Aura
     public Aura WithDamageOnTick(Spell spellSource, double minDamage, double maxDamage, bool scaleDamageOnTicks = false,
         bool includeCriticalStrike = true, bool includeExpertise = true, bool isFlatDamage = false)
     {
+        _hasPartialTicks = true;
         _spellSource = spellSource;
         _damageMin = scaleDamageOnTicks ? minDamage / (Duration / TickInterval.GetValue()) : minDamage;
         _damageMax = scaleDamageOnTicks ? maxDamage / (Duration / TickInterval.GetValue()) : maxDamage;
