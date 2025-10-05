@@ -43,19 +43,43 @@ public class Program
             MaxDegreeOfParallelism = Environment.ProcessorCount
         };
 
-        Parallel.For(0, config.RunCount, parallelOptions, i =>
-        {
-            var player = config.GetHero();
-            var enemies = new List<Unit>();
-            for (int e = 0; e < config.Enemies; e++)
-                enemies.Add(new Unit("Goblin: #" + e, true));
+        int completed = 0;
 
-            var simulator = new Simulator(player, enemies, config.Duration);
-            if (config.SimType == SimFellConfig.SimulationType.Debug) ConsoleLogger.Simulator = simulator;
-            simulator.Run();
-            results.StoreResults(simulator, config);
-        });
+        // Progress bar setup
+        AnsiConsole.Progress()
+            .AutoClear(true)
+            .HideCompleted(false)
+            .Columns(new ProgressColumn[]
+            {
+                new TaskDescriptionColumn(),
+                new ProgressBarColumn(),
+                new PercentageColumn(),
+                new RemainingTimeColumn(),
+                new SpinnerColumn()
+            })
+            .Start(ctx =>
+            {
+                var task = ctx.AddTask("[green]Running Simulations[/]", maxValue: config.RunCount);
 
+                Parallel.For(0, config.RunCount, parallelOptions, i =>
+                {
+                    var player = config.GetHero();
+                    var enemies = new List<Unit>();
+                    for (int e = 0; e < config.Enemies; e++)
+                        enemies.Add(new Unit("Goblin: #" + e, true));
+
+                    var simulator = new Simulator(player, enemies, config.Duration);
+                    if (config.SimType == SimFellConfig.SimulationType.Debug)
+                        ConsoleLogger.Simulator = simulator;
+
+                    simulator.Run();
+                    results.StoreResults(simulator, config);
+
+                    // Thread-safe progress update
+                    Interlocked.Increment(ref completed);
+                    task.Value = completed;
+                });
+            });
 
         stopwatch.Stop();
 
@@ -68,7 +92,6 @@ public class Program
         GC.WaitForPendingFinalizers();
         GC.Collect();
     }
-
 
     public void ApplicationLoop()
     {

@@ -109,8 +109,6 @@ public class Aura
                     _damageMin = oldMinDamage;
                     _damageMax = oldMaxDamage;
                 }
-
-                Console.WriteLine(partialTickPercentage);
             }
 
             _caster.Simulator.UnSchedule(_tickEvent);
