@@ -23,6 +23,7 @@ public class Aura
     public Action<Unit, Unit>? OnApply;
     public Action<Unit, Unit>? OnRemove;
     public Action<Unit, Unit>? OnIncreaseStack;
+    public Action<Unit, Unit>? OnDecreaseStack;
 
     // Damage Values
     private Spell _spellSource;
@@ -96,29 +97,64 @@ public class Aura
     public void Remove()
     {
         _expired = true;
+
         if (TickInterval.GetValue() > 0)
         {
-            if (_hasPartialTicks)
+            
+            if (_tickEvent != null && Math.Abs(_tickEvent.Time - _caster.Simulator.Now) < 0.001) // Floating point issue
             {
-                double partialTickPercentage =
-                    (_caster.Simulator.Now - _tickEvent.StartTime) / (_tickEvent.Time - _tickEvent.StartTime);
-
-                if (partialTickPercentage < 1 && partialTickPercentage > 0)
+                
+                if (_hasPartialTicks)
                 {
-                    double oldMinDamage = _damageMin;
-                    double oldMaxDamage = _damageMax;
-                    _damageMin *= partialTickPercentage;
-                    _damageMax *= partialTickPercentage;
-                    DoTick(false);
-                    _damageMin = oldMinDamage;
-                    _damageMax = oldMaxDamage;
+                    
+                    double partialTickPercentage =
+                        (_caster.Simulator.Now - _tickEvent.StartTime) / (_tickEvent.Time - _tickEvent.StartTime);
+
+                    if (partialTickPercentage < 1.001 && partialTickPercentage > 0)
+                    {
+                        double oldMinDamage = _damageMin;
+                        double oldMaxDamage = _damageMax;
+                        _damageMin *= partialTickPercentage;
+                        _damageMax *= partialTickPercentage;
+                        DoTick(false);
+                        _damageMin = oldMinDamage;
+                        _damageMax = oldMaxDamage;
+                    }
                 }
+                else
+                {
+                    DoTick(false);
+                }
+                _caster.Simulator.UnSchedule(_tickEvent);
             }
-
-            _caster.Simulator.UnSchedule(_tickEvent);
+            else
+            {
+                _caster.Simulator.UnSchedule(_tickEvent);
+            }
         }
-
         OnRemove?.Invoke(_caster, _target);
+    }
+
+    public Aura WithAOEDamageOnTick(Spell spellSource, double minDamage, double maxDamage, int targetCap,
+        bool scaleDamageOnTicks = false,
+        bool includeCriticalStrike = true, bool includeExpertise = true, bool isFlatDamage = false)
+    {
+        _hasPartialTicks = true;
+        _spellSource = spellSource;
+        _damageMin = scaleDamageOnTicks ? minDamage / (Duration / TickInterval.GetValue()) : minDamage;
+        _damageMax = scaleDamageOnTicks ? maxDamage / (Duration / TickInterval.GetValue()) : maxDamage;
+        _includeCriticalStrike = includeCriticalStrike;
+        _includeExpertise = includeExpertise;
+        _isFlatDamage = isFlatDamage;
+
+
+        OnTick += (caster, target, aura) =>
+        {
+            caster.DealAOEDamage(minDamage, maxDamage, targetCap, spellSource);
+        };
+
+
+        return this;
     }
 
     public void IncreaseStack()
@@ -132,7 +168,8 @@ public class Aura
     {
         CurrentStacks--;
         CurrentStacks = Math.Max(CurrentStacks, 0);
-        if (CurrentStacks == 0) Remove();
+        OnDecreaseStack?.Invoke(_caster, _target);
+        if (CurrentStacks == 0) _caster.RemoveBuff(this);
     }
 
     public double GetRemainingDuration()
@@ -201,30 +238,16 @@ public class Aura
         return this;
     }
 
-    public Aura WithAOEDamageOnTick(Spell spellSource, double minDamage, double maxDamage, int targetCap,
-        bool scaleDamageOnTicks = false,
-        bool includeCriticalStrike = true, bool includeExpertise = true, bool isFlatDamage = false)
-    {
-        _hasPartialTicks = true;
-        _spellSource = spellSource;
-        _damageMin = scaleDamageOnTicks ? minDamage / (Duration / TickInterval.GetValue()) : minDamage;
-        _damageMax = scaleDamageOnTicks ? maxDamage / (Duration / TickInterval.GetValue()) : maxDamage;
-        _includeCriticalStrike = includeCriticalStrike;
-        _includeExpertise = includeExpertise;
-        _isFlatDamage = isFlatDamage;
-
-        OnTick += (caster, target, aura) =>
-        {
-            int dmg = SimRandom.Next((int)_damageMin, (int)_damageMax);
-            caster.DealAOEDamage(dmg, targetCap, spellSource);
-        };
-
-        return this;
-    }
 
     public Aura WithIncreaseStacks(Action<Unit, Unit>? onIncreaseStack)
     {
         OnIncreaseStack += onIncreaseStack;
+        return this;
+    }
+
+    public Aura WithDecreaseStacks(Action<Unit, Unit>? onDecreaseStack)
+    {
+        OnDecreaseStack += onDecreaseStack;
         return this;
     }
 

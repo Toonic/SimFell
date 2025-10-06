@@ -23,9 +23,15 @@ public class Unit : SimLoopListener
     public List<SimAction> SimActions { get; set; } = new List<SimAction>();
 
     // Casting
-    public double GCD { get; set; }
+    public double BaseGCD { get; set; }
     public bool HastedGCD { get; set; }
+    private double _gcdEndTime = 0;
+    public bool IsOnGCD => Simulator.Now < _gcdEndTime;
     private Spell? _currentSpell;
+    private bool _isCasting = false;
+    private bool _isChanneling = false;
+    public bool IsCasting => _isCasting;
+    public bool IsChanneling => _isChanneling;
     public List<Unit> Targets = new List<Unit>();
 
     // Baseline Stats.
@@ -51,7 +57,8 @@ public class Unit : SimLoopListener
         onApply: (unit, target) => { unit.HasteStat.AddModifier(spiritOfHeroismMod); },
         onRemove: (unit, target) => { unit.HasteStat.RemoveModifier(spiritOfHeroismMod); }
     );
-
+    
+    public double ForbiddenTechniqueAccumulator { get; set; } // :)
 
     // Other Stat Buffs
     public Stat DamageBuffs = new Stat(0);
@@ -76,7 +83,7 @@ public class Unit : SimLoopListener
         Stamina = new Stat(999999);
         Health = new HealthStat(Stamina.GetValue());
         HasInfiniteHp = hasInfiniteHp;
-        GCD = 1.5;
+        BaseGCD = 1.5;
         HastedGCD = true;
 
         //Add base 5% Crit.
@@ -341,21 +348,19 @@ public class Unit : SimLoopListener
     /// <param name="targetCap">Target cap before AOE Damage Scaling happens.</param>
     /// <param name="includePrimaryTarget">Includes the Primary Target when dealing AOE. Disable when doing splash damage.</param>
     /// <param name="damageSource">Source of the damage. Usually a spell but can also be an Aura.</param>
-    public void DealAOEDamage(double damagePercent, double targetCap, Spell? spellSource = null,
-        bool includePrimaryTarget = true)
+    public void DealAOEDamage(double damagePercentLow, double damagePercentHigh, double targetCap, Spell? spellSource = null,
+        bool includePrimaryTarget = true, bool includeCriticalStrike = true, bool includeExpertise = true, bool isFlatDamage = false)
     {
         //Gets the list of targets, skips the first one if includePrimaryTarget is False.
         var affectedTargets = includePrimaryTarget ? Targets : Targets.Skip(1).ToList();
         int targetCount = affectedTargets.Count;
 
-        // Calculate damage per target
-        double damagePerTarget =
-            damagePercent * (targetCount > targetCap ? Math.Sqrt(targetCap / targetCount) : 1.0);
-
         // Deal damage to each affected target
         foreach (var target in affectedTargets)
         {
-            DealDamage(target, damagePerTarget, spellSource);
+            // Calculate damage per target
+            double damagePerTarget = SimRandom.Next((int)damagePercentLow, (int)damagePercentHigh) * (targetCount > targetCap ? Math.Sqrt(targetCap / targetCount) : 1.0);
+            DealDamage(target, damagePerTarget, spellSource, includeCriticalStrike, includeExpertise, isFlatDamage);
         }
     }
 
@@ -405,6 +410,8 @@ public class Unit : SimLoopListener
         var sourceName = spellSource != null
             ? spellSource.Name
             : "Unknown";
+        if (Name == "Goblin: #0")
+            ForbiddenTechniqueAccumulator += amount;
         var message = $"[bold blue]{sourceName}[/]"
                       + $" hits [bold yellow]{Name}[/]"
                       + $" for [bold magenta]{totalDamage}[/] "
@@ -445,8 +452,20 @@ public class Unit : SimLoopListener
     private List<SimEvent> _castEvents = new List<SimEvent>();
     private double _castStartTime;
 
+    public bool CanCast(Spell spell)
+    {
+        // Respect global cooldown -- TODO: Anti Spam shared cooldown for off gcd spells.
+        if (!spell.IgnoresGCD && IsOnGCD) return false;
+
+        return spell.CheckCanCast(this);
+    }
+    
     public void StartCasting(Spell spell, List<Unit> targets)
     {
+        if (spell.TriggersGCD)
+        {
+            StartGCD();
+        }
         _currentSpell = spell;
 
         // Handle Non-Channeled Spells.
@@ -456,7 +475,7 @@ public class Unit : SimLoopListener
                 SimulationLogLevel.CastEvents,
                 $"Casting [bold blue]{spell.Name}[/]"
             );
-
+            _isCasting = true;
             // Fire off the Cast Started Event.
             OnCastStarted?.Invoke(this, spell, Targets);
 
@@ -474,7 +493,7 @@ public class Unit : SimLoopListener
                 SimulationLogLevel.CastEvents,
                 $"Channeling [bold blue]{spell.Name}[/]"
             );
-
+            _isChanneling = true;
             // Trigger Cast Started Event.
             OnChannelStarted?.Invoke(this, spell, Targets);
 
@@ -525,6 +544,7 @@ public class Unit : SimLoopListener
 
     private void FinishCasting(Spell spell)
     {
+        _isCasting = false;
         _castEvents.Clear();
         ConsoleLogger.Log(
             SimulationLogLevel.CastEvents,
@@ -547,18 +567,27 @@ public class Unit : SimLoopListener
     private void FinishChanneling(Spell spell)
     {
         spell.OnTick -= OnTickFromChanneledSpell;
-
+        _isChanneling = false;
         foreach (var evt in _castEvents)
         {
-            if (evt.Time > Simulator.Now)
+            
+            if (evt.Time > Simulator.Now && (evt.Time - Simulator.Now > 0.001)) // Floating point issue
             {
-                //Handles Partial Ticks for channeled spells.
-                double partialTickPercentage = (Simulator.Now - evt.StartTime) / (evt.Time - evt.StartTime);
-                Modifier partialTickMod = new Modifier(Modifier.StatModType.Multiplicative, partialTickPercentage);
-                spell.DamageModifiers.AddModifier(partialTickMod);
-                TriggerSpellEvent(spell);
-                spell.DamageModifiers.RemoveModifier(partialTickMod);
-                Simulator.UnSchedule(evt);
+                if (!spell.PartialTicks)
+                {
+                    // If the spell does not allow partial ticks, just remove the event.
+                    Simulator.UnSchedule(evt);
+                }
+                else
+                {
+                    //Handles Partial Ticks for channeled spells.
+                    double partialTickPercentage = (Simulator.Now - evt.StartTime) / (evt.Time - evt.StartTime);
+                    Modifier partialTickMod = new Modifier(Modifier.StatModType.Multiplicative, partialTickPercentage);
+                    spell.DamageModifiers.AddModifier(partialTickMod);
+                    TriggerSpellEvent(spell);
+                    spell.DamageModifiers.RemoveModifier(partialTickMod);
+                    Simulator.UnSchedule(evt);
+                }
             }
         }
 
@@ -567,22 +596,31 @@ public class Unit : SimLoopListener
             SimulationLogLevel.CastEvents,
             $"Finished Channeling [bold blue]{spell.Name}[/]"
         );
-
         ScheduleNextCast();
+    }
+
+    public double GetEffectiveGCD()
+    {
+        double gcd = BaseGCD;
+        if (HastedGCD)
+        {
+            gcd /= (1 + HasteStat.GetValue() / 100.0); // your haste scaling
+        }
+        return gcd;
+    }
+    public void StartGCD()
+    {
+        _gcdEndTime = Simulator.Now + GetEffectiveGCD();
     }
 
     private void ScheduleNextCast()
     {
-        double gcd = _currentSpell.GetGCD(this);
-        double nextActionDelay = Math.Max(0,
-            gcd - (_currentSpell.Channel ? _currentSpell.ChannelTime.GetValue() : _currentSpell.CastTime.GetValue()));
-        if (nextActionDelay > 0)
-            ConsoleLogger.Log(
-                SimulationLogLevel.CastEvents,
-                $" -> Waiting on [bold blue]GCD[/]."
-            );
-        Simulator.Schedule(new SimEvent(Simulator, this, nextActionDelay,
-            () => Simulator.QueuePlayerAction(this), _currentSpell.GetIsGCDHasted(this)));
+        double castOrChannelTime = _currentSpell.Channel
+            ? _currentSpell.ChannelTime.GetValue()
+            : _currentSpell.CastTime.GetValue();
+
+        Simulator.Schedule(new SimEvent(Simulator, this, castOrChannelTime,
+            () => Simulator.QueuePlayerAction(this), false));
     }
 
     private void TriggerSpellEvent(Spell spell)

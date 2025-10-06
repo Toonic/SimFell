@@ -106,6 +106,7 @@ public class SimFellConfig
         if (hero == "rime") return new Rime();
         if (hero == "tariq") return new Tariq();
         if (hero == "ardeos") return new Ardeos();
+        if (hero == "meiko") return new Meiko();
 
         // Returns if no other Hero is properly configured.
         ConsoleLogger.Log(SimulationLogLevel.Error, "Invalid Hero in SimFellConfig: " + heroName);

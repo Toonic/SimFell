@@ -1,0 +1,123 @@
+# Sim Configuration
+name=Meiko - Quickplay - Average
+duration=300
+enemies=1
+run_count=50
+simulation_type=average
+simulation_mode=time
+
+# Character Configuration
+hero=Meiko
+
+stat_mode=percent
+
+primary=1000
+crit=20
+expertise=20
+haste=20
+spirit=20
+
+#talents=2-12-3 # Stands for Talents 1.2, 2.1, 2.2, 3.3. Legendaries are in row 7.
+#							Talent Tree
+#           1           |        2 			  |        3
+# 1  Resonance Of Earth | Perfect Storm       | Will of Stone
+# 2  Thundering Kicks   | Harsh Winds         | Earthen Guard 
+# 3  Earthwell          | Debilitating Vortex | Unwavering Spirit
+# 4  Slipstream         | Magic Ward          | Spirited Advance
+# 5  Serene Resilience  | Earthbourne         | Forbidden Technique
+# 6  Peacefield         | Superior Bulwark    | Conclusive Strikes
+#							Legendaries
+#               1			     |              2          
+# 7  Necklace of Tectonic Impact | Shattering Obelisk Drape  
+#Default: talents=13-3-23--2-3
+#No Unwavering talents=13-23-2--2-23-2
+#Forbidden Tech: talents=13-3-2--23     
+#FT no Will: talents=1-23-2--23-3
+#MonkeyMode: talents=3-23-3--23-3
+talents=13-23-2--2-23-2
+
+
+# Gear
+# gear_helmet=Test Helm Name,int=14,stam=17,exp=23,crit=4,gem_bonus=33,gem=ruby_t1,ilvl=150,tier=6
+# gear_shoulder=Test Shoulder Name,int=12,stam=15,crit=13,haste=6,set=Wyrmling Vigor,ilvl=150,tier=6
+
+
+# Meiko APL Specifics
+# Finishers should only be called via the finisher action, calling them directly bypasses combo checks for easier debugging.
+# "character.builder_one" and "character.builder_two" can be used to check the current combo state.
+# character.builder_one==0 : There is no ability starting a combo
+# character.builder_one==1 : Spirit Palm is the ability starting the Combo. 2 = Wind Kick, 3 = Earth first
+# character.builder_two==X : Same as builder_one but for the second ability in the combo. 
+
+## TODO - Implement APL variables and multiple action list support.
+# ----------------------------Start auto attacking
+
+action=/auto_attack
+
+# ----------------------------Always attempt a finisher if one is ready
+
+action+=/finisher
+
+# ----------------------------Use our cooldowns.
+
+action+=/twin_souls_bulwark
+action+=/stone_shield,if=!talent.forbidden_technique
+action+=/twin_souls_army,if=!talent.forbidden_technique
+action+=/shatter_earth,if=!talent.forbidden_technique
+action+=/stone_stomp,if=!talent.forbidden_technique
+
+# ----------------------------Forbidden Technique specific cooldown usage
+
+action+=/twin_souls_army,if=debuff.forbidden_technique.up
+action+=/stone_shield,if=debuff.forbidden_technique.up
+action+=/shatter_earth,if=debuff.forbidden_technique.up
+action+=/stone_stomp,if=debuff.forbidden_technique.up
+
+# ----------------------------Maintain Spirited Vortex (Palm -> Fist)
+
+# Use Spirit Palm if no combo started and buff.spirited_vortex is down
+action+=/spirit_palm,if=character.builder_one=0&buff.spirited_vortex.down
+
+# Follow with Earth Fist if Spirit Palm is first builder
+action+=/earth_fist,if=character.builder_two=0&character.builder_one=1&buff.spirited_vortex.down
+
+# ----------------------------Rising Earth (Fist -> Palm) to generate Earthfall stacks
+
+# Start with Earth Fist if no combo started
+action+=/earth_fist,if=character.builder_one=0&buff.earthfall.down&targets<=4
+
+# Follow with Spirit Palm if Earth Fist is first builder
+action+=/spirit_palm,if=character.builder_two=0&character.builder_one=3&buff.earthfall.down
+
+# ----------------------------Rising Storm (Kick -> Palm) to generate Stormfall stacks
+
+# Start with Wind Kick if no combo started
+action+=/wind_kick,if=character.builder_one=0&buff.stormfall.down&targets>=5
+
+# Follow with Spirit Palm if Wind Kick is first builder
+action+=/spirit_palm,if=character.builder_two=0&character.builder_one=2&buff.stormfall.down
+
+# ----------------------------Forbidden Technique (Palm -> Kick) when debuff has expired
+
+# Use Spirit Palm if no combo started and Forbidden Technique debuff is down
+action+=/spirit_palm,if=talent.forbidden_technique.enabled&character.builder_one=0&debuff.forbidden_technique.down
+
+# Follow with Wind Kick if Spirit Palm is first builder and Forbidden Technique debuff is down
+action+=/wind_kick,if=talent.forbidden_technique.enabled&character.builder_two=0&character.builder_one=1&debuff.forbidden_technique.down
+
+# ----------------------------Earthfist Barrage (Fist -> Kick) to spend Earthfall stacks
+
+# Start with Earth Fist if no combo started and have Earthfall stacks
+action+=/earth_fist,if=character.builder_one=0&buff.earthfall.up
+
+# Follow with Wind Kick if Earth Fist is first builder and Earthfall stacks are up
+action+=/wind_kick,if=character.builder_two=0&character.builder_one=3&buff.earthfall.up
+
+# ----------------------------Lashing Stormkick (Kick -> Fist) to spend Stormfall stacks
+
+# Start with Wind_kick if no combo started and have stormfall stacks
+action+=/wind_kick,if=character.builder_one=0&buff.stormfall.up
+
+# Follow with Wind Kick if Earth Fist is first builder and Earthfall stacks are up
+action+=/earth_fist,if=character.builder_two=0&character.builder_one=2&buff.stormfall.up
+

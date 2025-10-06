@@ -108,10 +108,9 @@ public class Tariq : Unit
             name: "Thunder Call",
             cooldown: 45,
             castTime: 0,
-            hasGCD: false,
             canCastWhileCasting: true,
             onCast: (unit, spell, targets) => { unit.ApplyBuff(unit, unit, _thunderCallAura); }
-        );
+        ).OffGCD();
 
         //TODO: Use stacks on this instead and subtract stacks.
         int focusedWrathUsage = 0;
@@ -144,7 +143,6 @@ public class Tariq : Unit
             name: "Auto Attack",
             cooldown: 0,
             castTime: 0,
-            hasGCD: false,
             canCastWhileCasting: true, // I'm not 100% sure on this? I'll look later.
             onCast: (unit, spell, targets) =>
             {
@@ -152,7 +150,7 @@ public class Tariq : Unit
                              ?? throw new Exception("No valid targets");
                 DealDamage(target, 90, spell);
             }
-        );
+        ).OffGCD();
 
         //Heavy Strike.
         _heavyStrike = new Spell(
@@ -160,7 +158,6 @@ public class Tariq : Unit
             name: "Heavy Strike",
             cooldown: 0,
             castTime: 0,
-            hasGCD: false,
             canCastWhileCasting: true,
             canCast: (unit, spell) => NextSwingTime <= Simulator.Now,
             onCast: (unit, spell, targets) =>
@@ -179,7 +176,7 @@ public class Tariq : Unit
                     }
                 }
             }
-        );
+        ).OffGCD();
 
         //Skull Crusher
         _skullCrusher = new Spell(
@@ -187,7 +184,6 @@ public class Tariq : Unit
             name: "Skull Crusher",
             cooldown: 0,
             castTime: 0,
-            hasGCD: false,
             hasAntiSpam: true, //Used when the spell can be spammed. (Multi Stacks etc.)
             canCast: (unit, spell) => Fury >= focusedWrathCostBuff.GetValue(0.5),
             onCast: (unit, spell, targets) =>
@@ -209,7 +205,7 @@ public class Tariq : Unit
                     if (focusedWrathUsage == 2) unit.RemoveBuff(_focusedWrathAura);
                 }
             }
-        );
+        ).OffGCD();
 
         //Hammer Storm
         double hammerStormRageSpent = 0;
@@ -268,7 +264,6 @@ public class Tariq : Unit
             name: "Face Breaker",
             cooldown: 0,
             castTime: 0,
-            hasGCD: false,
             canCastWhileCasting: true,
             canCast: (unit, spell) => faceBreakerActive,
             onCast: (unit, spell, targets) =>
@@ -278,7 +273,7 @@ public class Tariq : Unit
                 faceBreakerActive = false;
                 DealDamage(target, 275, spell);
             }
-        );
+        ).OffGCD();
 
         // Wild Swing
         // Wild Swing can't crit instead increases damage.
@@ -376,7 +371,6 @@ public class Tariq : Unit
             name: "Leap Smash",
             cooldown: 20,
             castTime: 0,
-            hasGCD: false,
             onCast: (unit, spell, targets) =>
             {
                 foreach (var target in targets)
@@ -386,7 +380,7 @@ public class Tariq : Unit
 
                 GainFury(0.25);
             }
-        );
+        ).OffGCD();
 
         _cullingStrike = new Spell(
             id: "culling-strike",
@@ -424,9 +418,8 @@ public class Tariq : Unit
             name: "Focused Wrath",
             cooldown: 90,
             castTime: 0,
-            hasGCD: false,
             onCast: (unit, spell, targets) => { unit.ApplyBuff(unit, unit, _focusedWrathAura); }
-        );
+        ).OffGCD();
 
         SpellBook.Add(_autoAttack);
         SpellBook.Add(_skullCrusher);

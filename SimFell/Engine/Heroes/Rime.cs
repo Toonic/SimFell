@@ -111,7 +111,7 @@ public class Rime : Unit
         DealDamage(PrimaryTarget, dam, _flightOfTheNavir);
         if (SimRandom.Roll(35))
         {
-            DealAOEDamage(dam * 0.7f, 5, frostSwallowsFracture, false);
+            DealAOEDamage(dam * 0.7f, dam * 0.7f, 5, frostSwallowsFracture, false);
         }
     }
 
@@ -216,7 +216,7 @@ public class Rime : Unit
         _iceComet = new Spell("ice-comet", "Ice Comet", 0, 0)
             .WithCanCast(((unit, spell) => WinterOrbs >= 2))
             .WithOnCastingCost((caster, spell) => UpdateWinterOrbs(-(int)(spell.ResourceCostModifiers.GetValue(2))))
-            .WithOnCast((unit, spell, targets) => { DealAOEDamage(SimRandom.Next(4059, 4961), 8, spell); });
+            .WithOnCast((unit, spell, targets) => { DealAOEDamage(4059, 4961, 8, spell); });
 
         // Ice Blitz
         Modifier iceBlitzBonusDamage = new Modifier(Modifier.StatModType.MultiplicativePercent, 20);
@@ -425,7 +425,7 @@ public class Rime : Unit
                     {
                         UpdateAnima(2); // Bonus + 2 Anima.
                         //Same Damage/AOE as Bursting Ice.
-                        DealAOEDamage(SimRandom.Next(495, 605), 5, _burstingIce);
+                        DealAOEDamage(495, 605, 5, _burstingIce);
                     }
                 };
             });
@@ -530,12 +530,12 @@ public class Rime : Unit
                     double rollChance = SimRandom.NextDouble();
                     if (rollChance < 0.07)
                     {
-                        DealAOEDamage(SimRandom.Next(4059, 4961), 5, spell);
-                        DealAOEDamage(SimRandom.Next(4059, 4961), 5, spell);
+                        DealAOEDamage(4059, 4961, 5, spell);
+                        DealAOEDamage(4059, 4961, 5, spell);
                     }
                     else if (rollChance < 0.15)
                     {
-                        DealAOEDamage(SimRandom.Next(4059, 4961), 5, spell);
+                        DealAOEDamage(4059, 4961, 5, spell);
                     }
                 };
             });
@@ -551,7 +551,7 @@ public class Rime : Unit
         coalescingFrostAura.WithOnRemove((unit1, unit2) =>
         {
             double damage = coalescingFrostAura.CurrentStacks * 53;
-            DealAOEDamage(damage, 5, coalescingFrost);
+            DealAOEDamage(damage, damage, 5, coalescingFrost);
         });
         coalescingFrostAura.WithIncreaseStacks((unit, unit1) => { coalescingFrostAura.ResetDuration(); });
 
