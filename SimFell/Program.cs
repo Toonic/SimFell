@@ -35,72 +35,62 @@ public class Program
             ConsoleLogger.SetLevel(SimulationLogLevel.Minimal);
         }
 
-        List<SimLoop> simLoops = new List<SimLoop>();
-
-
-        var tasks = new Task[config.RunCount];
-        var exceptions = new List<Exception>();
-        var exceptionLock = new object();
+        var results = new ResultsReporter();
         var stopwatch = Stopwatch.StartNew();
 
-        //Run all
-        for (int i = 0; i < config.RunCount; i++)
+        var parallelOptions = new ParallelOptions
         {
-            int threadId = i;
+            MaxDegreeOfParallelism = Environment.ProcessorCount
+        };
 
-            SimLoop loop = new SimLoop();
-            simLoops.Add(loop);
+        int completed = 0;
 
-            // If we are in Debug mode, set the Console Logger Simloop for better printing.
-            if (config.SimType == SimFellConfig.SimulationType.Debug) ConsoleLogger.simLoop = loop;
-            else ConsoleLogger.simLoop = null;
-
-            Unit player = config.GetHero();
-
-            List<Unit> freshEnemies = new List<Unit>();
-            for (int e = 0; e < config.Enemies; e++)
+        // Progress bar setup
+        AnsiConsole.Progress()
+            .AutoClear(true)
+            .HideCompleted(false)
+            .Columns(new ProgressColumn[]
             {
-                freshEnemies.Add(new Unit("Goblin: #" + e, true));
-            }
-
-            tasks[i] = Task.Run(() =>
+                new TaskDescriptionColumn(),
+                new ProgressBarColumn(),
+                new PercentageColumn(),
+                new RemainingTimeColumn(),
+                new SpinnerColumn()
+            })
+            .Start(ctx =>
             {
-                try
+                var task = ctx.AddTask("[green]Running Simulations[/]", maxValue: config.RunCount);
+
+                Parallel.For(0, config.RunCount, parallelOptions, i =>
                 {
-                    loop.Start(
-                        player,
-                        freshEnemies,
-                        config.Duration);
-                }
-                catch (Exception ex)
-                {
-                    lock (exceptionLock)
-                    {
-                        exceptions.Add(new Exception($"Thread {threadId}: {ex.Message}", ex));
-                    }
-                }
+                    var player = config.GetHero();
+                    var enemies = new List<Unit>();
+                    for (int e = 0; e < config.Enemies; e++)
+                        enemies.Add(new Unit("Goblin: #" + e, true));
+
+                    var simulator = new Simulator(player, enemies, config.Duration);
+                    if (config.SimType == SimFellConfig.SimulationType.Debug)
+                        ConsoleLogger.Simulator = simulator;
+
+                    simulator.Run();
+                    results.StoreResults(simulator, config);
+
+                    // Thread-safe progress update
+                    Interlocked.Increment(ref completed);
+                    task.Value = completed;
+                });
             });
-        }
-
-        // Wait for all the tasks to finish before we do calculations.
-        try
-        {
-            Task.WaitAll(tasks);
-        }
-        catch (AggregateException ae)
-        {
-            lock (exceptionLock)
-            {
-                exceptions.AddRange(ae.InnerExceptions);
-            }
-        }
 
         stopwatch.Stop();
 
-        Console.WriteLine("Duration: " + stopwatch.Elapsed.ToString(@"hh\:mm\:ss\.fff"));
-        Console.WriteLine("Itterations: " + config.RunCount.ToString("N0"));
-        var results = new ResultsReporter(simLoops, config);
+        Console.WriteLine($"Duration: {stopwatch.Elapsed:hh\\:mm\\:ss\\.fff}");
+        Console.WriteLine($"Iterations: {config.RunCount:N0}");
         results.Display();
+        results = null;
+
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
     }
 
     public void ApplicationLoop()

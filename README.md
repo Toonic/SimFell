@@ -28,6 +28,7 @@ SimFell is a work-in-progress .NET 9.0 console application that simulates combat
 | APL and Configuration Files    | ✅ Implemented |
 | Talents, Stats, and Spells     | ✅ Implemented |
 | Rime                           | ✅ Implemented|
+| Ardeos - WIP                   | ⚙️ Rough Draft|
 | Tariq - (Next Fest Example)    | ⚙️ Rough Draft|
 | Gems, Legendaries, and Items   | ⚙️ Rough Draft|
 | Rotation Opener, Multi-dotting | 🚧 Not Started |

@@ -2,7 +2,7 @@
 name=Rime - Quickplay - Debug
 duration=120
 enemies=1
-run_count=10000
+run_count=1
 simulation_type=debug
 simulation_mode=time
 
@@ -18,7 +18,7 @@ haste=20
 spirit=20
 
 #talents=2-12-3 # Stands for Talents 1.2, 2.1, 2.2, 3.3
-talents=1-1-0
+talents=0-0-0
 
 # Gear
 # gear_helmet=Test Helm Name,int=14,stam=17,exp=23,crit=4,gem_bonus=33,gem=ruby_t1,ilvl=150,tier=6

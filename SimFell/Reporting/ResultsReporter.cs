@@ -18,61 +18,55 @@ public class ResultsReporter
     private double totalDuration;
     private SimFellConfig config;
 
-    public ResultsReporter(List<SimLoop> simLoops, SimFellConfig config)
+    public void StoreResults(Simulator simulator, SimFellConfig config)
     {
         this.config = config;
-        totalIterations = simLoops.Count;
+        totalIterations = config.RunCount;
         totalDuration = config.Duration;
 
-        foreach (SimLoop simLoop in simLoops)
-        {
-            iterationDpsValues.Add(simLoop.GetDPS());
-        }
+        iterationDpsValues.Add(simulator.GetDPS());
 
-        BuildSpellResults(simLoops);
+        BuildSpellResults(simulator);
     }
 
-    private void BuildSpellResults(List<SimLoop> simLoops)
+    private void BuildSpellResults(Simulator simulator)
     {
-        foreach (SimLoop simLoop in simLoops)
+        foreach (var spellStat in simulator.GetSpellStats())
         {
-            foreach (var spellStat in simLoop.GetSpellStats())
-            {
-                spellResults.AddOrUpdate(
-                    spellStat.Key,
-                    _ => new SpellStats
+            spellResults.AddOrUpdate(
+                spellStat.Key,
+                _ => new SpellStats
+                {
+                    SpellName = spellStat.Value.SpellName,
+                    TotalDamage = spellStat.Value.TotalDamage,
+                    Casts = spellStat.Value.Casts,
+                    Ticks = spellStat.Value.Ticks,
+                    LargestHit = spellStat.Value.LargestHit,
+                    SmallestHit = spellStat.Value.SmallestHit,
+                    CritCount = spellStat.Value.CritCount,
+                },
+                (key, existingStat) =>
+                {
+                    lock (existingStat)
                     {
-                        SpellName = spellStat.Value.SpellName,
-                        TotalDamage = spellStat.Value.TotalDamage,
-                        Casts = spellStat.Value.Casts,
-                        Ticks = spellStat.Value.Ticks,
-                        LargestHit = spellStat.Value.LargestHit,
-                        SmallestHit = spellStat.Value.SmallestHit,
-                        CritCount = spellStat.Value.CritCount,
-                    },
-                    (key, existingStat) =>
-                    {
-                        lock (existingStat)
+                        existingStat.Casts += spellStat.Value.Casts;
+                        existingStat.Ticks += spellStat.Value.Ticks;
+                        existingStat.TotalDamage += spellStat.Value.TotalDamage;
+                        if (spellStat.Value.LargestHit > existingStat.LargestHit)
                         {
-                            existingStat.Casts += spellStat.Value.Casts;
-                            existingStat.Ticks += spellStat.Value.Ticks;
-                            existingStat.TotalDamage += spellStat.Value.TotalDamage;
-                            if (spellStat.Value.LargestHit > existingStat.LargestHit)
-                            {
-                                existingStat.LargestHit = spellStat.Value.LargestHit;
-                            }
-
-                            if (spellStat.Value.SmallestHit < existingStat.SmallestHit)
-                            {
-                                existingStat.SmallestHit = spellStat.Value.SmallestHit;
-                            }
-
-                            existingStat.CritCount += spellStat.Value.CritCount;
+                            existingStat.LargestHit = spellStat.Value.LargestHit;
                         }
 
-                        return existingStat;
-                    });
-            }
+                        if (spellStat.Value.SmallestHit < existingStat.SmallestHit)
+                        {
+                            existingStat.SmallestHit = spellStat.Value.SmallestHit;
+                        }
+
+                        existingStat.CritCount += spellStat.Value.CritCount;
+                    }
+
+                    return existingStat;
+                });
         }
     }
 

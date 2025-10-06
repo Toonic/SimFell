@@ -15,11 +15,8 @@ public class HeroConfigurationTableBuilder(SimFellConfig config)
     public Table BuildConfigTable()
     {
         var configTable = new Table().Border(TableBorder.Rounded).BorderColor(Color.SandyBrown);
-
         configTable.AddColumn(new TableColumn("[steelblue1]Configuration[/]"));
         configTable.AddColumn(new TableColumn("[steelblue1]Value[/]"));
-
-        Unit hero = config.GetHero();
 
         configTable.AddRow(
             $"[steelblue1]Simulation Type[/]",

@@ -10,7 +10,7 @@ public static class ConsoleLogger
     private static SimulationLogLevel _enabledLevels = SimulationLogLevel.All;
 
     public static bool Enabled { get; set; } = true;
-    public static SimLoop simLoop { get; set; }
+    public static Simulator Simulator { get; set; }
 
     public static void Configure(IConfiguration config)
     {
@@ -29,6 +29,7 @@ public static class ConsoleLogger
                     flags |= lvl;
                 }
             }
+
             _enabledLevels = flags;
         }
         else _enabledLevels = SimulationLogLevel.Default;
@@ -50,7 +51,7 @@ public static class ConsoleLogger
         if (!_enabledLevels.HasFlag(level)) return;
 
         var formatted = emoji is null ? message : $"{emoji} {message}";
-        var time = simLoop == null ? 0 : simLoop.GetElapsed();
+        var time = Simulator == null ? 0 : Simulator.Now;
 
         var cleanMessage = Regex.Replace(Markup.Escape(formatted), @"\[.*?\]", "").Replace("]", "");
         FileLogger.SimulationEvent(level, $"{time:F2}s : {cleanMessage}");
@@ -66,14 +67,14 @@ public static class ConsoleLogger
         if (!Enabled) return;
         if (!_enabledLevels.HasFlag(level)) return;
 
-        var time = simLoop == null ? 0 : simLoop.GetElapsed();
+        var time = Simulator == null ? 0 : Simulator.Now;
         if (level != SimulationLogLevel.Setup)
         {
             AnsiConsole.MarkupLine($"Time [aqua]{time:F2}[/]:");
         }
+
         AnsiConsole.Write(renderable);
 
         FileLogger.SimulationEvent(level, $"{time:F2}s : {renderable} (Reference console output)");
     }
 }
-
