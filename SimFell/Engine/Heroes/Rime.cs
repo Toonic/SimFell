@@ -216,7 +216,7 @@ public class Rime : Unit
         _iceComet = new Spell("ice-comet", "Ice Comet", 0, 0)
             .WithCanCast(((unit, spell) => WinterOrbs >= 2))
             .WithOnCastingCost((caster, spell) => UpdateWinterOrbs(-(int)(spell.ResourceCostModifiers.GetValue(2))))
-            .WithOnCast((unit, spell, targets) => { DealAOEDamage(SimRandom.Next(4059, 4961), 8, spell); });
+            .WithOnCast((unit, spell, targets) => { DealAOEDamage(4059, 4961, 8, spell); });
 
         // Ice Blitz
         Modifier iceBlitzBonusDamage = new Modifier(Modifier.StatModType.MultiplicativePercent, 20);
