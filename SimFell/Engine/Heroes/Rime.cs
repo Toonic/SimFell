@@ -111,7 +111,6 @@ public class Rime : Unit
         DealDamage(PrimaryTarget, dam, _flightOfTheNavir);
         if (SimRandom.Roll(35))
         {
-            //TODO: Figure out what the Target Cap is.
             DealAOEDamage(dam * 0.7f, dam * 0.7f, 5, frostSwallowsFracture, false);
         }
     }
