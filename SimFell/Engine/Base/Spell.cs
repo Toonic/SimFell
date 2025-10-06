@@ -8,17 +8,17 @@ public class Spell
 {
     public string ID { get; private set; }
     public string Name { get; set; }
-    private Stat Cooldown { get; set; }
+    public Stat Cooldown { get; set; }
 
     public double OffCooldown;
     public Stat CastTime { get; set; }
     public bool Channel { get; set; } //When the spell is a channeled spell.
+    public bool PartialTicks { get; set; }
     public Stat ChannelTime { get; set; } = new Stat(0);
     public Stat TickRate { get; set; }
     public Stat TravelTime { get; set; } = new Stat(0.000001);
-    public bool HasGCD { get; set; }
-    public double GCD { get; set; }
-    public bool HastedGCD { get; set; }
+    public bool TriggersGCD { get; set; }
+    public bool IgnoresGCD { get; set; }
     public bool CanCastWhileCasting { get; set; }
     public bool HasAntiSpam { get; set; }
     public bool HasteEffectsCoolodwn { get; set; }
@@ -47,7 +47,9 @@ public class Spell
 
         // Default valeus for all spells unless defined otherwise.
         Channel = false;
-        HasGCD = true;
+        PartialTicks = true;
+        TriggersGCD = true;
+        IgnoresGCD = false;
         CanCastWhileCasting = false;
         HasAntiSpam = false;
         HasteEffectsCoolodwn = false;
@@ -97,8 +99,14 @@ public class Spell
     {
         Channel = true;
         HasteEffectsChannel = false;
+        PartialTicks = true;
         ChannelTime = new Stat(channelTime);
         TickRate = new Stat(tickRate);
+        return this;
+    }
+    public Spell WithoutPartialTicks()
+    {
+        PartialTicks = false;
         return this;
     }
 
@@ -110,7 +118,13 @@ public class Spell
 
     public Spell DisableGCD()
     {
-        HasGCD = false;
+        TriggersGCD = false; // does not start GCD
+        return this;
+    }
+    public Spell OffGCD()
+    {
+        IgnoresGCD = true; // can cast while on GCD
+        TriggersGCD = false; // does not start GCD
         return this;
     }
 
@@ -120,6 +134,7 @@ public class Spell
         return this;
     }
 
+    /* WIP
     public Spell WithCustomGCD(double gcd, bool isHasted)
     {
         overridesGCD = true;
@@ -127,11 +142,12 @@ public class Spell
         HastedGCD = isHasted;
         return this;
     }
+    */
 
     [Obsolete("Do not use this constructor. Convert to the new system.")]
     public Spell(
         string id, string name, double cooldown, double castTime, bool channel = false, double channelTime = 0,
-        double tickRate = 0, bool hasGCD = true, bool canCastWhileCasting = false,
+        double tickRate = 0, bool canCastWhileCasting = false,
         bool hasAntiSpam = false, bool hasteEffectsCooldown = false, Func<Unit, Spell, bool>? canCast = null,
         Action<Unit, Spell, List<Unit>>? onCast = null, Action<Unit, Spell, List<Unit>>? onTick = null)
     {
@@ -149,7 +165,8 @@ public class Spell
         Channel = channel;
         ChannelTime = new Stat(channelTime);
         TickRate = new Stat(tickRate);
-        HasGCD = hasGCD;
+        TriggersGCD = true;
+        IgnoresGCD = false;
         HasAntiSpam = hasAntiSpam;
         HasteEffectsCoolodwn = hasteEffectsCooldown;
         CanCastWhileCasting = canCastWhileCasting;
@@ -178,6 +195,9 @@ public class Spell
 
     public bool CheckCanCast(Unit caster)
     {
+        // GCD checks are done in Unit class.
+        if (!CanCastWhileCasting && caster.IsCasting || caster.IsChanneling)
+            return false;
         UpdateCooldownAndCharges(caster);
         return Charges > 0 && (CanCast?.Invoke(caster, this) ?? true);
     }
@@ -185,26 +205,6 @@ public class Spell
     public double GetTickRate(Unit caster)
     {
         return TickRate.GetValue();
-    }
-
-    public double GetGCD(Unit caster)
-    {
-        if (!HasGCD)
-            if (HasAntiSpam) return 0.6; //Forced 0.6~ oGCD on all spells to stop people from spamming spells.
-            else return 0;
-
-        if (overridesGCD) return GCD;
-        return caster.GCD;
-    }
-
-    public bool GetIsGCDHasted(Unit caster)
-    {
-        if (overridesGCD)
-        {
-            return HastedGCD;
-        }
-
-        return caster.HastedGCD;
     }
 
     public void CastingCost(Unit caster)

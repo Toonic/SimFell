@@ -117,7 +117,7 @@ public class Ardeos : Unit
             .WithOnCast((unit, spell, targets) =>
             {
                 // TODO: Damage falloff/Target Cap
-                DealAOEDamage(SimRandom.Next(6957, 8503), 5, spell);
+                DealAOEDamage(6957, 8503, 5, spell);
                 Unit currentPrimaryTarget = PrimaryTarget;
                 foreach (var target in targets)
                 {
@@ -205,7 +205,7 @@ public class Ardeos : Unit
                 }
             };
             OnDamageDealt += onDamageHandler;
-            DealAOEDamage(SimRandom.Next(2529, 3091), 5, spell);
+            DealAOEDamage(2529, 3091, 5, spell);
             OnDamageDealt -= onDamageHandler;
         });
 

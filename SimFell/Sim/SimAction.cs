@@ -9,7 +9,7 @@ public class SimAction
     public bool CanExecute(Unit unit)
     {
         // A: Check if spell can be cast (defaulting to true for now)
-        if (!Spell.CheckCanCast(unit))
+        if (!unit.CanCast(Spell))
             return false;
 
         // B: Check the condition
