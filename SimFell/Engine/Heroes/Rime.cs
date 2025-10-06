@@ -103,7 +103,7 @@ public class Rime : Unit
         WinterOrbs = Math.Clamp(WinterOrbs, 0, MaxWinterOrbs);
     }
 
-    private Spell frostSwallowsFracture = new Spell(id: "frost-swallows-fracture", name: "Frost Swallows: Fracture");
+    private Spell frostSwallowsFracture = new(id: "frost-swallows-fracture", name: "Frost Swallows: Fracture");
 
     public void DoSwallowDamage()
     {
@@ -167,7 +167,7 @@ public class Rime : Unit
                 tickInterval: 0.5
             )
             .WithOnTick((_, _, _) => UpdateAnima(1))
-            .WithDamageOnTick(_burstingIce, 495, 605);
+            .WithAOEDamageOnTick(_burstingIce, 495, 605, 5);
 
         // Flight of the Navir
         // OnDamageReceived event for Flight of the Navir.
@@ -217,11 +217,7 @@ public class Rime : Unit
         _iceComet = new Spell("ice-comet", "Ice Comet", 0, 0)
             .WithCanCast(((unit, spell) => WinterOrbs >= 2))
             .WithOnCastingCost((caster, spell) => UpdateWinterOrbs(-(int)(spell.ResourceCostModifiers.GetValue(2))))
-            .WithOnCast((unit, spell, targets) =>
-            {
-                //TODO: Figure out what the Target Cap is.
-                DealAOEDamage(4059, 4961, 5, spell);
-            });
+            .WithOnCast((unit, spell, targets) => { DealAOEDamage(SimRandom.Next(4059, 4961), 8, spell); });
 
         // Ice Blitz
         Modifier iceBlitzBonusDamage = new Modifier(Modifier.StatModType.MultiplicativePercent, 20);
@@ -260,8 +256,7 @@ public class Rime : Unit
         // Wrath of Winter - Spirit Ability.
         Modifier wrathOfWinterDamageMod = new Modifier(Modifier.StatModType.MultiplicativePercent, 25);
         Modifier wrathOfWinterCastTimeMod = new Modifier(Modifier.StatModType.Multiplicative, 0);
-        //TODO: Wrath of Winter has a Cast Time now, and I don't know what it is. Tooltip says Instant which is wrong.
-        _wrathOfWinter = new Spell("wrath-of-winter", "Wrath of Winter", 0, 1.5)
+        _wrathOfWinter = new Spell("wrath-of-winter", "Wrath of Winter", 0, 1)
             .WithCanCast(((unit, spell) => Spirit >= 100))
             .WithOnCastingCost((caster, spell) => Spirit = 0)
             .WithOnCast((unit, spell, targets) =>
@@ -444,7 +439,6 @@ public class Rime : Unit
             )
             .WithOnActivate(unit =>
             {
-                // TODO: Spawn Swallows.
                 unit.OnCrit += (caster, damage, spell) =>
                 {
                     if (spell == _coldSnap)
@@ -614,7 +608,6 @@ public class Rime : Unit
         # region Row 5
 
         // Cascading Blitz
-        // TODO: 
         _cascadingBlitz = new Talent(
                 id: "cascading-blitz",
                 name: "Cascading Blitz",
