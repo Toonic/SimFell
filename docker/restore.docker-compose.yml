@@ -1,0 +1,8 @@
+services:
+    restore:
+        container_name: sim-fell-restore
+        build:
+            context: ..
+            dockerfile: ./docker/dockerfiles/restore.dockerfile
+        volumes:
+            - ..:/App

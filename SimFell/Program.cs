@@ -96,7 +96,7 @@ public class Program
     public void ApplicationLoop()
     {
         bool exit = false;
-        string directory = Directory.GetCurrentDirectory();
+        string directory = Environment.GetEnvironmentVariable("SIMFELL_CONFIG_DIR") ?? Directory.GetCurrentDirectory();
 
         while (!exit)
         {

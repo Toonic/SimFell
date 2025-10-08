@@ -1,0 +1,8 @@
+services:
+    build:
+        container_name: sim-fell-build
+        build:
+            context: ..
+            dockerfile: ./docker/dockerfiles/build.dockerfile
+        volumes:
+            - ..:/App

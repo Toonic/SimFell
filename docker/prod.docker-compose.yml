@@ -1,0 +1,8 @@
+services:
+    prod:
+        container_name: sim-fell-prod
+        build:
+            context: ..
+            dockerfile: ./docker/dockerfiles/prod.dockerfile
+        volumes:
+            - /App
