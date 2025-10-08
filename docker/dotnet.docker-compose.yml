@@ -1,0 +1,10 @@
+services:
+    dotnet:
+        container_name: sim-fell-dotnet
+        build:
+            context: ..
+            dockerfile: ./docker/dockerfiles/dotnet.dockerfile
+        stdin_open: true
+        tty: true
+        volumes:
+            - ..:/App

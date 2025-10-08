@@ -1,0 +1,10 @@
+services:
+    dev:
+        container_name: sim-fell-dev
+        build:
+            context: ..
+            dockerfile: ./docker/dockerfiles/dev.dockerfile
+        stdin_open: true
+        tty: true
+        volumes:
+            - ..:/App

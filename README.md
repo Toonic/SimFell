@@ -85,6 +85,17 @@ SimFell/
      dotnet run --project SimFell/SimFell.csproj
      ```
 
+   - **Using Docker**:
+
+     ```bash
+     # Restore dependencies and build
+     docker compose -f docker/restore.docker-compose.yml up
+     docker compose -f docker/build.docker-compose.yml up
+
+     # Run the simulator
+     docker compose -f docker/dev.docker-compose.yml run --rm dev
+     ```
+
 ## Usage
 
 Currently, SimFell runs as a command-line tool and outputs results to both the console and the `simulation.log` file in the root directory.
