@@ -539,22 +539,8 @@ public class Rime : Unit
                     }
                 };
             });
-
-        // Coalescing Frost
-        //Used for Damage Tracking - Future better handling needed.
+        // Coalescing Frost 
         Spell coalescingFrost = new Spell(id: "coalescing-frost", name: "Coalescing Frost", 0, 0);
-        Aura coalescingFrostAura = new Aura(
-            id: "coalescing-frost",
-            name: "Coalescing Frost",
-            duration: 3,
-            tickInterval: 0);
-        coalescingFrostAura.WithOnRemove((unit1, unit2) =>
-        {
-            double damage = coalescingFrostAura.CurrentStacks * 53;
-            DealAOEDamage(damage, 5, coalescingFrost);
-        });
-        coalescingFrostAura.WithIncreaseStacks((unit, unit1) => { coalescingFrostAura.ResetDuration(); });
-
 
         _coalescingFrost = new Talent(
                 id: "coalescing-frost",
@@ -567,20 +553,57 @@ public class Rime : Unit
 
                 _freezingTorrent.OnTick += (unit1, spell, unit2) =>
                 {
-                    if (unit.PrimaryTarget != null)
+                    if (PrimaryTarget != null)
                     {
-                        if (unit.PrimaryTarget.HasDebuff(coalescingFrostAura))
+                        var targetAura = PrimaryTarget.Debuffs.FirstOrDefault(aura => aura.ID == "coalescing_frost");
+                        
+                        if (targetAura != null)
                         {
-                            coalescingFrostAura.IncreaseStack();
+                            // Debuff exists, increase stacks
+                            targetAura.IncreaseStack();
                         }
                         else
                         {
-                            unit.PrimaryTarget.ApplyDebuff(unit, unit.PrimaryTarget, coalescingFrostAura);
+                            // Create a NEW aura instance with unlimited stacks
+                            var coalescingFrostDebuff = new Aura(
+                                id: "coalescing-frost",
+                                name: "Coalescing Frost",
+                                duration: 3,
+                                tickInterval: 0,
+                                maxStacks: 1000,
+                                onRemove: (caster, target) =>
+                                {
+                                    var aura = target.Debuffs.FirstOrDefault(a => a.ID == "coalescing_frost");
+                                    if (aura != null)
+                                    {
+                                        double damage = aura.CurrentStacks * (caster.MainStat.GetValue() * 0.43);
+                                        DealAOEDamage(damage, 5, coalescingFrost);
+                                    }
+                                }
+                            );
+                            
+                            coalescingFrostDebuff.WithIncreaseStacks((caster, target) =>
+                            {
+                                var aura = target.Debuffs.FirstOrDefault(a => a.ID == "coalescing_frost");
+                                aura?.ResetDuration();
+                            });
+                            
+                            PrimaryTarget.ApplyDebuff(this, PrimaryTarget, coalescingFrostDebuff);
                         }
                     }
                 };
-            });
 
+                // When Freezing Torrent crits, 50% chance to add an extra stack
+                OnCrit += (caster, damage, spell) =>
+                {
+                    if (spell == _freezingTorrent && PrimaryTarget != null && SimRandom.Roll(50))
+                    {
+                        var targetAura = PrimaryTarget.Debuffs.FirstOrDefault(aura => aura.ID == "coalescing_frost");
+                        targetAura?.IncreaseStack();
+                    }
+                };
+            });
+        
         Talents.Add(_icyFlow);
         Talents.Add(_avalanche);
         Talents.Add(_coalescingFrost);
@@ -595,8 +618,9 @@ public class Rime : Unit
                 name: "Greater Glacial Blast",
                 gridPos: "4.2")
             .WithOnActivate((unit) =>
-            {
-                _glacialBlast.DamageModifiers.AddModifier(new Modifier(Modifier.StatModType.AdditivePercent, 40));
+            {                    
+                _glacialBlast.DamageModifiers.AddModifier(new Modifier(Modifier.StatModType.MultiplicativePercent, 40)); //Multiplies damage by 40$.
+                //_glacialBlast.DamageModifiers.AddModifier(new Modifier(Modifier.StatModType.AdditivePercent, 40));
                 _glacialBlast.CastTime.AddModifier(new Modifier(Modifier.StatModType.Flat, 0.5));
             });
 
@@ -663,48 +687,64 @@ public class Rime : Unit
                     }
                 };
             });
-
         // Soulfrost Torrent
-        // TODO: Soulfrost shouldn't be applying the soulFrostTickSpeed and soulFrostCrit buff unless the spell is casted.
-        Modifier soulFrostTickSpeed = new Modifier(Modifier.StatModType.InverseMultiplicativePercent, 40);
-        Modifier soulFrostCrit = new Modifier(Modifier.StatModType.AdditivePercent, 100);
-        Aura soulFrostTorrent = new Aura(id: "soulfrost-torrent", name: "Soul Frost", duration: 18, tickInterval: 0,
-            maxStacks: 2);
-        soulFrostTorrent.WithOnApply((unit, unit1) =>
-        {
-            _freezingTorrent.CritModifiers.AddModifier(soulFrostCrit);
-            _freezingTorrent.TickRate.AddModifier(soulFrostTickSpeed);
-        });
-        soulFrostTorrent.WithOnRemove((unit1, unit2) =>
-        {
-            _freezingTorrent.CritModifiers.RemoveModifier(soulFrostCrit);
-            _freezingTorrent.TickRate.RemoveModifier(soulFrostTickSpeed);
-        });
-        soulFrostTorrent.WithIncreaseStacks(((unit, unit1) => soulFrostTorrent.ResetDuration()));
+        // For 40% increased tick rate, reduce the interval to ~71.4% of original (1/1.4)
+                Modifier soulFrostTickSpeed = new Modifier(Modifier.StatModType.Multiplicative, 0.714);
+                Modifier soulFrostCrit = new Modifier(Modifier.StatModType.AdditivePercent, 100);
+                Aura soulFrostTorrent = new Aura(
+                    id: "soulfrost-torrent", 
+                    name: "Soul Frost", 
+                    duration: 18, 
+                    tickInterval: 0,
+                    maxStacks: 1
+                );
 
-        _soulfrostTorrent = new Talent(
-                id: "soulfrost-torrent",
-                name: "Soulfrost Torrent",
-                gridPos: "5.3")
-            .WithOnActivate(unit =>
-            {
-                RPPM proc = new RPPM(1.5);
-                OnCastDone += (unit1, unit2, spell) =>
+        // Apply modifiers when buff is gained
+                soulFrostTorrent.WithOnApply((caster, target) =>
                 {
-                    if (proc.TryProc(this))
+                    _freezingTorrent.CritModifiers.AddModifier(soulFrostCrit);
+                    _freezingTorrent.TickRate.AddModifier(soulFrostTickSpeed);
+                });
+
+        // Remove modifiers when buff expires or is removed
+                soulFrostTorrent.WithOnRemove((caster, target) =>
+                {
+                    _freezingTorrent.CritModifiers.RemoveModifier(soulFrostCrit);
+                    _freezingTorrent.TickRate.RemoveModifier(soulFrostTickSpeed);
+                });
+
+                _soulfrostTorrent = new Talent(
+                        id: "soulfrost-torrent",
+                        name: "Soulfrost Torrent",
+                        gridPos: "5.3")
+                    .WithOnActivate(unit =>
                     {
-                        // Handle if Soulfrost procs during Soulfrost. Hence 2 Max Stacks.
-                        if (!HasBuff(soulFrostTorrent))
-                            ApplyBuff(this, this, soulFrostTorrent);
-                        else soulFrostTorrent.IncreaseStack();
-                    }
-                };
+                        RPPM proc = new RPPM(1.5);
 
-                OnCastDone += (unit1, unit2, spell) =>
-                {
-                    if (HasBuff(soulFrostTorrent)) soulFrostTorrent.DecreaseStack();
-                };
-            });
+                        // Proc the buff on any cast completion (1.5 PPM)
+                        OnCastDone += (caster, spell, targets) =>
+                        {
+                            if (proc.TryProc(this) && !HasBuff(soulFrostTorrent))
+                            {
+                                ApplyBuff(this, this, soulFrostTorrent);
+                            }
+                        };
+
+                        // Consume the buff when Freezing Torrent finishes channeling
+                        OnChannelEnd += (caster, spell, targets) =>
+                        {
+                            // Check by spell ID instead of object reference
+                            if (spell.ID == "freezing_torrent")
+                            {
+                                // Direct ID check to ensure we find and remove the buff
+                                var buff = Buffs.FirstOrDefault(a => a.ID == "soulfrost_torrent");
+                                if (buff != null)
+                                {
+                                    RemoveBuff(soulFrostTorrent);
+                                }
+                            }
+                        };
+                    });
 
         Talents.Add(_cascadingBlitz);
         Talents.Add(_frostweaversWrath);
